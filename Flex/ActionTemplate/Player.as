@@ -15,16 +15,30 @@ package{
 	public class Player extends IGameObject{
 		//==Const==
 
+		/*
+			VX = 110に収束するように、POWとRATIOを決定する
+			・地上は完全に110、空中はそれより少し小さい値に収束
+		*/
+
 		//#Pos
-		static public const MOVE_VEL:Number = 100.0;
+//		static public const MOVE_VEL:Number = 100.0;
+		static public const MOVE_POW_AIR:Number    = 470.0;//空中での制御はやややりにくくする
+		static public const MOVE_POW_GROUND:Number = 1100.0;
 		static public const JUMP_VEL:Number = 300.0;
+		static public const GRAVITY:Number = 600.0;
+
+		//#空気抵抗、地面との摩擦
+		static public const DRAG_RATIO_O:Number = 0.7;//空中での摩擦は少なくする（あまり減らさないようにする）
+		static public const DRAG_RATIO_W:Number = 0.5;
+
 
 		//==Var==
 
 		//#Pos
 		public var m_VX:Number = 0.0;
 		public var m_VY:Number = 0.0;
-		public var m_G:Number = 600.0;
+		public var m_AX:Number = 0.0;
+		public var m_AY:Number = GRAVITY;
 
 		//#Input
 		public var m_Input:IInput;
@@ -78,22 +92,48 @@ package{
 
 			//Param
 			{
-				//m_VX
+				//m_AX
 				{
-					var vx:Number = 0.0;
-					if(m_Input.IsPress(IInput.BUTTON_R)){
-						vx += MOVE_VEL;
-					}
-					if(m_Input.IsPress(IInput.BUTTON_L)){
-						vx -= MOVE_VEL;
+					var PowX:Number;
+					{
+						if(! m_GroundFlag){
+							PowX = MOVE_POW_AIR;
+						}else{
+							PowX = MOVE_POW_GROUND;
+						}
 					}
 
-					m_VX = vx;
+					m_AX = 0.0;
+					if(m_Input.IsPress(IInput.BUTTON_R)){
+						m_AX =  PowX
+					}
+					if(m_Input.IsPress(IInput.BUTTON_L)){
+						m_AX = -PowX
+					}
+				}
+
+				//m_VX
+				{
+					//Powによる加算
+					m_VX += m_AX * i_DeltaTime;
+
+					//空気抵抗率
+					var Rat:Number;
+					{
+						if(! m_GroundFlag){
+							Rat = DRAG_RATIO_O;
+						}else{
+							Rat = DRAG_RATIO_W;
+						}
+					}
+
+					//空気抵抗などによる減速(擬似抵抗)
+					m_VX *= MyMath.Pow(Rat, 10.0*i_DeltaTime);
 				}
 
 				//m_VY
 				{
-					m_VY += m_G * i_DeltaTime;
+					m_VY += m_AY * i_DeltaTime;
 
 					//下降速度に制限を設けてみる
 					if(m_VY > JUMP_VEL){
@@ -149,7 +189,16 @@ package{
 					//Move
 					{
 						for(i = 0; i < move; i += 1){
-							if(Game.Instance().IsCollision(this.x+1, this.y)){break;}
+							if(Game.Instance().IsCollision(this.x+1, this.y)){
+								//壁にぶつかった
+
+								//横の速度をリセットする
+								if(m_VX > 0){
+									m_VX = 0;
+								}
+
+								break;
+							}
 
 							this.x += 1;
 						}
@@ -167,7 +216,16 @@ package{
 					//Move
 					{
 						for(i = 0; i < move; i += 1){
-							if(Game.Instance().IsCollision(this.x-1, this.y)){break;}
+							if(Game.Instance().IsCollision(this.x-1, this.y)){
+								//壁にぶつかった
+
+								//横の速度をリセットする
+								if(m_VX < 0){
+									m_VX = 0;
+								}
+
+								break;
+							}
 
 							this.x -= 1;
 						}

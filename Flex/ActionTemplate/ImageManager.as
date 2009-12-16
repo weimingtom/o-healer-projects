@@ -16,6 +16,11 @@ package{
 		//パネルの一辺の長さ
 		static public const PANEL_LEN:int = 32;
 
+		//Alias
+		static public const O:int = Game.O;
+		static public const W:int = Game.W;
+
+
 		//==Function==
 
 		//＃BG
@@ -26,20 +31,17 @@ package{
 		static public var m_BitmapBG:Bitmap = new Bitmap_BG();
 		static public var m_color_transform : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
 
-		static public const BG_INDEX_TO_XY:Array = [
-			//O
-			[0, 0],
-			//W
-			[0, PANEL_LEN],
-		];
-
 		static public const PLAYER_COLLISION_W:int = 8;
 
+		//一つのブロックを４つに分割して描く
 		static public function DrawBG(o_BG_BitmapData:BitmapData, o_BG_Collision_BitmapData:BitmapData, i_Map:Array, i_Rect:Rectangle):void{
 			var x:int;
 			var y:int;
 
-			var dst_rect : Rectangle = new Rectangle(0,0,PANEL_LEN,PANEL_LEN);
+			var dst_rect_lu : Rectangle = new Rectangle(0,0,PANEL_LEN/2,PANEL_LEN/2);
+			var dst_rect_ru : Rectangle = new Rectangle(0,0,PANEL_LEN/2,PANEL_LEN/2);
+			var dst_rect_ld : Rectangle = new Rectangle(0,0,PANEL_LEN/2,PANEL_LEN/2);
+			var dst_rect_rd : Rectangle = new Rectangle(0,0,PANEL_LEN/2,PANEL_LEN/2);
 			var dst_rect_col : Rectangle = new Rectangle(0,0, PANEL_LEN + 2*PLAYER_COLLISION_W, PANEL_LEN + 2*PLAYER_COLLISION_W);
 
 			//clear
@@ -51,24 +53,115 @@ package{
 
 			//draw
 			for(y = i_Rect.y; y < i_Rect.height; y += 1){
-				dst_rect.y = y * PANEL_LEN;
+				dst_rect_lu.y = dst_rect_ru.y = y * PANEL_LEN;
+				dst_rect_ld.y = dst_rect_rd.y = y * PANEL_LEN + PANEL_LEN/2;
 				dst_rect_col.y = y * PANEL_LEN - PLAYER_COLLISION_W;
 
 				for(x = i_Rect.x; x < i_Rect.width; x += 1){
-					dst_rect.x = x * PANEL_LEN;
+					dst_rect_lu.x = dst_rect_ld.x = x * PANEL_LEN;
+					dst_rect_ru.x = dst_rect_rd.x = x * PANEL_LEN + PANEL_LEN/2;
 					dst_rect_col.x = x * PANEL_LEN - PLAYER_COLLISION_W;
 
-					var index:int = i_Map[y][x];
+
+					var id_c:int = GetIndex(x, y, i_Map);
 
 					//o_BG_BitmapData
-					var matrix : Matrix = new Matrix(1,0,0,1, -BG_INDEX_TO_XY[index][0] + dst_rect.left, -BG_INDEX_TO_XY[index][1] + dst_rect.top);
-					o_BG_BitmapData.draw(m_BitmapBG, matrix, m_color_transform, BlendMode.NORMAL, dst_rect, true);
+					{
+						var id_l:int = GetIndex(x-1, y, i_Map);
+						var id_r:int = GetIndex(x+1, y, i_Map);
+						var id_u:int = GetIndex(x, y-1, i_Map);
+						var id_d:int = GetIndex(x, y+1, i_Map);
+						var id_lu:int = GetIndex(x-1, y-1, i_Map);
+						var id_ru:int = GetIndex(x+1, y-1, i_Map);
+						var id_ld:int = GetIndex(x-1, y+1, i_Map);
+						var id_rd:int = GetIndex(x+1, y+1, i_Map);
+
+						//LU
+						DrawBG_Quarter(o_BG_BitmapData, dst_rect_lu, POS_LU, id_c, id_l, id_u, id_lu);
+						//RU
+						DrawBG_Quarter(o_BG_BitmapData, dst_rect_ru, POS_RU, id_c, id_r, id_u, id_ru);
+						//LD
+						DrawBG_Quarter(o_BG_BitmapData, dst_rect_ld, POS_LD, id_c, id_l, id_d, id_ld);
+						//RD
+						DrawBG_Quarter(o_BG_BitmapData, dst_rect_rd, POS_RD, id_c, id_r, id_d, id_rd);
+					}
 
 					//o_BG_Collision_BitmapData
-					if(index == Game.W){
-						o_BG_Collision_BitmapData.fillRect(dst_rect_col, 0x88FFFFFF);
+					{
+						if(id_c == Game.W){
+							o_BG_Collision_BitmapData.fillRect(dst_rect_col, 0x88FFFFFF);
+						}
 					}
 				}
+			}
+		}
+
+		static public function GetIndex(x:int, y:int, i_Map:Array):int{
+			//Check : Range
+			{
+				if(x < 0){return W;}
+				if(x >= i_Map[0].length){return W;}
+				if(y < 0){return W;}
+				if(y >= i_Map.length){return W;}
+			}
+
+			return i_Map[y][x];
+		}
+
+		//４隅のうちどこを描くか
+		static public const POS_LU:int = 0;
+		static public const POS_RU:int = 1;
+		static public const POS_LD:int = 2;
+		static public const POS_RD:int = 3;
+		static public const POS_NUM:int = 4;
+
+		//指定された隅を描く
+		static public function DrawBG_Quarter(o_BG_BitmapData:BitmapData, i_DstRect:Rectangle, i_Pos:int, i_ID_C:int, i_ID_X:int, i_ID_Y:int, i_ID_XY:int):void{
+			//Indexx
+			var index_xy:Array = [0, 0];
+			{
+				switch(i_ID_C){
+				case O:
+					index_xy = [3, 2];
+					break;
+				case W:
+					if(i_ID_X == O){
+						//O
+						if(i_ID_Y == O){
+							//OO
+//							const index_OO:Array = [[0, 0], [2, 0], [0, 2], [2, 2]];//LU. RU, LD, RD
+//							index_xy = index_OO[i_Pos];
+							index_xy = [[0, 0], [2, 0], [0, 2], [2, 2]][i_Pos];//LU. RU, LD, RD
+						}else{
+							//OW
+							index_xy = [[0, 1], [2, 1], [0, 1], [2, 1]][i_Pos];//LU. RU, LD, RD
+						}
+					}else{
+						//W
+						if(i_ID_Y == O){
+							//WO
+							index_xy = [[1, 0], [1, 0], [1, 2], [1, 2]][i_Pos];//LU. RU, LD, RD
+						}else{
+							//WW
+							if(i_ID_XY == O){
+								//WWO
+								index_xy = [[0, 3], [1, 3], [0, 4], [1, 4]][i_Pos];//LU. RU, LD, RD
+							}else{
+								//WWW
+								index_xy = [1, 1];
+							}
+						}
+					}
+					break;
+				}
+			}
+
+			//Draw
+			{
+				//indexの位置の画像を、DstRectの枠に入るように移動
+				var matrix : Matrix = new Matrix(1,0,0,1, -index_xy[0]*PANEL_LEN/2 + i_DstRect.left, -index_xy[1]*PANEL_LEN/2 + i_DstRect.top);
+
+				o_BG_BitmapData.draw(m_BitmapBG, matrix, m_color_transform, BlendMode.NORMAL, i_DstRect, true);
 			}
 		}
 

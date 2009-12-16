@@ -31,6 +31,11 @@ package{
 			return (i_Val > 0)? i_Val: -i_Val;
 		}
 
+		//#Pos
+		static public function Pow(i_Base:Number, i_Pow:Number):Number{
+			return Math.pow(i_Base, i_Pow);
+		}
+
 		//#Square Root
 		static public function Sqrt(i_Val:Number):Number{
 			return Math.sqrt(i_Val);
