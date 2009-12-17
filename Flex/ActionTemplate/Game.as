@@ -155,10 +155,10 @@ package{
 					[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
 					[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
 					[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
+					[W, W, O, O, O, O, O, O, O, O, O, O, O, O, O, W, O, O, W],
+					[W, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, O, O, W],
+					[W, O, O, O, W, O, O, O, W, O, W, O, O, O, O, O, O, O, W],
 					[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
-					[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
-					[W, O, O, O, O, O, O, O, W, O, O, O, O, O, O, O, O, O, W],
-					[W, W, O, O, O, W, O, O, O, O, O, O, O, O, O, O, O, O, W],
 					[W, O, O, O, O, O, W, O, O, O, O, O, O, O, O, O, O, O, W],
 					[W, O, O, O, W, O, W, O, O, O, O, O, O, O, O, O, O, O, W],
 					[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
@@ -167,8 +167,8 @@ package{
 //*
 			//＃Player
 			{
-				var PlayerX:int = 100;
-				var PlayerY:int = 100;
+				var PlayerX:int = ImageManager.PANEL_LEN * 1.5;
+				var PlayerY:int = ImageManager.PANEL_LEN * 1.5;
 
 				m_Player = new Player();
 				m_Player.Init(PlayerX, PlayerY, m_Input);
@@ -212,7 +212,7 @@ package{
 		}
 
 
-		//=更新まわり=
+		//==更新まわり==
 
 		public function GetDeltaTime():Number{
 			return 1.0 / 24.0;
@@ -224,13 +224,82 @@ package{
 
 			//Input
 			{
-				m_Input.Update();
+				UpdateInput();
+
+				CheckInput();
 			}
 
 			//GameObject
 			{
 				GameObjectManager.Update(deltaTime);
 			}
+
+			//Camera
+			{
+				UpdateCamera(deltaTime);
+			}
+		}
+
+
+		//==入力==
+
+		protected function UpdateInput():void{
+			m_Input.Update();
+		}
+
+		protected function CheckInput():void{
+			if(m_Input.IsPress_Edge(IInput.BUTTON_RESET)){
+				Reset();
+			}
+		}
+
+
+		//==カメラ==
+
+		protected function UpdateCamera(i_DeltaTime:Number):void{
+			//プレイヤー位置
+			var PlayerX:int;
+			var PlayerY:int;
+			{
+				PlayerX = m_Player.x;
+				PlayerY = m_Player.y;
+			}
+
+			//プレイヤーを中心にした時の画面の左上の座標
+			var TrgX:int;
+			var TrgY:int;
+			{
+				TrgX = PlayerX - CAMERA_W/2;
+				TrgY = PlayerY - CAMERA_H/2;
+			}
+
+			//カメラの左上の位置
+			var CameraX:int;
+			var CameraY:int;
+			{
+				CameraX = TrgX;
+				CameraY = TrgY;
+
+				//画面外を移さないようにする
+				if(CameraX < 0){CameraX = 0;}
+				if(CameraX + CAMERA_W > GetStageW()){CameraX = GetStageW() - CAMERA_W;}
+				if(CameraY < 0){CameraY = 0;}
+				if(CameraY + CAMERA_H > GetStageH()){CameraY = GetStageH() - CAMERA_H;}
+			}
+
+			//カメラ位置に合わせて、ステージの位置を変更する
+			{
+				m_Root_Game.x = -CameraX;
+				m_Root_Game.y = -CameraY;
+			}
+		}
+
+		public function GetStageW():int{
+			return m_Map[0].length * ImageManager.PANEL_LEN;
+		}
+
+		public function GetStageH():int{
+			return m_Map.length * ImageManager.PANEL_LEN;
 		}
 
 
