@@ -47,17 +47,21 @@ package{
 			//clear
 			//o_BG_Collision_BitmapData
 			{
-				var clear_rect : Rectangle = new Rectangle(i_Rect.x * PANEL_LEN, i_Rect.y * PANEL_LEN, i_Rect.width * PANEL_LEN, i_Rect.height * PANEL_LEN);
+				var clear_rect : Rectangle = new Rectangle(
+					i_Rect.x * PANEL_LEN + PLAYER_COLLISION_W,
+					i_Rect.y * PANEL_LEN + PLAYER_COLLISION_W,
+					i_Rect.width * PANEL_LEN - PLAYER_COLLISION_W*2,
+					i_Rect.height * PANEL_LEN - PLAYER_COLLISION_W*2);
 				o_BG_Collision_BitmapData.fillRect(clear_rect, 0x00000000);
 			}
 
 			//draw
-			for(y = i_Rect.y; y < i_Rect.height; y += 1){
+			for(y = i_Rect.y; y < i_Rect.y + i_Rect.height; y += 1){
 				dst_rect_lu.y = dst_rect_ru.y = y * PANEL_LEN;
 				dst_rect_ld.y = dst_rect_rd.y = y * PANEL_LEN + PANEL_LEN/2;
 				dst_rect_col.y = y * PANEL_LEN - PLAYER_COLLISION_W;
 
-				for(x = i_Rect.x; x < i_Rect.width; x += 1){
+				for(x = i_Rect.x; x < i_Rect.x + i_Rect.width; x += 1){
 					dst_rect_lu.x = dst_rect_ld.x = x * PANEL_LEN;
 					dst_rect_ru.x = dst_rect_rd.x = x * PANEL_LEN + PANEL_LEN/2;
 					dst_rect_col.x = x * PANEL_LEN - PLAYER_COLLISION_W;
