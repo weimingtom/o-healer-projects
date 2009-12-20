@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:comp="*"
+	paddingTop="0" paddingLeft="0"
+	paddingRight="0" paddingBottom="0"
+	applicationComplete="init()"
+>
+	<!--Script-->
+	<mx:Script>
+		<![CDATA[
+			//最初のロード完了時の初期化
+			private function init():void{
+				//幅を、実際のゲーム画面に合わせる
+				MyViewStack.width  = Game.CAMERA_W;
+				MyViewStack.height = Game.CAMERA_H;
+				button_to_start.width  = Game.CAMERA_W;
+				button_to_start.height = Game.CAMERA_H;
+			}
+
+			//ボタンが押されて開始する時の処理
+			private function start():void{
+				MyViewStack.selectedChild = main_game;
+
+				main_game.Init();
+			}
+		]]>
+	</mx:Script>
+
+
+	<!--View-->
+	<mx:ViewStack id="MyViewStack" width="10" height="10">
+		<mx:HBox borderStyle="none">
+			<mx:Button id="button_to_start" label="Click to Start" buttonDown="start()" width="10" height="10"/>
+		</mx:HBox>
+
+		<comp:Game id="main_game" borderStyle="solid"/>
+	</mx:ViewStack>
+</mx:Application>
