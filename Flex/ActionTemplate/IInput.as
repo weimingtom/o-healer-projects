@@ -8,12 +8,10 @@ package{
 		static public const BUTTON_R:int = 1;
 		static public const BUTTON_U:int = 2;
 		static public const BUTTON_D:int = 3;
-		static public const BUTTON_DECIDE:int = 4;
-		static public const BUTTON_CANCEL:int = 5;
 		//System
-		static public const BUTTON_RESET:int = 6;
+		static public const BUTTON_RESET:int = 4;
 		//Num
-		static public const BUTTON_NUM:int  = 7;
+		static public const BUTTON_NUM:int  = 5;
 
 
 		//i_Button‚ªŒ»İ‰Ÿ‚³‚ê‚Ä‚¢‚é‚©
