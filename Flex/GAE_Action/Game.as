@@ -12,6 +12,7 @@ package{
 	import flash.events.*;
 	import flash.geom.*;
 	import flash.filters.*;
+	import flash.net.*;
 	//mxml
 	import mx.core.*;
 	import mx.containers.*;
@@ -25,8 +26,10 @@ package{
 		static public const CAMERA_H:Number = 32 * 10;//ImageManager.PANEL_LEN * 10;//300;
 
 		//＃マップの要素
-		static public const O:int = 0;
-		static public const W:int = 1;
+		static public const O:int = 0;//空白
+		static public const W:int = 1;//地形
+		static public const P:int = 2;//プレイヤー位置（生成後は空白として扱われる）
+		static public const B:int = 3;//動かせるブロック（生成後は空白として扱われる）
 
 		//==Var==
 
@@ -48,20 +51,17 @@ package{
 		//＃BG
 		public var m_BG_BitmapData:BitmapData;
 
-		//＃Collision
-		public var m_BG_Collision_BitmapData:BitmapData;
-
 		//＃マップ
 		public var m_Map:Array = [
 			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
-			[W, W, O, O, O, O, O, O, O, O, O, O, O, O, O, W, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, O, O, W],
-			[W, O, O, O, W, O, O, O, W, O, W, O, O, O, O, O, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
-			[W, O, O, O, O, O, W, O, O, O, O, O, O, O, O, O, O, O, W],
-			[W, O, O, O, W, O, W, O, O, O, O, O, O, O, O, O, O, O, W],
+			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, W],
+			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, W],
+			[W, O, O, O, O, O, O, O, O, O, O, B, O, O, W, O, O, O, W],
+			[W, O, O, O, O, O, O, O, O, O, W, W, W, O, W, O, O, O, W],
+			[W, O, O, O, O, B, O, O, O, O, W, O, O, O, W, O, O, W, W],
+			[W, O, O, O, O, O, O, O, O, W, W, O, O, O, O, O, O, W, W],
+			[W, O, O, W, O, O, O, O, O, W, W, O, O, O, O, O, O, W, W],
+			[W, P, O, W, O, O, O, O, O, W, W, O, O, B, O, O, O, W, W],
 			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
 		];
 
@@ -125,6 +125,9 @@ package{
 
 		//リセット時に必要な処理（初期化の一部も兼ねる）
 		public function Reset():void{
+			var x:int;
+			var y:int;
+
 			//＃画面に相当する部分の初期化
 			{
 				//Reset
@@ -169,37 +172,69 @@ package{
 				GameObjectManager.Reset();
 			}
 
-/*
-			//＃Map
+			//＃PhysManager
 			{
-				m_Map = [
-					[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
-					[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
-					[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
-					[W, W, O, O, O, O, O, O, O, O, O, O, O, O, O, W, O, O, W],
-					[W, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, O, O, W],
-					[W, O, O, O, W, O, O, O, W, O, W, O, O, O, O, O, O, O, W],
-					[W, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, W],
-					[W, O, O, O, O, O, W, O, O, O, O, O, O, O, O, O, O, O, W],
-					[W, O, O, O, W, O, W, O, O, O, O, O, O, O, O, O, O, O, W],
-					[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
-				];
+				PhysManager.Reset();
 			}
-//*/
 
-//*
+			//＃Map
+			var PlayerX:int = ImageManager.PANEL_LEN * 1.5;
+			var PlayerY:int = ImageManager.PANEL_LEN * 1.5;
+			{
+				//
+				{
+					var NumX:int = m_Map[0].length;
+					var NumY:int = m_Map.length;
+
+					for(y = 0; y < NumY; y += 1){
+						var pos_y:int = ImageManager.PANEL_LEN * (y + 0.5);
+
+						for(x = 0; x < NumX; x += 1){
+							var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
+
+							switch(m_Map[y][x]){
+							case O:
+								//空白なので何もしない
+								break;
+							case W:
+								//CreateTerrainCollision()でまとめてやる
+								break;
+							case P:
+								//プレイヤー位置として記憶
+								{
+									PlayerX = pos_x;
+									PlayerY = pos_y;
+								}
+								break;
+							case B:
+								//動かせるブロックを生成
+								{
+									var block_m:Block_Movable = new Block_Movable();
+									block_m.Init(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(block_m);
+									GameObjectManager.Register(block_m);
+								}
+								break;
+							}
+						}
+					}
+				}
+
+				//Terrain
+				{
+					CreateTerrainCollision();
+				}
+			}
+
 			//＃Player
 			{
-				var PlayerX:int = ImageManager.PANEL_LEN * 1.5;
-				var PlayerY:int = ImageManager.PANEL_LEN * 1.5;
-
 				m_Player = new Player();
 				m_Player.Init(PlayerX, PlayerY, m_Input);
 
 				m_Root_Player.addChild(m_Player);
 				GameObjectManager.Register(m_Player);
 			}
-//*/
 
 			//＃BG
 			{
@@ -208,14 +243,12 @@ package{
 
 				//Init
 				m_BG_BitmapData = new BitmapData(BG_W, BG_H, true, 0x88000000);
-				m_BG_Collision_BitmapData = new BitmapData(BG_W, BG_H, true, 0x00000000);
 
 				//描画登録
 				m_Root_BG.addChild(new Bitmap(m_BG_BitmapData));
-//				m_Root_BG.addChild(new Bitmap(m_BG_Collision_BitmapData));//コリジョンの可視化
 
 				//描画内容更新
-				ImageManager.DrawBG(m_BG_BitmapData, m_BG_Collision_BitmapData, m_Map, GetMapRect_All());
+				ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_All());
 			}
 		}
 
@@ -250,6 +283,133 @@ package{
 		}
 
 
+		//==Terrain==
+
+		public function CreateTerrainCollision():void{
+			var x:int;
+			var y:int;
+			var iter_x:int;
+			var iter_y:int;
+
+			var NumX:int = m_Map[0].length;
+			var NumY:int = m_Map.length;
+
+			var CopyMap:Array;
+			{
+				CopyMap = new Array(NumY);
+
+				for(y = 0; y < NumY; y += 1){
+					CopyMap[y] = new Array(NumX);
+
+					for(x = 0; x < NumX; x += 1){
+						CopyMap[y][x] = m_Map[y][x];
+					}
+				}
+			}
+
+			//左右に一列になってるブロックを探して連結
+			//さらに、それらの下もブロックだったら連結
+			for(y = 0; y < NumY; y += 1){
+
+				var lx:int = -1;
+				var rx:int = -1;
+
+				for(x = -1; x < NumX+1; x += 1){
+
+					//範囲外は空白とみなす
+					var map:int;
+					{
+						if(x < 0){map = O;}
+						else
+						if(x >= NumX){map = O;}
+						else
+						{map = CopyMap[y][x];}
+					}
+
+					//必要な処理をしつつ、ブロックの生成が必要になったらフラグを立てて伝達
+					var CreateBlockFlag:Boolean = true;
+					{
+						switch(map){
+						case W:
+							{
+								if(lx < 0){lx = x;}
+								rx = x;
+							}
+
+							//このブロックの上も元々ブロックであれば、横に長くせず、縦に長くする
+							{
+								//上がブロックじゃない時だけフラグを戻す。そうでなければ、下のブロック生成に移行する
+								if(y == 0){CreateBlockFlag = false;}//マップの上辺なら上がブロックなわけはない
+								else
+								if(m_Map[y-1][x] != W){CreateBlockFlag = false;}//一つ上がブロックでなければすぐには生成しない
+							}
+
+							break;
+						}
+					}
+
+					//必要ならブロックを生成
+					{
+						if(CreateBlockFlag)
+						{
+							//左右に連結してるのがあれば、下方向を連結した後、採用
+							if(lx >= 0)
+							{//yの段のlx～rxが連結されている
+								//lx～rx, uy～dyを一つのブロックとみなす
+
+								//uyとdyを求める
+
+								var uy:int;
+								{
+									uy = y;//今の行が上辺
+								}
+
+								var dy:int;
+								{
+									var break_flag:Boolean = false;
+									for(dy = uy+1; dy < NumY; dy += 1){
+										for(iter_x = lx; iter_x <= rx; iter_x += 1){
+											if(CopyMap[dy][iter_x] != W){
+												break_flag = true;
+											}
+
+											if(break_flag){break;}
+										}
+										if(break_flag){break;}
+									}
+									dy -= 1;
+								}
+
+								//ブロックを実際に生成
+								{
+									var block:Block_Fix = new Block_Fix();
+									block.Init(lx, rx, uy, dy);
+
+									m_Root_Gimmick.addChild(block);
+									GameObjectManager.Register(block);
+								}
+
+								//CopyMap上から、該当ブロックを消す
+								{
+									for(iter_y = uy; iter_y <= dy; iter_y += 1){
+										for(iter_x = lx; iter_x <= rx; iter_x += 1){
+											CopyMap[iter_y][iter_x] = O;
+										}
+									}
+								}
+
+								//reset
+								{
+									lx = rx = -1;
+								}
+							}//lx >= 0
+						}//CreateBlockFlag
+					}//Scope : Create Block
+				}//loop x
+			}//loop y
+		}
+
+
 		//==更新まわり==
 
 		public function GetDeltaTime():Number{
@@ -270,6 +430,11 @@ package{
 			//GameObject
 			{
 				GameObjectManager.Update(deltaTime);
+			}
+
+			//Physics
+			{
+				PhysManager.Update(deltaTime);
 			}
 
 			//Camera
@@ -338,21 +503,6 @@ package{
 
 		public function GetStageH():int{
 			return m_Map.length * ImageManager.PANEL_LEN;
-		}
-
-
-		//==BG Collision==
-
-		public function IsCollision(i_X:int, i_Y:int):Boolean{
-			//Check : Range
-			{
-				if(i_X < 0){return true;}
-				if(i_X >= m_BG_Collision_BitmapData.width){return true;}
-				if(i_Y < 0){return true;}
-				if(i_Y >= m_BG_Collision_BitmapData.height){return true;}
-			}
-
-			return (m_BG_Collision_BitmapData.getPixel32(i_X, i_Y) != 0x00000000);
 		}
 
 
@@ -573,7 +723,7 @@ package{
 			//ReDraw
 			{
 				//描画内容更新
-				ImageManager.DrawBG(m_BG_BitmapData, m_BG_Collision_BitmapData, m_Map, GetMapRect_Point(i_X, i_Y));
+				ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Point(i_X, i_Y));
 			}
 		}
 
@@ -620,6 +770,75 @@ package{
 					m_Root_Game.y = -CursorDY + CAMERA_H;
 				}
 			}
+		}
+
+
+		//=セーブまわり=
+
+		private var m_NetConnection:NetConnection;
+
+		private var m_Responder_Save:Responder;
+
+		public function Save():void{
+			if(! m_NetConnection){
+				m_NetConnection = new NetConnection();
+/*
+				m_NetConnection.connect("http://enen-pazzle.appspot.com/api/");
+/*/
+				m_NetConnection.connect("http://localhost:8080/api/");
+//*/
+			}
+
+			if(! m_Responder_Save){
+				m_Responder_Save = new Responder(
+					//OnComplete
+					function():void{
+					},
+					//OnFail
+					function(results:*):void{
+					}
+				);
+			}
+
+			var data:Object = {
+				//id:
+				stage:GetSaveData()
+			};
+
+			//Save
+			m_NetConnection.call("save", m_Responder_Save, data);//save(data)     
+		}
+
+		public function GetSaveData():String{
+			var result:String = "";
+
+			for(var y:int = 0; y < m_Map.length; y += 1){
+				for(var x:int = 0; x < m_Map[y].length; x += 1){
+					result = result + m_Map[y][x];
+				}
+
+				result = result + "_";
+			}
+
+			return result;
+		}
+
+		public function LoadData(i_MapString:String):void{
+			var NewMap:Array = [[]];
+
+			var len:int = i_MapString.length;
+			var y:int = 0;
+			for(var i:int = 0; i < len; i += 1){
+				switch(i_MapString[i]){
+				case 'O': NewMap[y].push(O); break;
+				case 'W': NewMap[y].push(W); break;
+				case '_': NewMap.push([]); y += 1; break;
+				}
+			}
+
+			//必要ならNewMapの出来をチェック
+
+			m_Map = NewMap;
 		}
 
 	}

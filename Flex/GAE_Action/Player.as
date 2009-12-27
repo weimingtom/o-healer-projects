@@ -11,6 +11,12 @@ package{
 	import mx.core.*;
 	import mx.containers.*;
 	import mx.controls.*;
+	//Box2D
+	import Box2D.Dynamics.*;
+	import Box2D.Dynamics.Contacts.*;
+	import Box2D.Collision.*;
+	import Box2D.Collision.Shapes.*;
+	import Box2D.Common.Math.*;
 
 	public class Player extends IGameObject{
 		//==Const==
@@ -28,30 +34,28 @@ package{
 		*/
 
 		//#Pos
-//		static public const MOVE_VEL:Number = 100.0;
 		static public const MOVE_POW_AIR:Number    = 470.0;//空中での制御はやややりにくくする
 		static public const MOVE_POW_GROUND:Number = 1100.0;
 		static public const JUMP_VEL:Number = 300.0;
-		static public const GRAVITY:Number = 600.0;
+//		static public const GRAVITY:Number = 600.0;
 
 		//#空気抵抗、地面との摩擦
 		static public const DRAG_RATIO_O:Number = 0.7;//空中での摩擦は少なくする（あまり減らさないようにする）
-		static public const DRAG_RATIO_W:Number = 0.5;
+		static public const DRAG_RATIO_W:Number = 0.5;//地面の摩擦も物理エンジンには任せない（壁に触れたままジャンプして摩擦が起こっても困るため）
+
+		//#Collision
+		static public const COL_RAD:int = 4;
 
 
 		//==Var==
 
 		//#Pos
-		public var m_VX:Number = 0.0;
-		public var m_VY:Number = 0.0;
 		public var m_AX:Number = 0.0;
-		public var m_AY:Number = GRAVITY;
+//		public var m_AY:Number = GRAVITY;
 
 		//#Input
 		public var m_Input:IInput;
 
-		//#Flag
-		public var m_GroundFlag:Boolean = false;
 
 		//==Common==
 
@@ -68,8 +72,33 @@ package{
 
 			//Graphic Anim
 			{
-				ResetGraphic(ImageManager.LoadCharaImage("Player", 1));
+				ResetGraphic(ImageManager.LoadCharaImage("Player"));
 				SetGraphicDir(GRAPHIC_DIR_R);
+			}
+
+			//Collision
+			{
+				var ColParam:Object = GetDefaultCollisionParam();
+				{//デフォルトのパラメータ
+					ColParam.density = 9.0;//大きめにしてみるテスト
+					ColParam.friction = 0.0;//1.0;//摩擦は独自計算
+				}
+
+				//Normal
+				{//通常用コリジョン
+					SetOwnCategory(ColParam, CATEGORY_PLAYER);
+					SetHitCategory(ColParam, CATEGORY_BLOCK);
+
+					CreateCollision_Circle(ImageManager.CHARA_GRAPHIC_LEN_X/2-1, ColParam);
+				}
+
+				//Vs Terrain
+				{//地形衝突用
+					SetOwnCategory(ColParam, CATEGORY_PLAYER_VS_TERRAIN);
+					SetHitCategory(ColParam, CATEGORY_TERRAIN_VS_PLAYER);
+
+					CreateCollision_Circle(COL_RAD, ColParam);
+				}
 			}
 		}
 
@@ -95,9 +124,21 @@ package{
 
 		//#Pos
 		public function UpdatePosition(i_DeltaTime:Number):void{
-			var i:int;
+			//Check
+			{
+				if(m_Body == null){
+					return;
+				}
+			}
 
-			//Param
+			//PhysVel => GameVel
+			var PhysVel:b2Vec2 = m_Body.GetLinearVelocity();
+			{
+				m_VX = PhysVel.x * PhysManager.PHYS_SCALE;
+				m_VY = PhysVel.y * PhysManager.PHYS_SCALE;
+			}
+
+			//Paramの計算
 			{
 				//m_AX
 				{
@@ -140,7 +181,7 @@ package{
 
 				//m_VY
 				{
-					m_VY += m_AY * i_DeltaTime;
+//					m_VY += m_AY * i_DeltaTime;//重力計算は物理エンジン任せ
 
 					//下降速度に制限を設けてみる
 					if(m_VY > JUMP_VEL){
@@ -155,139 +196,17 @@ package{
 				}
 			}
 
-
-			//Move
+			//GameVel => PhysVel
 			{
-				var move:int;
+				PhysVel.x = m_VX / PhysManager.PHYS_SCALE;
+				PhysVel.y = m_VY / PhysManager.PHYS_SCALE;
 
-				//U
-				{
-					//Val
-					{
-						move = 1;
-						if(m_VY < 0){move -= m_VY * i_DeltaTime;}
-					}
+				m_Body.SetLinearVelocity(PhysVel);
+			}
 
-					//Move
-					{
-						for(i = 0; i < move; i += 1){
-							if(Game.Instance().IsCollision(this.x, this.y-1)){
-								//天井にぶつかった
-
-								//縦の速度をリセットする
-								m_VY = 0;
-
-								break;
-							}
-
-							this.y -= 1;
-						}
-					}
-				}
-
-				//R
-				{
-					//Val
-					{
-						move = 1;
-						if(m_VX > 0){move += m_VX * i_DeltaTime;}
-					}
-
-					//Move
-					{
-						for(i = 0; i < move; i += 1){
-							if(Game.Instance().IsCollision(this.x+1, this.y)){
-								//壁にぶつかった
-
-								//横の速度をリセットする
-								if(m_VX > 0){
-									m_VX = 0;
-								}
-
-								break;
-							}
-
-							this.x += 1;
-						}
-					}
-				}
-
-				//L
-				{
-					//Val
-					{
-						move = 2;
-						if(m_VX < 0){move -= m_VX * i_DeltaTime;}
-					}
-
-					//Move
-					{
-						for(i = 0; i < move; i += 1){
-							if(Game.Instance().IsCollision(this.x-1, this.y)){
-								//壁にぶつかった
-
-								//横の速度をリセットする
-								if(m_VX < 0){
-									m_VX = 0;
-								}
-
-								break;
-							}
-
-							this.x -= 1;
-						}
-					}
-				}
-
-				//R
-				{
-					//Val
-					{
-						move = 1;
-					}
-
-					//Move
-					{
-						for(i = 0; i < move; i += 1){
-							if(Game.Instance().IsCollision(this.x+1, this.y)){break;}
-
-							this.x += 1;
-						}
-					}
-				}
-
-				//D
-				{
-					m_GroundFlag = false;
-
-					//Val
-					{
-						move = 2;
-						if(m_VY > 0){move += m_VY * i_DeltaTime;}
-					}
-
-					//Move
-					{
-						for(i = 0; i < move; i += 1){
-							if(Game.Instance().IsCollision(this.x, this.y+1)){
-								//接地した
-
-								//壁づたいにジャンプすると、アルゴリズムの関係上、上昇中でも接地するので、下降中のみに制限
-								if(m_VY >= 0){
-									//接地フラグを立てる
-									m_GroundFlag = true;
-
-									//縦の速度をリセットする
-									m_VY = 0;
-								}
-
-								break;
-							}
-
-							this.y += 1;
-						}
-					}
-				}
+			//Param Reset
+			{
+				m_GroundFlag = false;
 			}
 		}
 	}

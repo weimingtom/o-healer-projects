@@ -11,12 +11,14 @@ package{
 	import mx.core.*;
 	import mx.containers.*;
 	import mx.controls.*;
+	//Box2D
+	import Box2D.Dynamics.*;
+	import Box2D.Dynamics.Contacts.*;
+	import Box2D.Collision.*;
+	import Box2D.Collision.Shapes.*;
+	import Box2D.Common.Math.*;
 
 	public class IGameObject extends Image{
-
-		//------------------
-		//Var
-		//------------------
 
 		//==GameObject==
 
@@ -28,14 +30,7 @@ package{
 		public var m_KillFlag:Boolean = false;
 
 
-
-		//------------------
-		//Function
-		//------------------
-
-
-		//==GameObject==
-
+		//Init
 		public function IGameObject(){
 		}
 
@@ -48,6 +43,10 @@ package{
 			//remove Graphic
 			if(this.parent){
 				this.parent.removeChild(this);
+			}
+			//remove collision
+			if(m_Body != null){
+				PhysManager.DestroyBody(m_Body);
 			}
 		}
 
@@ -124,6 +123,13 @@ package{
 
 		//==Coordinate==
 
+		public var m_VX:Number = 0;
+		public var m_VY:Number = 0;
+
+		//Flag
+		public var m_GroundFlag:Boolean = false;
+
+
 		//Pos
 		protected function SetPos(i_X:Number, i_Y:Number):void{
 			this.x = i_X;
@@ -131,9 +137,220 @@ package{
 		}
 
 
-		public function OnContact_Common(i_Trg:IGameObject, i_X:Number, i_Y:Number):void{
+		//==Collision==
+
+		//Collision Category
+		public static const CATEGORY_PLAYER:uint 			= 0x0001;//通常のプレイヤーコリジョン
+		public static const CATEGORY_PLAYER_VS_TERRAIN:uint	= 0x0002;//地形衝突専用のプレイヤーコリジョン
+		public static const CATEGORY_TERRAIN:uint 			= 0x0004;//通常の地形コリジョン
+		public static const CATEGORY_TERRAIN_VS_PLAYER:uint	= 0x0008;//プレイヤー衝突専用の地形コリジョン
+		public static const CATEGORY_BLOCK:uint				= 0x0010;//ブロックコリジョン
+
+		//Collision Body
+		protected var m_BodyDef:b2BodyDef;
+		protected var m_Body:b2Body;
+
+		//Create : Base
+		public function CreateBody(i_Param:Object):void{
+			//コリジョン（の形状）をくっつけるためのBodyの生成
+			//自分で呼んでも良いけど、基本的には以下のCreateCollision～で自動的に呼ばれるので気にしなくて良い
+
+			//Check
+			{
+				//すでに作ってあるなら何もしない
+				if(m_Body){return;}
+			}
+
+			//Body
+			m_BodyDef = new b2BodyDef();
+			{
+				m_BodyDef.userData = this;//m_Graphic;//物理エンジンに合わせて座標などを更新するために登録
+				m_BodyDef.position.Set(this.x / PhysManager.PHYS_SCALE, this.y / PhysManager.PHYS_SCALE);
+
+				m_BodyDef.fixedRotation = i_Param.fix_rotation;
+
+				if(i_Param.start_sleep){
+					m_BodyDef.isSleeping = true;
+				}else{
+					m_BodyDef.allowSleep = i_Param.allow_sleep;
+				}
+			}
+
+			//Create:Base
+			{
+				m_Body = PhysManager.CreateBody(m_BodyDef);//コリジョンの実際の生成
+			}
 		}
-		public function OnContact(i_Trg:IGameObject, i_X:Number, i_Y:Number):void{
+
+		//Create:Circle
+		public function CreateCollision_Circle(i_Rad:int, i_Param:Object):void{
+			//Create : Base
+			{
+				CreateBody(i_Param);
+			}
+
+			//Add Shape
+			{
+				var shapeDef:b2CircleDef = new b2CircleDef();
+				shapeDef.radius = i_Rad / PhysManager.PHYS_SCALE;
+				shapeDef.density = i_Param.density;
+				shapeDef.friction = i_Param.friction;
+//				shapeDef.restitution = i_Param.restitution;
+				shapeDef.filter.categoryBits = i_Param.category_bits;
+				shapeDef.filter.maskBits = i_Param.mask_bits;
+
+				m_Body.CreateShape(shapeDef);
+				if(i_Param.density > 0){
+					m_Body.SetMassFromShapes();
+				}
+			}
+		}
+
+		//Create:Box
+		public function CreateCollision_Box(i_W:int, i_H:int, i_Param:Object):void{
+			//Create : Base
+			{
+				CreateBody(i_Param);
+			}
+
+			//Add Shape
+			{
+				var shapeDef:b2PolygonDef = new b2PolygonDef();
+				shapeDef.SetAsBox(i_W/2 / PhysManager.PHYS_SCALE, i_H/2 / PhysManager.PHYS_SCALE);
+				shapeDef.density = i_Param.density;
+				shapeDef.friction = i_Param.friction;
+//				shapeDef.restitution = i_Param.restitution;
+				shapeDef.filter.categoryBits = i_Param.category_bits;
+				shapeDef.filter.maskBits = i_Param.mask_bits;
+
+				m_Body.CreateShape(shapeDef);
+				if(i_Param.density > 0){
+					m_Body.SetMassFromShapes();
+				}
+			}
+		}
+
+		//Param : Get Default
+		public function GetDefaultCollisionParam():Object{
+			var param:Object = {};
+			{
+				param.density = 1.0;
+				param.friction = 1.0;
+				param.category_bits = 0x01;
+				param.mask_bits = 0xFFFF;
+				param.start_sleep = false;
+				param.allow_sleep = false;
+				param.fix_rotation = false;
+			}
+
+			return param;
+		}
+
+		//Param : Category
+		public function SetOwnCategory(o_Param:Object, i_Category:uint):void{
+			//セットするパラメータと、自分のカテゴリーを引数にする
+			o_Param.category_bits = i_Category;
+		}
+		public function SetHitCategory(o_Param:Object, i_CategoryOr:uint):void{
+			//セットするパラメータと、ヒットする相手のカテゴリーを引数にする
+			//カテゴリーは「|」でつなぐことが可能
+			o_Param.mask_bits = i_CategoryOr;
+		}
+
+		//Contact:Common
+		public function OnContact_Common(in_Obj:IGameObject, in_Nrm:Vector3D):void{
+			//コリジョンに接触したら必ず呼ばれる
+
+			//コリジョンの接地判定
+			{//将来的に「横方向にぶつかってる」などの判定が必要になるかもしれないので、Ground以外にも用意しておく
+				var Vel:b2Vec2 = m_Body.GetLinearVelocity();
+
+				//L
+				{
+					if(in_Nrm.x < -0.7){
+						if(Vel.x <= 0){
+						}
+					}
+				}
+
+				//R
+				{
+					if(in_Nrm.x >  0.7){
+						if(Vel.x >= 0){
+						}
+					}
+				}
+
+				//U
+				{
+					if(in_Nrm.y < -0.7){
+						if(Vel.y <= 0){
+						}
+					}
+				}
+
+				//D
+				{
+					if(in_Nrm.y >  0.7){
+//						if(Vel.y >= 0)//これだけだと、「一緒に落下しているとき」や「めりこんで上昇してるとき」が入らないので、もっと良い判定が望まれる
+						{
+							//接地フラグを立てる
+							m_GroundFlag = true;
+						}
+					}
+				}
+			}
+		}
+
+		//Contact:
+		public function OnContact(in_Obj:IGameObject, in_Nrm:Vector3D):void{
+			//こっちはオーバーライドして各自で使う
+		}
+
+
+/*
+		//Sync:Obj=>Physics
+		//こっちは使わないので封印
+		public function Obj2Phys():void{
+			//コリジョンの位置を実際の位置として採用する
+
+			//Check
+			{
+				if(m_Body == null){
+					return;
+				}
+			}
+
+			//Pos
+			{
+				m_Body.SetXForm(
+					new b2Vec2(this.x / PhysManager.PHYS_SCALE, this.y / PhysManager.PHYS_SCALE),
+					m_Body.GetAngle()
+				);
+			}
+		}
+//*/
+		//Sync:Physics=>Obj
+		public function Phys2Obj():void{
+			//コリジョンの位置を実際の位置として採用する
+
+			//Check
+			{
+				if(m_Body == null){
+					return;
+				}
+			}
+
+			//Pos
+			{
+				this.x = m_Body.GetPosition().x * PhysManager.PHYS_SCALE;
+				this.y = m_Body.GetPosition().y * PhysManager.PHYS_SCALE;
+			}
+
+			//Rot
+			{
+				this.rotation = m_Body.GetAngle() * 360/(2*MyMath.PI);
+			}
 		}
 
 
