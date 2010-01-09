@@ -29,7 +29,28 @@ package{
 		static public const O:int = 0;//空白
 		static public const W:int = 1;//地形
 		static public const P:int = 2;//プレイヤー位置（生成後は空白として扱われる）
-		static public const B:int = 3;//動かせるブロック（生成後は空白として扱われる）
+		static public const G:int = 3;//ゴール位置（基本的には空白として扱われる）
+		static public const Q:int = 4;//動かせるブロック（生成後は空白として扱われる）
+		static public const S:int = 5;//赤青ブロック用の切り替えスイッチ
+		static public const R:int = 6;//赤ブロック
+		static public const B:int = 7;//青ブロック
+		//system
+		static public const C:int			= 8;
+		static public const V:int			= 9;
+		static public const SET_RANGE:int	= 10;
+		static public const SET_DIR:int		= 11;
+
+		//＃マップの要素を文字列化したときの値
+		static public const MapIndex2Char:Array = [
+			"O",
+			"W",
+			"P",
+			"G",
+			"Q",
+			"S",
+			"R",
+			"B",
+		];
 
 		//==Var==
 
@@ -48,22 +69,28 @@ package{
 		//＃Player
 		public var m_Player:Player;
 
+		//＃Goal
+		public var m_Goal:Goal;
+
 		//＃BG
 		public var m_BG_BitmapData:BitmapData;
 
 		//＃マップ
 		public var m_Map:Array = [
-			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, O, B, O, O, W, O, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, W, W, W, O, W, O, O, O, W],
-			[W, O, O, O, O, B, O, O, O, O, W, O, O, O, W, O, O, W, W],
-			[W, O, O, O, O, O, O, O, O, W, W, O, O, O, O, O, O, W, W],
-			[W, O, O, W, O, O, O, O, O, W, W, O, O, O, O, O, O, W, W],
-			[W, P, O, W, O, O, O, O, O, W, W, O, O, B, O, O, O, W, W],
-			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
+			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
+			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, Q, O, O, W, O, O, W],
+			[W, O, O, O, O, O, O, O, O, O, O, O, W, W, W, W, O, W, O, O, W],
+			[W, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, O, W, O, O, W],
+			[W, O, O, O, O, O, O, O, O, O, O, W, O, O, Q, O, O, W, O, G, W],
+			[W, O, O, O, O, O, O, O, O, O, O, W, O, W, W, O, O, W, O, W, W],
+			[W, O, O, O, Q, O, O, O, O, O, W, O, O, O, O, O, O, O, O, W, W],
+			[W, O, O, W, W, W, O, O, O, O, W, O, O, O, Q, O, O, O, O, W, W],
+			[W, O, O, O, O, O, O, O, O, O, W, W, W, W, W, W, O, W, W, W, W],
+			[W, P, O, O, O, O, O, O, Q, O, W, W, W, W, W, W, O, W, W, W, W],
+			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
 		];
+		//Objectへの参照版
+		public var m_ObjMap:Array;
 
 		//＃Input
 		public var m_Input:CInput_Keyboard;
@@ -86,8 +113,20 @@ package{
 			}
 		}
 
+
+		static public var InitFlag:Boolean = false;//どうもウィンドウとかの切り替えで再度Initが呼ばれてるような気がするので、必ず一度だけになるようにしておく
+
 		//!stageなどの初期化が終了した後に呼んでもらう
 		public function Init():void{
+			//Check
+			{
+				if(InitFlag){
+					return;
+				}
+
+				InitFlag = true;
+			}
+
 			//==Common Init==
 			{
 				//スクロールバーの表示はしないようにする
@@ -180,12 +219,24 @@ package{
 			//＃Map
 			var PlayerX:int = ImageManager.PANEL_LEN * 1.5;
 			var PlayerY:int = ImageManager.PANEL_LEN * 1.5;
+			var GoalX:int = ImageManager.PANEL_LEN * 0.5;
+			var GoalY:int = ImageManager.PANEL_LEN * 0.5;
 			{
 				//
 				{
 					var NumX:int = m_Map[0].length;
 					var NumY:int = m_Map.length;
 
+					//m_ObjMap
+					{
+						m_ObjMap = new Array(NumY);
+						for(y = 0; y < NumY; y += 1){
+							m_ObjMap[y] = new Array(NumX);
+							//[NUM_Y][NUM_X] = null
+						}
+					}
+
+					//Create from m_Map
 					for(y = 0; y < NumY; y += 1){
 						var pos_y:int = ImageManager.PANEL_LEN * (y + 0.5);
 
@@ -206,14 +257,23 @@ package{
 									PlayerY = pos_y;
 								}
 								break;
-							case B:
+							case G:
+								//ゴール位置として記憶
+								{
+									GoalX = pos_x;
+									GoalY = pos_y;
+								}
+								break;
+							case Q:
 								//動かせるブロックを生成
 								{
 									var block_m:Block_Movable = new Block_Movable();
-									block_m.Init(pos_x, pos_y);
+									block_m.Reset(pos_x, pos_y);
 
 									m_Root_Gimmick.addChild(block_m);
 									GameObjectManager.Register(block_m);
+
+									m_ObjMap[y][x] = block_m;
 								}
 								break;
 							}
@@ -230,10 +290,47 @@ package{
 			//＃Player
 			{
 				m_Player = new Player();
-				m_Player.Init(PlayerX, PlayerY, m_Input);
+				m_Player.SetInput(m_Input);
+				m_Player.Reset(PlayerX, PlayerY);
 
 				m_Root_Player.addChild(m_Player);
 				GameObjectManager.Register(m_Player);
+			}
+
+			//＃Goal
+			{
+				m_Goal = new Goal();
+				m_Goal.Reset(GoalX, GoalY);
+
+				m_Root_Gimmick.addChild(m_Goal);
+				GameObjectManager.Register(m_Goal);
+			}
+
+			//#Goal Text
+			{
+				m_GoalText = new TextField();
+				{
+					m_GoalText.border = false;
+					m_GoalText.width = CAMERA_W;
+					m_GoalText.autoSize = "center";
+					m_GoalText.htmlText = <font size="30" color="#ffffff">GOAL</font>.toXMLString();
+					m_GoalText.filters = [
+						new GlowFilter(0x000000, 1, 4, 4, 16, 1),
+						new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 16)
+					];
+
+					m_GoalText.x = CAMERA_W/2;
+					m_GoalText.y = CAMERA_H/2;
+				}
+				m_Root.addChild(m_GoalText);//最前面に表示
+
+				//最初は非表示
+				m_GoalText.visible = false;
+			}
+
+			//#Goal Flag
+			{
+				m_GameEndType = -1;
 			}
 
 			//＃BG
@@ -282,9 +379,28 @@ package{
 			return m_TempRect;
 		}
 
+		//指定範囲を更新するためのRectangleを返す
+		public function GetMapRect_Area(i_X:int, i_Y:int, i_W:int, i_H:int):Rectangle{
+			m_TempRect.x = i_X-1;
+			m_TempRect.y = i_Y-1;
+			m_TempRect.width  = i_W + 2;
+			m_TempRect.height = i_H + 2;
+
+			var NumX:int = m_Map[0].length;
+			var NumY:int = m_Map.length;
+
+			if(i_X <= 0){m_TempRect.x = i_X;}
+			if(i_X+i_W+1 > NumX){m_TempRect.width = NumX - i_X + 1;}
+			if(i_Y <= 0){m_TempRect.y = i_Y;}
+			if(i_Y+i_H+1 > NumY){m_TempRect.height = NumY - i_Y + 1;}
+
+			return m_TempRect;
+		}
+
 
 		//==Terrain==
 
+		public var m_WallList:Array = [];
 		public function CreateTerrainCollision():void{
 			var x:int;
 			var y:int;
@@ -293,6 +409,16 @@ package{
 
 			var NumX:int = m_Map[0].length;
 			var NumY:int = m_Map.length;
+
+			//Delete Old
+			{
+				var num:int = m_WallList.length;
+				for(var i:int = 0; i < num; i += 1){
+					m_WallList[i].Kill();
+				}
+
+				m_WallList = [];
+			}
 
 			var CopyMap:Array;
 			{
@@ -387,6 +513,8 @@ package{
 
 									m_Root_Gimmick.addChild(block);
 									GameObjectManager.Register(block);
+
+									m_WallList.push(block);
 								}
 
 								//CopyMap上から、該当ブロックを消す
@@ -425,6 +553,13 @@ package{
 				UpdateInput();
 
 				CheckInput();
+			}
+
+			//ゲーム終了時はここの処理まで
+			{
+				if(m_GameEndType >= 0){
+					return;
+				}
 			}
 
 			//GameObject
@@ -506,6 +641,30 @@ package{
 		}
 
 
+		//==Goal==
+
+		static public const GAME_END_GOAL:int	= 0;
+		static public const GAME_END_DEAD:int	= 1;
+
+		public var m_GameEndType:int = -1;//終了してなければマイナスの値にしておく
+
+		//＃ゴール用テキスト
+		public var m_GoalText:TextField;
+
+		//ゴールOBJに触れたら呼ばれ、ゴール処理を開始する
+		public function OnGoal():void{
+			//ゴールしたので停止フラグをそれっぽくセット
+			{
+				m_GameEndType = GAME_END_GOAL;
+			}
+
+			//ゴール時の表示物を表示
+			{
+				m_GoalText.visible = true;
+			}
+		}
+
+
 
 		//==For Editor==
 
@@ -519,6 +678,9 @@ package{
 		private var m_CursorImage:Image;
 		private var m_CursorIndexX:int = 0;
 		private var m_CursorIndexY:int = 0;
+
+		//タブウィンドウ
+		public var m_TabWindow:TabWindow;
 
 		public function Init_ForEditor():void{
 			//Flag
@@ -550,6 +712,22 @@ package{
 				m_Root_Cursor.addChild(m_CursorImage);
 			}
 
+			//右側のタブウィンドウ
+			{
+				var TabWindowX:int = CAMERA_W;
+				var TabWindowY:int = 0;
+				var TabWindowW:int = 300;
+				var TabWindowH:int = CAMERA_H;
+
+				m_TabWindow = new TabWindow(TabWindowX, TabWindowY, TabWindowW, TabWindowH);
+				m_TabWindow.AddTab(new Tab_Hint());
+			//	m_TabWindow.AddTab(new Tab_Setting());
+				m_TabWindow.AddTab(new Tab_Save());
+			//	m_TabWindow.AddTab(new Tab_Upload());
+
+				m_Root.addChild(m_TabWindow);
+			}
+
 			//一度Updateをまわす（位置などの設定のため）
 			{
 				//Cursor
@@ -560,6 +738,35 @@ package{
 				//Camera
 				{//位置更新
 					UpdateCamera_ForEditor(0.0);
+				}
+			}
+
+			//Objの状態を初期化
+			{
+				var NumX:int = m_Map[0].length;
+				var NumY:int = m_Map.length;
+
+				for(var y:int = 0; y < NumY; y += 1){
+					var pos_y:int = (y + 0.5) * ImageManager.PANEL_LEN;
+
+					for(var x:int = 0; x < NumX; x += 1){
+						var pos_x:int = (x + 0.5) * ImageManager.PANEL_LEN;
+
+						switch(m_Map[y][x]){
+						case O://空白
+							break;
+						case W://地形
+							break;
+						case P://プレイヤー位置（生成後は空白として扱われる）
+							m_Player.Reset(pos_x, pos_y);
+							break;
+						case G://ゴール位置（基本的には空白として扱われる）
+							break;
+						case Q://動かせるブロック（生成後は空白として扱われる）
+							m_ObjMap[y][x].Reset(pos_x, pos_y);
+							break;
+						}
+					}
 				}
 			}
 		}
@@ -628,6 +835,9 @@ package{
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_W)){
 						SetBlock(W, m_CursorIndexX, m_CursorIndexY);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_B)){
+						SetBlock(Q, m_CursorIndexX, m_CursorIndexY);
 					}
 				}
 			}else{
@@ -708,22 +918,111 @@ package{
 
 		//Block
 		public function SetBlock(i_BlockIndex:int, i_X:int, i_Y:int):void{
-			//Check
-			{
-				if(m_Map[i_Y][i_X] == i_BlockIndex){
-					return;
+			SetBlocks([[i_BlockIndex]], i_X, i_Y);
+		}
+		public function SetBlocks(i_BlockIndexList:Array, i_X:int, i_Y:int):void{		
+			var x:int;
+			var y:int;
+			var local_x:int;
+			var local_y:int;
+			var iter_x:int;
+			var iter_y:int;
+
+			var LocalNumX:int = i_BlockIndexList[0].length;
+			var LocalNumY:int = i_BlockIndexList.length;
+			var NumX:int = m_Map[0].length;
+			var NumY:int = m_Map.length;
+
+			//Set Blocks
+			for(local_y = 0; local_y < LocalNumY; local_y += 1){
+				//Calc Y
+				{
+					y = local_y + i_Y;
+					if(y >= NumY){break;}
+				}
+
+				for(local_x = 0; local_x < LocalNumX; local_x += 1){
+					//Calc X
+					{
+						x = local_x + i_X;
+
+						if(x >= NumX){break;}
+					}
+
+					//セットしようとしている値
+					var index:int = i_BlockIndexList[local_y][local_x];
+
+					//Check
+					{
+						if(m_Map[y][x] == index){
+							continue;//今セットされてる値と同じだったらいじらない
+						}
+					}
+
+					//セット時の位置
+					var pos_x:int = (x + 0.5) * ImageManager.PANEL_LEN;
+					var pos_y:int = (y + 0.5) * ImageManager.PANEL_LEN;
+
+					//Pre : Delete Old OBJ
+					{
+						switch(m_Map[y][x]){
+						case Q://移動ブロック
+							m_ObjMap[y][x].Kill();//ここにあったObjは削除する
+							m_ObjMap[y][x] = null;
+							break;
+						}
+					}
+
+					//Pre : Delete Old Info
+					{
+						switch(index){
+						case P:
+						case G:
+							for(iter_y = 0; iter_y < NumY; iter_y += 1){
+								for(iter_x = 0; iter_x < NumX; iter_x += 1){
+									if(m_Map[iter_y][iter_x] == index){
+										m_Map[iter_y][iter_x] = O;//以前のものは空白にする
+									}
+								}
+							}
+						}
+					}
+
+					//Set
+					{
+						m_Map[y][x] = index;
+					}
+
+					//Post : Create New OBJ
+					{
+						switch(index){
+						case P:
+							m_Player.Reset(pos_x, pos_y);
+							break;
+						case G:
+							m_Goal.Reset(pos_x, pos_y);
+							break;
+
+						case Q:
+							//動かせるブロックを生成
+							{
+								var block_m:Block_Movable = new Block_Movable();
+								block_m.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(block_m);
+								GameObjectManager.Register(block_m);
+
+								m_ObjMap[y][x] = block_m;
+							}
+							break;
+						}
+					}
 				}
 			}
 
-			//Set Index
+			//ReDraw BG
 			{
-				m_Map[i_Y][i_X] = i_BlockIndex;
-			}
-
-			//ReDraw
-			{
-				//描画内容更新
-				ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Point(i_X, i_Y));
+				ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(i_X, i_Y, LocalNumX, LocalNumY));
 			}
 		}
 
@@ -773,13 +1072,144 @@ package{
 		}
 
 
-		//=セーブまわり=
+		//=ステージの文字列化と逆変換=
 
+		//Map→文字列
+		static public function Map2String(i_Map:Array):String{
+			var result:String = "";
+
+			for(var y:int = 0; y < i_Map.length; y += 1){
+				for(var x:int = 0; x < i_Map[y].length; x += 1){
+					result = result + MapIndex2Char[i_Map[y][x]];
+				}
+
+				result = result + "_";
+			}
+
+			return result;
+		}
+
+		//文字列→Map
+		static public function String2Map(i_MapString:String):Array{
+			var NewMap:Array = [[]];
+
+			var len:int = i_MapString.length;
+			var y:int = 0;
+			for(var i:int = 0; i < len; i += 1){
+				switch(i_MapString.charAt(i)){
+				case 'O': NewMap[y].push(O); break;
+				case 'W': NewMap[y].push(W); break;
+				case 'P': NewMap[y].push(P); break;
+				case 'G': NewMap[y].push(G); break;
+				case 'Q': NewMap[y].push(Q); break;
+				case 'S': NewMap[y].push(S); break;
+				case 'R': NewMap[y].push(R); break;
+				case 'B': NewMap[y].push(B); break;
+				case '_': NewMap.push([]); y += 1; break;
+				}
+			}
+
+			//必要ならNewMapの出来をチェック
+
+			return NewMap;
+		}
+
+
+
+		//=Local用セーブまわり=
+
+		//data
+		//-count	: セーブしてあるステージ数
+		//-list		: ステージデータのリスト
+		//--stage	: ステージを文字列で表現したもの
+//		//--stage_name	: ステージ名
+
+		//#Save
+		//基本はi_Index番目のセーブデータに上書きセーブ。範囲外であれば新規セーブとみなす。
+		public function Save(i_Index:int):void{
+			//ローカルセーブを司るSharedObject
+			var so:SharedObject = LoadSharedObject();
+
+			//実際にセーブするデータ
+			var save_data:Object = {
+				stage:Map2String(m_Map)
+				//stage_name:...
+			};
+
+			//Write
+			{
+				if(i_Index < 0 || so.data.count <= i_Index){
+					//新規セーブ
+					so.data.list.push(save_data);
+					so.data.count += 1;
+				}else{
+					//上書きセーブ
+					so.data.list[i_Index] = save_data;
+				}
+			}
+
+			//反映
+			so.data.flush();
+		}
+
+		//#Load
+		//指定番号のセーブデータをロード（範囲外ならクリアとみなす）
+		public function Load(i_Index:int):void{
+			//ローカルセーブを司るSharedObject
+			var so:SharedObject = LoadSharedObject();
+
+			var NewMap:Array;
+			if(i_Index < 0 || so.data.count <= i_Index){
+				//クリア
+				//!!
+				return;
+			}else{
+				//ステージデータを文字列化したもの
+				var stage_str:String = so.data.list[i_Index].stage;
+
+				//文字列→実際のMap配列
+				NewMap = String2Map(stage_str);
+			}
+
+			//ステージの再構築
+			SetBlocks(NewMap, 0, 0);
+		}
+
+
+		//SharedObjectの取得（名称の統一と初期化場所の制限のため関数化）
+		public function LoadSharedObject():SharedObject{
+			var so:SharedObject = SharedObject.getLocal("ClassicActionGameEditor");
+
+			//初期化が必要なら初期化する
+			if(so.data.list == null){//hasOwnPropertyで判定した方が良い？
+				//count
+				{
+					so.data.count = 0;
+				}
+
+				//list
+				{
+					so.data.list = [];
+				}
+			}
+
+			//整合性の確保
+			so.data.count = so.data.list.length;
+
+			return so;
+		}
+
+
+		//=GAE用投稿まわり=
+
+		//通信用のやつ
 		private var m_NetConnection:NetConnection;
 
-		private var m_Responder_Save:Responder;
+		//通信に応答するやつ
+		private var m_Responder_Upload:Responder;
 
-		public function Save():void{
+		//
+		public function Upload():void{
 			if(! m_NetConnection){
 				m_NetConnection = new NetConnection();
 /*
@@ -789,8 +1219,8 @@ package{
 //*/
 			}
 
-			if(! m_Responder_Save){
-				m_Responder_Save = new Responder(
+			if(! m_Responder_Upload){
+				m_Responder_Upload = new Responder(
 					//OnComplete
 					function():void{
 					},
@@ -800,45 +1230,14 @@ package{
 				);
 			}
 
+			//投稿データはローカルのセーブデータと一部兼用
 			var data:Object = {
 				//id:
-				stage:GetSaveData()
+				stage:Map2String(m_Map)
 			};
 
-			//Save
-			m_NetConnection.call("save", m_Responder_Save, data);//save(data)     
-		}
-
-		public function GetSaveData():String{
-			var result:String = "";
-
-			for(var y:int = 0; y < m_Map.length; y += 1){
-				for(var x:int = 0; x < m_Map[y].length; x += 1){
-					result = result + m_Map[y][x];
-				}
-
-				result = result + "_";
-			}
-
-			return result;
-		}
-
-		public function LoadData(i_MapString:String):void{
-			var NewMap:Array = [[]];
-
-			var len:int = i_MapString.length;
-			var y:int = 0;
-			for(var i:int = 0; i < len; i += 1){
-				switch(i_MapString[i]){
-				case 'O': NewMap[y].push(O); break;
-				case 'W': NewMap[y].push(W); break;
-				case '_': NewMap.push([]); y += 1; break;
-				}
-			}
-
-			//必要ならNewMapの出来をチェック
-
-			m_Map = NewMap;
+			//Upload
+			m_NetConnection.call("save", m_Responder_Upload, data);//save(data)     
 		}
 
 	}

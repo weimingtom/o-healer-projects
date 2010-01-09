@@ -34,6 +34,10 @@ package{
 		public function IGameObject(){
 		}
 
+		//Reset:オーバライドして使う
+		public function Reset(i_X:int, i_Y:int):void{
+		}
+
 		//Update:オーバライドして使う
 		public function Update(i_DeltaTime:Number):void{
 		}
@@ -134,6 +138,13 @@ package{
 		protected function SetPos(i_X:Number, i_Y:Number):void{
 			this.x = i_X;
 			this.y = i_Y;
+
+			if(m_Body){
+				m_Body.SetXForm(
+					new b2Vec2(this.x / PhysManager.PHYS_SCALE, this.y / PhysManager.PHYS_SCALE),
+					0//m_Body.GetAngle()
+				);
+			}
 		}
 
 

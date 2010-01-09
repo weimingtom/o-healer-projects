@@ -95,11 +95,14 @@ package{
 
 			case KEY_R:				m_Input[BUTTON_RESET] = true;	break;
 
-			case Keyboard.ENTER:	m_Input[BUTTON_GO_TO_PLAY] = true;	break;
-			case Keyboard.ESCAPE:	m_Input[BUTTON_GO_TO_EDIT] = true;	break;
+			case Keyboard.ENTER:
+				m_Input[BUTTON_GO_TO_PLAY] = true;
+				m_Input[BUTTON_GO_TO_EDIT] = true;
+				break;
 
 			case Keyboard.SPACE:	m_Input[BUTTON_BLOCK_O] = true;	break;
 			case KEY_W:				m_Input[BUTTON_BLOCK_W] = true;	break;
+			case KEY_B:				m_Input[BUTTON_BLOCK_B] = true;	break;
 			}
 		}
 		private function OnKeyUp(event:KeyboardEvent):void{
@@ -123,11 +126,14 @@ package{
 
 			case KEY_R:				m_Input[BUTTON_RESET] = false;	break;
 
-			case Keyboard.ENTER:	m_Input[BUTTON_GO_TO_PLAY] = false;	break;
-			case Keyboard.ESCAPE:	m_Input[BUTTON_GO_TO_EDIT] = false;	break;
+			case Keyboard.ENTER:
+				m_Input[BUTTON_GO_TO_PLAY] = false;
+				m_Input[BUTTON_GO_TO_EDIT] = false;
+				break;
 
 			case Keyboard.SPACE:	m_Input[BUTTON_BLOCK_O] = false;	break;
 			case KEY_W:				m_Input[BUTTON_BLOCK_W] = false;	break;
+			case KEY_B:				m_Input[BUTTON_BLOCK_B] = false;	break;
 			}
 		}
 

@@ -19,8 +19,9 @@ package{
 		static public const BUTTON_GO_TO_EDIT:int = 10;
 		static public const BUTTON_BLOCK_O:int = 11;
 		static public const BUTTON_BLOCK_W:int = 12;
+		static public const BUTTON_BLOCK_B:int = 13;
 		//Num
-		static public const BUTTON_NUM:int  = 13;
+		static public const BUTTON_NUM:int  = 14;
 
 
 		//i_Button‚ªŒ»İ‰Ÿ‚³‚ê‚Ä‚¢‚é‚©

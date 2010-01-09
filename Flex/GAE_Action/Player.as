@@ -59,24 +59,23 @@ package{
 
 		//==Common==
 
-		public function Init(i_X:int, i_Y:int, i_Input:IInput):void{
+		//Reset
+		override public function Reset(i_X:int, i_Y:int):void{
 			//Pos
 			{
 				SetPos(i_X, i_Y);
 			}
 
-			//Input
-			{
-				m_Input = i_Input;
-			}
-
 			//Graphic Anim
 			{
-				ResetGraphic(ImageManager.LoadCharaImage("Player"));
+				if(! m_AnimGraphicList){//まだ生成していなければ
+					ResetGraphic(ImageManager.LoadCharaImage("Player"));
+				}
 				SetGraphicDir(GRAPHIC_DIR_R);
 			}
 
 			//Collision
+			if(! m_Body)//まだ生成していなければ
 			{
 				var ColParam:Object = GetDefaultCollisionParam();
 				{//デフォルトのパラメータ
@@ -99,6 +98,13 @@ package{
 
 					CreateCollision_Circle(COL_RAD, ColParam);
 				}
+			}
+		}
+
+		public function SetInput(i_Input:IInput):void{
+			//Input
+			{
+				m_Input = i_Input;
 			}
 		}
 

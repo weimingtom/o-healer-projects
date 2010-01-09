@@ -9,13 +9,16 @@
 	<!--Script-->
 	<mx:Script>
 		<![CDATA[
+			private const EDITOR_W:int = 800;
+			private const EDITOR_H:int = 400;
+
 			//最初のロード完了時の初期化
 			private function init():void{
 				//幅を、実際のゲーム画面に合わせる
-				MyViewStack.width  = Game.CAMERA_W;
-				MyViewStack.height = Game.CAMERA_H;
-				button_to_start.width  = Game.CAMERA_W;
-				button_to_start.height = Game.CAMERA_H;
+				MyViewStack.width  = EDITOR_W;
+				MyViewStack.height = EDITOR_H;
+				button_to_start.width  = EDITOR_W;
+				button_to_start.height = EDITOR_H;
 			}
 
 			//ボタンが押されて開始する時の処理
