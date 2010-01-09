@@ -26,6 +26,13 @@ package{
 			}
 		}
 
+		//#Clamp
+		static public function Clamp(i_Val:Number, i_Min:Number, i_Max:Number):Number{
+			if(i_Val < i_Min){return i_Min;}
+			if(i_Val > i_Max){return i_Max;}
+			return i_Val;
+		}
+
 		//#Abs
 		static public function Abs(i_Val:Number):Number{
 			return (i_Val > 0)? i_Val: -i_Val;

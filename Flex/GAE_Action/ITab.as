@@ -96,6 +96,11 @@ package{
 	//			MyMessageWindow.ShowMessage(i_MessageStr);
 			}
 		}
+
+		//Update
+		public function Update(i_DeltaTime:Number):void{
+			//overrideして使う
+		}
 	}
 }
 

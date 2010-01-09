@@ -407,6 +407,154 @@ package{
 		}
 
 
+		//#Tab : Setting
+
+		//ベース画像
+		static public const SETTING_BASE_W:int = 32 * 5;
+		static public const SETTING_BASE_H:int = 32 * 3;
+		static public function CreateSettingImage_Base():Image{
+			var bmp_data:BitmapData = new BitmapData(SETTING_BASE_W, SETTING_BASE_H, true, 0xFF444488);
+
+			//Imageに入れて返す
+			{
+				var bmp:Bitmap = new Bitmap(bmp_data);
+
+				var img:Image = new Image();
+				img.addChild(bmp);
+
+				return img;
+			}
+		}
+
+		//値の表示（ここでは空のBMPを返すだけ）
+		static public const SETTING_VAL_W:int = 32 * 3;
+		static public const SETTING_VAL_H:int = 32 * 1;
+		static public function CreateSettingBitmap_Val():Bitmap{
+			var bmp_data:BitmapData = new BitmapData(SETTING_VAL_W, SETTING_VAL_H, true, 0x00000000);
+
+			//Bitmapに入れて返す
+			{
+				var bmp:Bitmap = new Bitmap(bmp_data);
+
+				return bmp;
+			}
+		}
+
+		//値を増加させるボタン
+		static public const BUTTON_SETTING_UP_W:int = 32 * 3;
+		static public const BUTTON_SETTING_UP_H:int = 32;
+		static public function CreateSettingImage_Button_Up():Image{
+			var bmp_data:BitmapData = new BitmapData(BUTTON_SETTING_UP_W, BUTTON_SETTING_UP_H, true, 0xFFFFFFFF);
+			{
+				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
+				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
+				var rect : Rectangle = new Rectangle(0,0,bmp_data.width,bmp_data.height);
+
+				var text_field:TextField = new TextField();
+				{
+					text_field.border = false;
+					text_field.x = 0;
+					text_field.y = 0;
+					text_field.width = 999;
+					text_field.height = 999;
+				}
+
+				//キー
+				{
+					text_field.text = "↑";
+
+					matrix.tx = 0;
+
+					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
+				}
+			}
+
+			//Imageに入れて返す
+			{
+				var bmp:Bitmap = new Bitmap(bmp_data);
+
+				var img:Image = new Image();
+				img.addChild(bmp);
+
+				return img;
+			}
+		}
+
+		//値を減少させるボタン
+		static public const BUTTON_SETTING_DOWN_W:int = 32 * 3;
+		static public const BUTTON_SETTING_DOWN_H:int = 32;
+		static public function CreateSettingImage_Button_Down():Image{
+			var bmp_data:BitmapData = new BitmapData(BUTTON_SETTING_DOWN_W, BUTTON_SETTING_DOWN_H, true, 0xFFFFFFFF);
+			{
+				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
+				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
+				var rect : Rectangle = new Rectangle(0,0,bmp_data.width,bmp_data.height);
+
+				var text_field:TextField = new TextField();
+				{
+					text_field.border = false;
+					text_field.x = 0;
+					text_field.y = 0;
+					text_field.width = 999;
+					text_field.height = 999;
+				}
+
+				//キー
+				{
+					text_field.text = "↓";
+
+					matrix.tx = 0;
+
+					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
+				}
+			}
+
+			//Imageに入れて返す
+			{
+				var bmp:Bitmap = new Bitmap(bmp_data);
+
+				var img:Image = new Image();
+				img.addChild(bmp);
+
+				return img;
+			}
+		}
+
+		static public function RedrawSettingBitmap_Val(i_Bitmap:Bitmap, i_Val:int):void{
+			var bmp_data:BitmapData = i_Bitmap.bitmapData;
+
+			//Clear
+			{
+				bmp_data.fillRect(bmp_data.rect, 0x00000000);
+			}
+
+			//Draw
+			{
+				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
+				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
+				var rect : Rectangle = bmp_data.rect;
+
+				var text_field:TextField = new TextField();
+				{
+					text_field.border = false;
+					text_field.x = 0;
+					text_field.y = 0;
+					text_field.width = 999;
+					text_field.height = 999;
+				}
+
+				//キー
+				{
+					text_field.text = i_Val.toString();
+
+					matrix.tx = (3 - text_field.text.length) * 32;
+
+					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
+				}
+			}
+		}
+
+
 		//#Tab : Save
 
 		//セーブデータひとかたまり用のベース画像

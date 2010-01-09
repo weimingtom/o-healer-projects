@@ -52,6 +52,10 @@ package{
 			"B",
 		];
 
+		//＃セットできるマップの数の上限
+		static public const MAP_NUM_MAX_X:int = 100;
+		static public const MAP_NUM_MAX_Y:int = 100;
+
 		//==Var==
 
 		//＃エディタとして実行するか
@@ -335,8 +339,9 @@ package{
 
 			//＃BG
 			{
-				var BG_W:int = m_Map[0].length * ImageManager.PANEL_LEN;
-				var BG_H:int = m_Map.length * ImageManager.PANEL_LEN;
+				//最初から最大数分確保しておく
+				var BG_W:int = MAP_NUM_MAX_X * ImageManager.PANEL_LEN;
+				var BG_H:int = MAP_NUM_MAX_Y * ImageManager.PANEL_LEN;
 
 				//Init
 				m_BG_BitmapData = new BitmapData(BG_W, BG_H, true, 0x88000000);
@@ -390,9 +395,9 @@ package{
 			var NumY:int = m_Map.length;
 
 			if(i_X <= 0){m_TempRect.x = i_X;}
-			if(i_X+i_W+1 > NumX){m_TempRect.width = NumX - i_X + 1;}
+			if(i_X+i_W+1 > NumX){m_TempRect.width = NumX - m_TempRect.x;}//{m_TempRect.width = NumX - i_X + 1;}
 			if(i_Y <= 0){m_TempRect.y = i_Y;}
-			if(i_Y+i_H+1 > NumY){m_TempRect.height = NumY - i_Y + 1;}
+			if(i_Y+i_H+1 > NumY){m_TempRect.height = NumY - m_TempRect.y;}//{m_TempRect.height = NumY - i_Y + 1;}
 
 			return m_TempRect;
 		}
@@ -721,7 +726,7 @@ package{
 
 				m_TabWindow = new TabWindow(TabWindowX, TabWindowY, TabWindowW, TabWindowH);
 				m_TabWindow.AddTab(new Tab_Hint());
-			//	m_TabWindow.AddTab(new Tab_Setting());
+				m_TabWindow.AddTab(new Tab_Setting());
 				m_TabWindow.AddTab(new Tab_Save());
 			//	m_TabWindow.AddTab(new Tab_Upload());
 
@@ -791,6 +796,11 @@ package{
 				//Camera
 				{
 					UpdateCamera_ForEditor(deltaTime);
+				}
+
+				//Menu
+				{
+					m_TabWindow.Update(deltaTime);
 				}
 			}else{
 				//プレイを試みる
@@ -965,12 +975,7 @@ package{
 
 					//Pre : Delete Old OBJ
 					{
-						switch(m_Map[y][x]){
-						case Q://移動ブロック
-							m_ObjMap[y][x].Kill();//ここにあったObjは削除する
-							m_ObjMap[y][x] = null;
-							break;
-						}
+						DeleteObjMap(x, y);
 					}
 
 					//Pre : Delete Old Info
@@ -1024,6 +1029,101 @@ package{
 			{
 				ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(i_X, i_Y, LocalNumX, LocalNumY));
 			}
+		}
+
+		public function DeleteObjMap(i_X:int, i_Y:int):void{
+			//Check
+			{
+				if(m_ObjMap[i_Y][i_X] == null){
+					return;
+				}
+			}
+
+			switch(m_Map[i_Y][i_X]){//この分岐は要らないかも
+			case Q://移動ブロック
+				m_ObjMap[i_Y][i_X].Kill();//ここにあったObjは削除する
+				m_ObjMap[i_Y][i_X] = null;
+				break;
+			}
+		}
+
+		public function ResizeMap(i_W:int, i_H:int):void{
+			var x:int;
+			var y:int;
+
+			var OldNumX:int = m_Map[0].length;
+			var OldNumY:int = m_Map.length;
+
+			//狭める場合、消える位置にあるOBJを削除する
+			{
+				//横の列
+				for(y = i_H; y < OldNumY; y += 1){
+					for(x = 0; x < OldNumX; x += 1){
+						DeleteObjMap(x, y);
+					}
+				}
+
+				//縦の列
+				for(x = i_W; x < OldNumX; x += 1){
+					for(y = 0; y < OldNumY; y += 1){
+						DeleteObjMap(x, y);
+					}
+				}
+			}
+
+			//新しいMapの計算
+			var NewMap:Array;
+			var NewObjMap:Array;
+			{
+				NewMap = new Array(i_H);
+				NewObjMap = new Array(i_H);
+
+				for(y = 0; y < i_H; y += 1){
+					NewMap[y] = new Array(i_W);
+					NewObjMap[y] = new Array(i_W);
+
+					for(x = 0; x < i_W; x += 1){
+						if(x < OldNumX && y < OldNumY){
+							NewMap[y][x] = m_Map[y][x];
+							NewObjMap[y][x] = m_ObjMap[y][x];
+						}else{
+							NewMap[y][x] = O;//新しく追加された分は空白にする
+							NewObjMap[y][x] = null;
+						}
+					}
+				}
+			}
+
+			//今のMapを新しいMapで置き換え（この段階では内部データだけ）
+			{
+				m_Map = NewMap;
+				m_ObjMap = NewObjMap;
+			}
+
+			//新しい背景用BMPの生成
+			//→最初から最大数確保しているので必要なし
+
+			//変更した部分とその隣の部分を再描画
+			{
+				//横
+				if(OldNumY < i_H){//増やしたとき
+					ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(0, OldNumY-1, i_W, i_H - OldNumY));
+				}
+				if(OldNumY > i_H){//減らしたとき
+					ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(0, i_H-1, i_W, 1));
+				}
+
+				//縦
+				if(OldNumX < i_W){//増やしたとき
+					ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(OldNumX-1, 0, i_W - OldNumX, i_H));
+				}
+				if(OldNumX > i_W){//減らしたとき
+					ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(i_W-1, 0, 1, i_H));
+				}
+			}
+
+			//!!ObjMapまわりがまだ不完全かもしれない
+			//プレイヤー位置とかはそのままで良いのだろうか
 		}
 
 		//Camera
@@ -1083,7 +1183,9 @@ package{
 					result = result + MapIndex2Char[i_Map[y][x]];
 				}
 
-				result = result + "_";
+				if(y < i_Map.length-1){
+					result = result + "_";
+				}
 			}
 
 			return result;
@@ -1172,7 +1274,8 @@ package{
 			}
 
 			//ステージの再構築
-			SetBlocks(NewMap, 0, 0);
+			ResizeMap(NewMap[0].length, NewMap.length);//サイズを変更して
+			SetBlocks(NewMap, 0, 0);//全てのブロックを再セット
 		}
 
 

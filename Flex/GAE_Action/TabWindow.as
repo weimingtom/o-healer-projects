@@ -142,5 +142,15 @@ package{
 				}
 			}
 		}
+
+		//Update
+		public function Update(i_DeltaTime:Number):void{
+			//現在選択されているタブのUpdateを呼ぶだけ
+			if(0 < m_SelectedIndex && m_SelectedIndex < m_TabList.length){
+				if(m_TabList[m_SelectedIndex]){
+					m_TabList[m_SelectedIndex].Update(i_DeltaTime);
+				}
+			}
+		}
 	}
 }
