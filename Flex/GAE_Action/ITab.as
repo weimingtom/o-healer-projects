@@ -24,37 +24,42 @@ package{
 		//中身の画像
 		public var m_Content:Image;
 
+		//このタブの基本イメージとなる色（これを変換して枠の色や背景色に使う）
+		public var m_BaseColor:uint;
+
 		//これは何番目のタブか（セットされていなければマイナス）
 		public var m_TabIndex:int = -1;
 
 		//タブに表示する文字列
-		public var m_TabName:String = "TEST";
+		public var m_TabName:String = "テスト";
 
-		public var m_TabLength:int = 4;
+		public var m_TabLength:int = 3;
 
 
 		//==Function==
 
-		public function ITab(i_TabName:String){
+		public function ITab(i_TabName:String, i_BaseColor:uint = 0x000000){
 			//Set Param
 			{
 				m_TabName = i_TabName;
 
-				m_TabLength = i_TabName.length;
+				m_TabLength = 3;//i_TabName.length;
+
+				m_BaseColor = i_BaseColor;
+			}
+
+			//Create Dummy Content
+			{
+				m_Content = ImageManager.CreateTabContentImage(i_BaseColor);
+				m_Content.x = ImageManager.TAB_W;
+				m_Content.visible = false;
+
+				addChild(m_Content);
 			}
 
 			//Create Tab Image
 			{
 				CreateTab();
-			}
-
-			//Create Dummy Content
-			{
-				m_Content = new Image();
-				m_Content.x = TabWindow.TAB_W;
-				m_Content.visible = false;
-
-				addChild(m_Content);
 			}
 		}
 
@@ -62,7 +67,7 @@ package{
 		public function CreateTab():void{
 			//Create
 			{
-				m_TabImage = ImageManager.CreateTabImage(m_TabName);
+				m_TabImage = ImageManager.CreateTabImage(m_TabName, m_BaseColor);
 
 				m_TabImage.addEventListener(
 					MouseEvent.CLICK,//クリックされたら

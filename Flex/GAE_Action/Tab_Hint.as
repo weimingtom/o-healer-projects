@@ -43,7 +43,7 @@ package{
 		public function Tab_Hint(){
 			//Tab
 			{
-				super("ヒント");
+				super("ヒント", 0x00FF00);
 			}
 
 			//Content

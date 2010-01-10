@@ -29,7 +29,7 @@ package{
 		public function Tab_Save(){
 			//Tab
 			{
-				super("セ｜ブ");//縦に表示するため、伸ばし棒は縦にしておく
+				super("セ｜ブ", 0x0000FF);//縦に表示するため、伸ばし棒は縦にしておく
 			}
 
 			//Content

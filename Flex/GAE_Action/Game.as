@@ -687,6 +687,10 @@ package{
 		//タブウィンドウ
 		public var m_TabWindow:TabWindow;
 
+		//タブウィンドウの大きさまわり
+		static public const TAB_WINDOW_W:uint = 400;
+		static public const TAB_WINDOW_H:uint = 400;
+
 		public function Init_ForEditor():void{
 			//Flag
 			{
@@ -721,8 +725,8 @@ package{
 			{
 				var TabWindowX:int = CAMERA_W;
 				var TabWindowY:int = 0;
-				var TabWindowW:int = 300;
-				var TabWindowH:int = CAMERA_H;
+				var TabWindowW:int = TAB_WINDOW_W;
+				var TabWindowH:int = TAB_WINDOW_H;
 
 				m_TabWindow = new TabWindow(TabWindowX, TabWindowY, TabWindowW, TabWindowH);
 				m_TabWindow.AddTab(new Tab_Hint());

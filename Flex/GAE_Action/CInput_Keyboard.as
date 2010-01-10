@@ -6,7 +6,7 @@ package{
 	import flash.events.KeyboardEvent;
 
 	public class CInput_Keyboard extends IInput{
-		//ƒL[ƒ{[ƒh‚ÌƒL[
+		//ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã®ã‚­ãƒ¼
 		static public const KEY_0:int = 48;
 		static public const KEY_1:int = 49;
 		static public const KEY_2:int = 50;
@@ -44,20 +44,20 @@ package{
 		static public const KEY_Y:int = 89;
 		static public const KEY_Z:int = 90;
 
-		//ƒL[ƒ{[ƒh‚Ì“ü—Í‚ğ‹L‰¯‚µ‚Ä‚¨‚­
+		//ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã®å…¥åŠ›ã‚’è¨˜æ†¶ã—ã¦ãŠã
 		private var m_Input:Array;//Boolean[BUTTON_NUM]
-		private var m_Input_Old:Array;//ƒGƒbƒWŒŸo—p
-		private var m_Input_Old_Old:Array;//ƒGƒbƒWŒŸo—p
+		private var m_Input_Old:Array;//ã‚¨ãƒƒã‚¸æ¤œå‡ºç”¨
+		private var m_Input_Old_Old:Array;//ã‚¨ãƒƒã‚¸æ¤œå‡ºç”¨
 
-		//‰Šú‰»
+		//åˆæœŸåŒ–
 		public function CInput_Keyboard(i_Stage:Stage):void{
-			//ƒL[ƒ{[ƒh‚Ì“ü—Í‚ğOnKeyDown‚È‚Ç‚Åó‚¯æ‚é
+			//ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã®å…¥åŠ›ã‚’OnKeyDownãªã©ã§å—ã‘å–ã‚‹
 			{
 				i_Stage.addEventListener(KeyboardEvent.KEY_DOWN, OnKeyDown);
 				i_Stage.addEventListener(KeyboardEvent.KEY_UP, OnKeyUp);
 			}
 
-			//‹L‰¯‚ğ‰Šú‰»
+			//è¨˜æ†¶ã‚’åˆæœŸåŒ–
 			{
 				m_Input = new Array(BUTTON_NUM);
 				m_Input_Old     = new Array(BUTTON_NUM);
@@ -68,10 +68,10 @@ package{
 			}
 		}
 
-		//ƒL[‚ª‰Ÿ‚³‚ê‚½‚çA‘Î‰‚·‚é•”•ª‚ğtrue‚É‚·‚é
+		//ã‚­ãƒ¼ãŒæŠ¼ã•ã‚ŒãŸã‚‰ã€å¯¾å¿œã™ã‚‹éƒ¨åˆ†ã‚’trueã«ã™ã‚‹
 		private function OnKeyDown(event:KeyboardEvent):void{
 			switch(event.keyCode){
-			//ƒJ[ƒ\ƒ‹‚Ì©“®˜A‘Å‚ğ‹–—e‚·‚é
+			//ã‚«ãƒ¼ã‚½ãƒ«ã®è‡ªå‹•é€£æ‰“ã‚’è¨±å®¹ã™ã‚‹
 			case Keyboard.LEFT:
 				m_Input[BUTTON_L] = true;
 				m_Input[BUTTON_CURSOR_L] = true;
@@ -137,20 +137,20 @@ package{
 			}
 		}
 
-		//i_Button‚ªŒ»İ‰Ÿ‚³‚ê‚Ä‚¢‚é‚©
+		//i_ButtonãŒç¾åœ¨æŠ¼ã•ã‚Œã¦ã„ã‚‹ã‹
 		override public function IsPress(i_Button:int):Boolean{
 			return m_Input[i_Button];
 		}
 
-		//i_Button‚ª‰Ÿ‚³‚ê‚½‚©iƒGƒbƒWj
+		//i_ButtonãŒæŠ¼ã•ã‚ŒãŸã‹ï¼ˆã‚¨ãƒƒã‚¸ï¼‰
 		override public function IsPress_Edge(i_Button:int):Boolean{
 			return m_Input[i_Button] && (m_Input_Old_Old[i_Button] != m_Input[i_Button]);
 		}
 
-		//–ˆƒtƒŒ[ƒ€ŒÄ‚ñ‚ÅA•K—v‚È‚çî•ñ‚ÌXV‚ğs‚¤
+		//æ¯ãƒ•ãƒ¬ãƒ¼ãƒ å‘¼ã‚“ã§ã€å¿…è¦ãªã‚‰æƒ…å ±ã®æ›´æ–°ã‚’è¡Œã†
 		override public function Update():void{
 			var i:int;
-			//Update_Post‚Æ‚¢‚¤ˆ—‚ğ’Ç‰Á‚·‚ê‚ÎA‚í‚´‚í‚´OldOld‚İ‚½‚¢‚È‚Ì‚Í—pˆÓ‚µ‚È‚­‚Ä‚à‚¢‚¢‚¯‚ÇA¡‰ñ‚Í‚±‚ê‚Å
+			//Update_Postã¨ã„ã†å‡¦ç†ã‚’è¿½åŠ ã™ã‚Œã°ã€ã‚ã–ã‚ã–OldOldã¿ãŸã„ãªã®ã¯ç”¨æ„ã—ãªãã¦ã‚‚ã„ã„ã‘ã©ã€ä»Šå›ã¯ã“ã‚Œã§
 			for(i = 0; i < m_Input.length; i+=1){
 				m_Input_Old_Old[i] = m_Input_Old[i];
 			}

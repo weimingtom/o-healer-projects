@@ -11,6 +11,9 @@ package{
 	import mx.controls.*;
 
 	public class ImageManager{
+		//==Font==
+		private var myfont:MyFont;//フォントのEmbedに対応するためのダミーメンバ変数
+
 		//==Const==
 
 		//パネルの一辺の長さ
@@ -283,10 +286,13 @@ package{
 
 		//#タブウィンドウまわり
 
+		static public const TAB_W:int = 24;//一文字当たりの幅
+		static public const TAB_FRAME_W:int = 3;
+
 		//ウィンドウ本体
 		static public function CreateTabWindow(i_W:int, i_H:int):Image{
 			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0xFF888888);
-			var tab_w:int = TabWindow.TAB_W;
+			var tab_w:int = TAB_W;
 			bmp_data.fillRect(new Rectangle(tab_w, 0, i_W - tab_w, i_H), 0xFFFFFFFF);
 
 			var bmp:Bitmap = new Bitmap(bmp_data);
@@ -298,28 +304,63 @@ package{
 		}
 
 		//タブの部分
-		static public function CreateTabImage(i_TabName:String):Image{
-			var bmp_data:BitmapData = new BitmapData(TabWindow.TAB_W, TabWindow.TAB_H * (i_TabName.length + 2), true, 0x00000000);
-			bmp_data.fillRect(new Rectangle(0, TabWindow.TAB_H, TabWindow.TAB_W, TabWindow.TAB_H * i_TabName.length), 0xFFFFFFFF);
+		static public function CreateTabImage(i_TabName:String, i_BaseColor:uint = 0x000000):Image{
+			//基本的なタブの大きさはは1x5
+			var bmp_data:BitmapData = new BitmapData(TAB_W, TAB_W*5, true, 0x00000000);
+
+			//Draw Frame & BackColor
+			{
+				var frame_color:uint = Convert2FrameColor(i_BaseColor);
+				var back_color:uint  = Convert2BackColor(i_BaseColor);
+
+				var sprite:Sprite = new Sprite();
+				{
+					var g:Graphics = sprite.graphics;
+
+					g.lineStyle(TAB_FRAME_W, frame_color, 1.0);
+					g.beginFill(back_color, 1.0);
+
+					g.moveTo(TAB_W*1, TAB_FRAME_W/2);
+					g.lineTo(TAB_FRAME_W/2, TAB_W*1);
+					g.lineTo(TAB_FRAME_W/2, TAB_W*4);
+					g.lineTo(TAB_W*1, TAB_W*5-TAB_FRAME_W/2);
+					g.lineTo(TAB_W*2, TAB_W*5-TAB_FRAME_W/2);
+					g.lineTo(TAB_W*2, TAB_FRAME_W);
+
+					g.endFill();
+				}
+
+				bmp_data.draw(sprite);
+			}
 
 			//Draw Label
 			{
-				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
-				matrix.ty += TabWindow.TAB_H;
+				const char_size:int = TAB_W - TAB_FRAME_W*2 - 2;
+				const ori_size:int = 32;//このサイズで描画して、上のサイズに縮小する
+
+				var matrix : Matrix = new Matrix(1.0*char_size/ori_size,0,0,1.0*char_size/ori_size,0,0);
+				matrix.ty += TAB_W;
+				if(i_TabName.length == 2){matrix.ty += TAB_W/2;}
 
 				var tf:TextField = new TextField();
 				tf.selectable = false;
 				tf.autoSize = TextFieldAutoSize.LEFT;
 
 				for(var i:int = 0; i < i_TabName.length; i += 1){
+/*
 					tf.text = i_TabName.charAt(i);
-					tf.width = tf.textWidth;
-					tf.height = tf.textHeight;
+/*/
+					tf.embedFonts = true;
+					tf.htmlText = "<font face='ume' size='" + ori_size.toString() + "'>" + i_TabName.charAt(i) + "</font>";
+//*/
+//					tf.width = tf.textWidth;
+//					tf.height = tf.textHeight;
+					matrix.tx = TAB_W/2 - char_size/2
 		//			tf.setTextFormat( fmt );
 
 					bmp_data.draw(tf, matrix);
 
-					matrix.ty += TabWindow.TAB_H;
+					matrix.ty += TAB_W;
 				}
 	 		}
 
@@ -329,6 +370,76 @@ package{
 			img.addChild(bmp);
 
 			return img;
+		}
+
+		//コンテナ（独自描画部分）の背景
+		static public function CreateTabContentImage(i_BaseColor:uint = 0x000000):Image{
+			const TAB_CONTAINER_W:uint = Game.TAB_WINDOW_W - TAB_W + TAB_FRAME_W;
+			const TAB_CONTAINER_H:uint = Game.TAB_WINDOW_H;
+
+			//生成と同時に背景色も描画してしまう
+			var bmp_data:BitmapData = new BitmapData(TAB_CONTAINER_W, TAB_CONTAINER_H, false, Convert2BackColor(i_BaseColor));
+
+			//Draw Frame & BackColor
+			{
+				var frame_color:uint = Convert2FrameColor(i_BaseColor);
+
+				var sprite:Sprite = new Sprite();
+				{
+					var g:Graphics = sprite.graphics;
+
+					g.lineStyle(TAB_FRAME_W, frame_color, 1.0);
+
+					g.moveTo(TAB_FRAME_W/2, 0);
+					g.lineTo(TAB_FRAME_W/2, TAB_CONTAINER_H);
+				}
+
+				bmp_data.draw(sprite);
+			}
+
+			var bmp:Bitmap = new Bitmap(bmp_data);
+			bmp.x =  -TAB_FRAME_W;//枠の部分は外にはみ出させておく
+
+			var img:Image = new Image();
+			img.addChild(bmp);
+
+			return img;
+		}
+
+		//元の色から、枠の色や背景色を求める
+		//・枠の色
+		static public function Convert2FrameColor(i_BaseColor:uint):uint{
+			var r:uint = (i_BaseColor >> 16) & 0xFF;
+			var g:uint = (i_BaseColor >>  8) & 0xFF;
+			var b:uint = (i_BaseColor >>  0) & 0xFF;
+
+			{//独自部分
+				//彩度を落として暗めの色にする
+				var ratio:Number = 0.7;
+
+				r = MyMath.Lerp(r, 0x00, ratio);
+				g = MyMath.Lerp(g, 0x00, ratio);
+				b = MyMath.Lerp(b, 0x00, ratio);
+			}
+
+			return (r << 16) | (g << 8) | (b << 0);
+		}
+		//・背景色
+		static public function Convert2BackColor(i_BaseColor:uint):uint{
+			var r:uint = (i_BaseColor >> 16) & 0xFF;
+			var g:uint = (i_BaseColor >>  8) & 0xFF;
+			var b:uint = (i_BaseColor >>  0) & 0xFF;
+
+			{//独自部分
+				//薄いパステルカラーにする
+				var ratio:Number = 0.9;
+
+				r = MyMath.Lerp(r, 0xFF, ratio);
+				g = MyMath.Lerp(g, 0xFF, ratio);
+				b = MyMath.Lerp(b, 0xFF, ratio);
+			}
+
+			return (r << 16) | (g << 8) | (b << 0);
 		}
 
 		//#Tab : Hint

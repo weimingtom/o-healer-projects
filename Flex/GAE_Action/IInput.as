@@ -2,7 +2,7 @@
 package{
 	public class IInput{
 
-		//i_Button‚Æ‚µ‚Äw’è‚·‚é‚à‚Ì(enum—~‚µ‚¢)
+		//i_Buttonã¨ã—ã¦æŒ‡å®šã™ã‚‹ã‚‚ã®(enumæ¬²ã—ã„)
 		//Player
 		static public const BUTTON_L:int = 0;
 		static public const BUTTON_R:int = 1;
@@ -24,19 +24,19 @@ package{
 		static public const BUTTON_NUM:int  = 14;
 
 
-		//i_Button‚ªŒ»İ‰Ÿ‚³‚ê‚Ä‚¢‚é‚©
+		//i_ButtonãŒç¾åœ¨æŠ¼ã•ã‚Œã¦ã„ã‚‹ã‹
 		public function IsPress(i_Button:int):Boolean{
-			//Œp³‚³‚ê‚Ä‚È‚¯‚ê‚ÎAí‚Éfalse‚ğ•Ô‚·
+			//ç¶™æ‰¿ã•ã‚Œã¦ãªã‘ã‚Œã°ã€å¸¸ã«falseã‚’è¿”ã™
 			return false;
 		}
 
-		//i_Button‚ª‰Ÿ‚³‚ê‚½‚©iƒGƒbƒWj
+		//i_ButtonãŒæŠ¼ã•ã‚ŒãŸã‹ï¼ˆã‚¨ãƒƒã‚¸ï¼‰
 		public function IsPress_Edge(i_Button:int):Boolean{
-			//Œp³‚³‚ê‚Ä‚È‚¯‚ê‚ÎAí‚Éfalse‚ğ•Ô‚·
+			//ç¶™æ‰¿ã•ã‚Œã¦ãªã‘ã‚Œã°ã€å¸¸ã«falseã‚’è¿”ã™
 			return false;
 		}
 
-		//–ˆƒtƒŒ[ƒ€ŒÄ‚ñ‚ÅA•K—v‚È‚çî•ñ‚ÌXV‚ğs‚¤
+		//æ¯ãƒ•ãƒ¬ãƒ¼ãƒ å‘¼ã‚“ã§ã€å¿…è¦ãªã‚‰æƒ…å ±ã®æ›´æ–°ã‚’è¡Œã†
 		public function Update():void{
 		}
 	}

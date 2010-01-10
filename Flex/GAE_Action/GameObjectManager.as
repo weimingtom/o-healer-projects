@@ -2,10 +2,10 @@
 package{
 	public class GameObjectManager{
 
-		//���X�g�̐擪
+		//リストの先頭
 		static public var m_ObjectList:IGameObject;
 
-		//Box2D�Ƃقړ��l��Object���Ǘ�����
+		//Box2Dとほぼ同様にObjectを管理する
 		//-Add
 		static public function Register(i_Obj:IGameObject):void{
 			if(m_ObjectList != null){
@@ -51,7 +51,7 @@ package{
 		static public function Update(i_DeltaTime:Number):void{
 			var obj:IGameObject;
 
-			//�eGameObject��Update
+			//各GameObjectのUpdate
 			obj = m_ObjectList;
 			while(obj){
 				obj.Update(i_DeltaTime);
@@ -59,7 +59,7 @@ package{
 				obj = obj.m_NextObj;
 			}
 
-			//Kill���Ă΂ꂽ���͍̂폜����
+			//Killが呼ばれたものは削除する
 			obj = m_ObjectList;
 			while(obj){
 				if(obj.m_KillFlag){
@@ -89,7 +89,7 @@ package{
 		}
 		static public function IsShareFlagsOn(i_Flags:uint):Boolean{
 			var Result:Boolean = false;
-			{//�ЂƂ܂��A��ł�true�Ȃ�true��Ԃ��Ă���
+			{//ひとまず、一つでもtrueならtrueを返しておく
 				for(var i:uint = 0; i < FLAG_NUM; i+=1){
 					if((i_Flags & (1 << i)) != 0){
 						if(m_Flags[i]){

@@ -15,11 +15,6 @@ package{
 	public class TabWindow extends Image{
 		//==Const==
 
-		//タブの（一文字あたりの）高さ
-		static public const TAB_H:int = 16;
-		//タブの幅
-		static public const TAB_W:int = 32;
-
 
 		//==Var==
 
@@ -79,14 +74,10 @@ package{
 			{
 				var offset:int;
 				{
-					if(index <= 0){
-						offset = 0;
-					}else{
-						offset = TAB_H;
-					}
+					offset = -ImageManager.TAB_W/2;//半マス上から始める
 
 					for(var i:int = 0; i < index; i += 1){
-						offset += (m_TabList[i].m_TabLength + 1) * TAB_H;
+						offset += (m_TabList[i].m_TabLength + 1) * ImageManager.TAB_W;
 					}
 				}
 
@@ -98,6 +89,11 @@ package{
 				if(index == 0){
 					Select(index);
 				}
+			}
+
+			//タブの表示順序を整える
+			{
+				Show(m_SelectedIndex);//面倒なのでこれで
 			}
 		}
 
@@ -123,22 +119,46 @@ package{
 
 		//Show
 		public function Show(i_Index:int):void{
-			//Off
+			//コンテナの表示を差し替える
 			{
-				if(m_SelectedContent){
-					m_SelectedContent.visible = false;
+				//Off
+				{
+					if(m_SelectedContent){
+						m_SelectedContent.visible = false;
+					}
+				}
+
+				//Set
+				{
+					m_SelectedContent = m_TabList[i_Index].m_Content;
+				}
+
+				//On
+				{
+					if(m_SelectedContent){//一応チェック
+						m_SelectedContent.visible = true;
+					}
 				}
 			}
 
-			//Set
+			//タブの手前描画の順序を変更
 			{
-				m_SelectedContent = m_TabList[i_Index].m_Content;
-			}
+				var i:int;
+				var num:int = m_TabList.length;
 
-			//On
-			{
-				if(m_SelectedContent){//一応チェック
-					m_SelectedContent.visible = true;
+				//まずは全てのタブを表示から外す
+				for(i = 0; i < num; i += 1){
+					removeChild(m_TabList[i]);
+				}
+
+				//選択したやつの手前までは順番に再登録
+				for(i = 0; i < i_Index; i += 1){
+					addChild(m_TabList[i]);
+				}
+
+				//選択したやつ以降のものは逆順に登録
+				for(i = num-1; i >= i_Index; i -= 1){
+					addChild(m_TabList[i]);
 				}
 			}
 		}
