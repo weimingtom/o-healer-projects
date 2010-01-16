@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:comp="*"
+	paddingTop="0" paddingLeft="0"
+	paddingRight="0" paddingBottom="0"
+	applicationComplete="init()"
+>
+	<!--Script-->
+	<mx:Script>
+		<![CDATA[
+			//最初のロード完了時の初期化
+			private function init():void{
+				//Init Component
+				{
+					//canvas
+					{//creationCompleteのタイミングではダメだったのでこちらでInit
+						canvas_color.Init();
+						canvas_shade.Init();
+					}
+
+				}
+				
+/*
+				//幅を、実際のゲーム画面に合わせる
+				MyViewStack.width  = Game.CAMERA_W;
+				MyViewStack.height = Game.CAMERA_H;
+				button_to_start.width  = Game.CAMERA_W;
+				button_to_start.height = Game.CAMERA_H;
+//*/
+			}
+/*
+			//ボタンが押されて開始する時の処理
+			private function start():void{
+				MyViewStack.selectedChild = main_game;
+
+				main_game.Init();
+			}
+//*/
+		]]>
+	</mx:Script>
+
+
+	<!--View-->
+	<mx:HBox width="100%" height="100%">
+		<!--Space-->
+		<mx:Spacer width="100%" />
+
+		<!--TabWindow_Color-->
+		<mx:TabNavigator id="tab_window_color" width="200" height="100%">
+			<mx:Canvas label="色" width="100%" height="100%">
+			</mx:Canvas>
+		</mx:TabNavigator>
+
+		<!--Space-->
+		<mx:Spacer width="100%" />
+
+		<!--Area_Center-->
+		<mx:VBox width="100%" height="100%">
+			<!--Space-->
+			<mx:Spacer height="100%" />
+
+			<!--Area_Center_Content-->
+			<mx:HBox width="100%" height="100%">
+				<!--Area_Color-->
+				<mx:VBox width="200" height="100%">
+					<!--Space-->
+					<mx:Spacer height="100%" />
+
+					<!--SizeButton List-->
+					<mx:HBox width="100%" height="100%">
+						<!--8x8-->
+						<comp:GridButton id="gridbutton_color_8x8" creationComplete="gridbutton_color_8x8.Init(GridButton.GRID_TYPE_8x8, canvas_color)" />
+						<!--Space-->
+						<mx:Spacer width="100%" />
+						<!--16x16-->
+						<comp:GridButton id="gridbutton_color_16x16" creationComplete="gridbutton_color_16x16.Init(GridButton.GRID_TYPE_16x16, canvas_color)" />
+						<!--Space-->
+						<mx:Spacer width="100%" />
+						<!--32x32-->
+						<comp:GridButton id="gridbutton_color_32x32" creationComplete="gridbutton_color_32x32.Init(GridButton.GRID_TYPE_32x32, canvas_color)" />
+					</mx:HBox>
+
+					<!--Canvas_Color-->
+					<mx:HBox width="100%" height="100%">
+						<!--Centering-->
+						<mx:Spacer width="100%" />
+						<comp:Canvas_Color id="canvas_color" backgroundColor="0xFFFFFF" />
+						<mx:Spacer width="100%" />
+					</mx:HBox>
+
+					<!--Space-->
+					<mx:Spacer height="100%" />
+				</mx:VBox>
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Area_Result-->
+				<mx:VBox width="50" height="100%">
+					<!--Space-->
+					<mx:Spacer height="100%" />
+
+					<!--Canvas_Result-->
+					<mx:Canvas id="canvas_result" width="32" height="32" backgroundColor="0xFFFFFF">
+					</mx:Canvas>
+
+					<!--Space-->
+					<mx:Spacer height="100%" />
+				</mx:VBox>
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Area_Shade-->
+				<mx:VBox width="200" height="100%">
+					<!--Space-->
+					<mx:Spacer height="100%" />
+
+					<!--SizeButton List-->
+					<mx:HBox width="100%" height="100%">
+						<!--8x8-->
+						<comp:GridButton id="gridbutton_shade_8x8" creationComplete="gridbutton_shade_8x8.Init(GridButton.GRID_TYPE_8x8, canvas_shade)" />
+						<!--Space-->
+						<mx:Spacer width="100%" />
+						<!--16x16-->
+						<comp:GridButton id="gridbutton_shade_16x16" creationComplete="gridbutton_shade_16x16.Init(GridButton.GRID_TYPE_16x16, canvas_shade)" />
+						<!--Space-->
+						<mx:Spacer width="100%" />
+						<!--32x32-->
+						<comp:GridButton id="gridbutton_shade_32x32" creationComplete="gridbutton_shade_32x32.Init(GridButton.GRID_TYPE_32x32, canvas_shade)" />
+					</mx:HBox>
+
+					<!--Canvas_Shade-->
+					<mx:HBox width="100%" height="100%">
+						<!--Centering-->
+						<mx:Spacer width="100%" />
+						<comp:Canvas_Shade id="canvas_shade" backgroundColor="0xFFFFFF" />
+						<mx:Spacer width="100%" />
+					</mx:HBox>
+
+					<!--Space-->
+					<mx:Spacer height="100%" />
+				</mx:VBox>
+			</mx:HBox>
+
+			<!--Space-->
+			<mx:Spacer height="100%" />
+
+			<!--Area_Tool-->
+			<mx:HBox width="100%" height="100%">
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Tool_Pen-->
+				<comp:ToolButton id="tool_pen" creationComplete="tool_pen.Init(ToolButton.TOOL_PEN)" />
+
+				<!--Space-->
+<!--
+				<mx:Spacer width="100%" />
+-->
+
+				<!--Tool_Spray-->
+<!--
+				<comp:ToolButton id="tool_spray" creationComplete="tool_spray.Init(ToolButton.TOOL_SPRAY)" />
+-->
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Tool_Paint-->
+				<comp:ToolButton id="tool_paint" creationComplete="tool_paint.Init(ToolButton.TOOL_PAINT)" />
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Tool_Line-->
+				<comp:ToolButton id="tool_line" creationComplete="tool_line.Init(ToolButton.TOOL_LINE)" />
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Tool_Rect-->
+				<comp:ToolButton id="tool_rect" creationComplete="tool_rect.Init(ToolButton.TOOL_RECT)" />
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Tool_Circle-->
+				<comp:ToolButton id="tool_circle" creationComplete="tool_circle.Init(ToolButton.TOOL_CIRCLE)" />
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Tool_Spoit-->
+				<comp:ToolButton id="tool_spoit" creationComplete="tool_spoit.Init(ToolButton.TOOL_SPOIT)" />
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Tool_Undo-->
+				<comp:ToolButton id="tool_undo" creationComplete="tool_undo.Init(ToolButton.TOOL_UNDO)" />
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+
+				<!--Tool_Redo-->
+				<comp:ToolButton id="tool_redo" creationComplete="tool_redo.Init(ToolButton.TOOL_REDO)" />
+
+				<!--Space-->
+				<mx:Spacer width="100%" />
+			</mx:HBox>
+
+			<!--Space-->
+			<mx:Spacer height="100%" />
+		</mx:VBox>
+
+		<!--Space-->
+		<mx:Spacer width="100%" />
+
+		<!--TabWindow_Shade-->
+		<mx:TabNavigator id="tab_window_shade" width="200" height="100%">
+			<mx:Canvas label="傾き" width="100%" height="100%">
+			</mx:Canvas>
+		</mx:TabNavigator>
+
+		<!--Space-->
+		<mx:Spacer width="100%" />
+	</mx:HBox>
+</mx:Application>
