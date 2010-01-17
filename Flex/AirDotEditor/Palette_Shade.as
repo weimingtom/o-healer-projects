@@ -1,6 +1,8 @@
 //author Show=O=Healer
 
 /*
+法線のベクトルを求めるところから、法線マップの値を計算するところまではここでやる
+法線マップの値（とライトやマテリアル）から実際の色を計算するのはよそに任せる
 */
 
 
@@ -17,66 +19,24 @@ package{
 	import mx.containers.*;
 	import mx.controls.*;
 
-	public class Palette_Color extends Canvas{
+	public class Palette_Shade extends Canvas{
 		//==Const==
 
 		//＃サイズ
 		static public const SIZE_W:int = 200;
 		static public const SIZE_H:int = 300;
 
-		//＃スペース
-		static public const SPACE_L:int = 3;
-		static public const SPACE_R:int = 3;
-		static public const SPACE_U:int = 3;
-		static public const SPACE_D:int = 3;
-		static public const SPACE_Y:int = 6;
-
-
-		//＃色のリスト
-
-		static public const COLOR_LIST:Array = [
-			[//1st
-				0xFFFF0000,//Red
-				0xFFFFA500,//Orange
-				0xFFFFFF00,//Yellow
-				0xFF008000,//Green
-				0xFF0000FF,//Blue
-				0xFF4B0082,//Blue Pirple
-				0xFF800080,//Red Pirple
-
-				0xFFFFFFFF,//White
-				0xFF808080,//Gray
-				0xFF000000,//Black
-			],
-			[//2nd //1stの隣接色を合成した色
-				0xFFFF5200,
-				0xFFFFD200,
-				0xFF80C000,
-				0xFF004080,
-				0xFF2500C8,
-				0xFF650081,
-				0xFFC02940,
-
-				0xFFC0C0C0,
-				0xFF404040,
-//				0xFF000000,
-			],
-
-			//透明色は別にする
-		];
 
 
 		//==Var==
 
-		//各色に対応したImage
-		public var m_ColorImage:Array;//Image[COLOR_LIST_SIZE][]
-		public var m_ColorGraphics:Array;//Graphics[COLOR_LIST_SIZE][]
+		//各値に対応したImage
+		public var m_Image:Array;//Image[NUM_Y][NUM_X]
+		public var m_Graphics:Array;//Graphics[NUM_Y][NUM_X]
+		public var m_Nrm:Array;//Nrm[NUM_Y][NUM_X]
 
 		//対応するキャンバス
 		public var m_Canvas:MyCanvas;
-
-		//現在のパレットの表示形式（COLOR_LISTの何段目までを表示するか）
-		public var m_PalettePhase:int = 1;
 
 		//==Function==
 
@@ -96,64 +56,118 @@ package{
 
 			//==Image==
 			{
-				var i:int;
-				var Size:int;
-				var shape:Shape;
+				var x:int;
+				var y:int;
+				var NumXY:int = 5;
+				var CenterX:Number = (NumXY-1)/2.0;
+				var CenterY:Number = (NumXY-1)/2.0;
 
-				var IndexOffset:int = 0;
+				m_Image    = new Array(NumXY);
+				m_Graphics = new Array(NumXY);
+				m_Nrm      = new Array(NumXY);
 
-				var PhaseNum:int = COLOR_LIST.length;
+				for(y = 0; y < NumXY; y += 1){
+					m_Image[y]    = new Array(NumXY);
+					m_Graphics[y] = new Array(NumXY);
+					m_Nrm[y]      = new Array(NumXY);
 
-				//
-				{
-					m_ColorImage    = new Array(PhaseNum);
-					m_ColorGraphics = new Array(PhaseNum);
-				}
+					for(x = 0; x < NumXY; x += 1){
+						//Calc Nrm
+						var nrm:Vector3D;
+						{
+							//画像と同じく、右がX+、下がY+とする
+							var RotZ:Number;
+							{
+								//X+:0/4, Y+:1/4, X-:2/4, Y-:3/4
+								var GapX:Number = x - CenterX;
+								var GapY:Number = y - CenterY;
 
-				//まだ実際には色をつけず、Imageとそれをクリックした時の処理を設定するのみ
-				for(var p:int = 0; p < PhaseNum; p += 1){
-					Size = COLOR_LIST[p].length;
+								if(GapX == 0.0 && GapY == 0.0){
+									RotZ = 0;//tekitou
+								}else{
+									RotZ = Math.atan2(GapY, GapX);
+								}
+							}
 
-					m_ColorImage[p] = new Array(Size);
-					m_ColorGraphics[p] = new Array(Size);
+							var RotXY:Number;
+							{
+								var Phase:int;
+								{//0:中心、Num/2:外側
+									Phase = Math.max(Math.abs(GapX), Math.abs(GapY));
+								}
 
-					for(i = 0; i < Size; i += 1){
+								RotXY = 0.5*Math.PI * Phase/(Math.floor(NumXY/2)+1);
+							}
+
+							var DirXY:Vector3D = new Vector3D(Math.cos(RotZ), Math.sin(RotZ), 0.0);
+
+							//LerpByTheta(AxisZ, DirXY, RotXY)
+							var RatioZ:Number = Math.cos(RotXY);
+							var RatioXY:Number = Math.sin(RotXY);
+							nrm = new Vector3D(
+								DirXY.x * RatioXY,
+								DirXY.y * RatioXY,
+								1.0 * RatioZ
+							);
+
+							//Normalize
+							nrm.normalize();
+						}
+
 						//Graphic
 						{
-							shape = new Shape();
-							m_ColorGraphics[p][i] = shape.graphics;
+							var shape:Shape = new Shape();
+							m_Graphics[y][x] = shape.graphics;
 
-							m_ColorImage[p][i] = new Image();
-							m_ColorImage[p][i].addChild(shape);
-							addChild(m_ColorImage[p][i]);
+							//あとで画像ロードで置き換えたい
+							{
+								var g:Graphics = m_Graphics[y][x];
+								var color:uint = Canvas_Result.CalcColor(0xFFFFFFFF, NrmVector2NrmColor(nrm));
+//								var color:uint = NrmVector2NrmColor(nrm);//法線マップをそのまま表示する場合はこちらで
+
+								g.lineStyle(0, 0x000000, 0.0);
+								g.beginFill(color, 1.0);
+
+								g.drawRect(x*40, y*40, 32, 32);
+
+								g.endFill();
+							}
+
+							m_Image[y][x] = new Image();
+							m_Image[y][x].addChild(shape);
+							addChild(m_Image[y][x]);
+						}
+
+						//Nrm
+						{
+							m_Nrm[y][x] = nrm;
 						}
 
 						//Mouse
 						{//Down
-							var func:Function = function(in_Index:int):Function{
+							var func:Function = function(in_Nrm:Vector3D):Function{
 								return function(e:MouseEvent):void{
-									SelectColor(in_Index);
+									SelectNrm(in_Nrm);
 								};
 							}
 
-							m_ColorImage[p][i].addEventListener(
+							m_Image[y][x].addEventListener(
 								MouseEvent.MOUSE_DOWN,
 /*
 								function(e:MouseEvent):void{
-									SelectColor(i + IndexOffset);//この書き方だとiの変動の影響を受ける
+									SelectNrm(nrm);//この書き方だとnrmの変動の影響を受ける？
 								}
 /*/
-								func(i + IndexOffset)
+								func(nrm)
 								//一度引数として別物にしてやれば大丈夫
 //*/
 							);
 						}
 					}
-
-					IndexOffset += Size;
 				}
 			}
 
+/*
 			//色を塗ったりレイアウト構築したり
 			{
 				//m_PalettePhaseのデフォルトの値に応じて構築
@@ -165,8 +179,10 @@ package{
 				//m_PalettePhaseのデフォルトの値に応じて構築
 				SelectColor(m_PalettePhase);
 			}
+//*/
 		}
 
+/*
 		//
 		public function CreatePalette(in_Phase:int):void{
 			//Param
@@ -202,7 +218,7 @@ package{
 					}
 
 					for(i = 0; i < Size; i += 1){
-						var g:Graphics = m_ColorGraphics[p][i];
+						var g:Graphics = m_Graphics[p][i];
 
 						var color:uint = COLOR_LIST[p][i];
 
@@ -242,7 +258,7 @@ package{
 						Size = COLOR_LIST[p].length;
 
 						for(i = 0; i < Size; i += 1){
-							m_ColorGraphics[p][i].clear();
+							m_Graphics[p][i].clear();
 						}
 					}
 				}
@@ -263,7 +279,7 @@ package{
 					}
 
 					for(i = 0; i < Size; i += 1){
-						var g:Graphics = m_ColorGraphics[p][i];
+						var g:Graphics = m_Graphics[p][i];
 
 						var color:uint = COLOR_LIST[p][i];
 
@@ -326,7 +342,7 @@ package{
 					}
 
 					for(i = 0; i < Size; i += 1){
-						var g:Graphics = m_ColorGraphics[p][i];
+						var g:Graphics = m_Graphics[p][i];
 
 						var color:uint = COLOR_LIST[p][i];
 
@@ -379,16 +395,35 @@ package{
 						Size = COLOR_LIST[p].length;
 
 						for(i = 0; i < Size; i += 1){
-							m_ColorGraphics[p][i].clear();
+							m_Graphics[p][i].clear();
 						}
 					}
 				}
 				break;
 			}
 		}
+//*/
 
-		//指定したIndexの色を採用する時の処理
-		public function SelectColor(in_Index:int):void{
+		//NrmVector => NrmColor
+		static public function NrmVector2NrmColor(in_Nrm:Vector3D):uint{
+			var color:uint;
+			{
+				var a:uint = 0xFF;
+				var r:uint = 0xFF * (0.5 + 0.5*in_Nrm.x);
+				var g:uint = 0xFF * (0.5 + 0.5*in_Nrm.y);
+				var b:uint = 0xFF * (0.5 + 0.5*in_Nrm.z);
+
+				color = (a << 24) | (r << 16) | (g << 8) | (b << 0);
+			}
+
+			return color;
+		}
+
+		//指定した法線を採用する時の処理
+		public function SelectNrm(in_Nrm:Vector3D):void{
+//*
+			m_Canvas.SetColor(NrmVector2NrmColor(in_Nrm));
+/*/
 			var Size:int;
 
 			var PhaseNum:int = COLOR_LIST.length;
@@ -409,8 +444,10 @@ package{
 
 				index -= Size;
 			}
+//*/
 		}
 
+/*
 		//カーソルの位置と形状を変更
 		public function ResetCursor(in_Index:int):void{
 			switch(m_PalettePhase){
@@ -418,5 +455,6 @@ package{
 				break;
 			}
 		}
+//*/
 	}
 }

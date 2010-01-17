@@ -25,7 +25,7 @@ package{
 		static public const DOT_NUM:int = 32;
 
 		//#何倍に拡大して表示するか
-		static public const SIZE_RATIO:int = 5;
+		static public const SIZE_RATIO:int = 7;
 
 		//＃サイズ
 		static public const SIZE_W:int = DOT_NUM * SIZE_RATIO;

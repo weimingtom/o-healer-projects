@@ -17,6 +17,7 @@
 					{//creationCompleteのタイミングではダメだったのでこちらでInit
 						canvas_color.Init();
 						canvas_shade.Init();
+						canvas_result.Init(canvas_color, canvas_shade);
 					}
 
 				}
@@ -62,7 +63,7 @@
 			<!--Area_Center_Content-->
 			<mx:HBox width="100%" height="100%">
 				<!--Area_Color-->
-				<mx:VBox width="200" height="100%">
+				<mx:VBox width="100%" height="100%">
 					<!--Space-->
 					<mx:Spacer height="100%" />
 
@@ -81,38 +82,34 @@
 					</mx:HBox>
 
 					<!--Canvas_Color-->
-					<mx:HBox width="100%" height="100%">
-						<!--Centering-->
-						<mx:Spacer width="100%" />
-						<comp:Canvas_Color id="canvas_color" backgroundColor="0xFFFFFF" />
-						<mx:Spacer width="100%" />
-					</mx:HBox>
+					<comp:Canvas_Color id="canvas_color" backgroundColor="0xFFFFFF" />
 
 					<!--Space-->
 					<mx:Spacer height="100%" />
 				</mx:VBox>
 
 				<!--Space-->
+				<mx:Spacer width="10" />
 				<mx:Spacer width="100%" />
 
 				<!--Area_Result-->
-				<mx:VBox width="50" height="100%">
+				<mx:VBox width="100%" height="100%">
 					<!--Space-->
 					<mx:Spacer height="100%" />
 
 					<!--Canvas_Result-->
-					<mx:Canvas id="canvas_result" width="32" height="32" backgroundColor="0xFFFFFF">
-					</mx:Canvas>
+					<comp:Canvas_Result id="canvas_result" />
 
 					<!--Space-->
 					<mx:Spacer height="100%" />
 				</mx:VBox>
 
 				<!--Space-->
+				<mx:Spacer width="10" />
 				<mx:Spacer width="100%" />
 
 				<!--Area_Shade-->
-				<mx:VBox width="200" height="100%">
+				<mx:VBox width="100%" height="100%">
 					<!--Space-->
 					<mx:Spacer height="100%" />
 
@@ -131,12 +128,7 @@
 					</mx:HBox>
 
 					<!--Canvas_Shade-->
-					<mx:HBox width="100%" height="100%">
-						<!--Centering-->
-						<mx:Spacer width="100%" />
-						<comp:Canvas_Shade id="canvas_shade" backgroundColor="0xFFFFFF" />
-						<mx:Spacer width="100%" />
-					</mx:HBox>
+					<comp:Canvas_Shade id="canvas_shade" backgroundColor="0xFFFFFF" />
 
 					<!--Space-->
 					<mx:Spacer height="100%" />
@@ -218,8 +210,7 @@
 
 		<!--TabWindow_Shade-->
 		<mx:TabNavigator id="tab_window_shade" width="200" height="100%">
-			<mx:Canvas label="傾き" width="100%" height="100%">
-			</mx:Canvas>
+			<comp:Palette_Shade label="傾き" id="palette_shade" creationComplete="palette_shade.Init(canvas_shade)" />
 		</mx:TabNavigator>
 
 		<!--Space-->
