@@ -48,8 +48,7 @@
 
 		<!--TabWindow_Color-->
 		<mx:TabNavigator id="tab_window_color" width="200" height="100%">
-			<mx:Canvas label="色" width="100%" height="100%">
-			</mx:Canvas>
+			<comp:Palette_Color label="色" id="palette_color" creationComplete="palette_color.Init(canvas_color)" />
 		</mx:TabNavigator>
 
 		<!--Space-->

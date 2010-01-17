@@ -257,7 +257,7 @@ package{
 				break;
 			//
 			case ToolButton.TOOL_SPOIT:
-				m_Color = m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY);
+				SetColor(m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY));
 				break;
 			}
 		}
@@ -295,7 +295,7 @@ package{
 				break;
 			//
 			case ToolButton.TOOL_SPOIT:
-				m_Color = m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY);
+				SetColor(m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY));
 				break;
 			}
 		}
@@ -326,7 +326,7 @@ package{
 					break;
 				//
 				case ToolButton.TOOL_SPOIT:
-					m_Color = m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY);
+					SetColor(m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY));
 					break;
 				}
 			}
@@ -933,6 +933,13 @@ package{
 			{
 				m_GridType = in_GridType;
 			}
+		}
+
+
+		//===Color==
+
+		public function SetColor(in_Color:uint):void{
+			m_Color = in_Color;
 		}
 	}
 }
