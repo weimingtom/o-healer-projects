@@ -78,6 +78,10 @@ package{
 			}
 		}
 
+		//==描画関数のoverride==
+
+		//余裕があれば、変更部分だけRedrawするために、描画関数を渡したりしたい
+
 		//#Line (& Pen)
 		override public function DrawLine(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int):void{
 			super.DrawLine(in_SrcX, in_SrcY, in_DstX, in_DstY);

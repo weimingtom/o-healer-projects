@@ -9,6 +9,8 @@
 	<!--Script-->
 	<mx:Script>
 		<![CDATA[
+			import com.adobe.images.*;
+
 			//最初のロード完了時の初期化
 			private function init():void{
 				//Init Component
@@ -38,6 +40,95 @@
 				main_game.Init();
 			}
 //*/
+			private function Save():void{
+/*
+/*/
+				var bmp_list:Array = [
+					canvas_color.m_Bitmap,
+					canvas_shade.m_Bitmap,
+					canvas_result.m_Bitmap,
+				];
+				var save_file_ext:Array = [
+					"_C.png",
+					"_S.png",
+					".png",
+				];
+				var BitmapNum:int = bmp_list.length;
+
+				try{
+					var file:File = new File();
+
+					//OnSelect
+					file.addEventListener(
+						Event.SELECT,
+						function(e:Event):void{
+							var save_file_ori:File = e.target as File;
+
+							var fsw:FileStream = new FileStream();
+
+							for(var i:int = 0; i < BitmapNum; i += 1){
+								var save_file_name:String = save_file_ori.name + save_file_ext[i];
+								var save_file:File = save_file.resolvePath(save_file_name);
+
+								var bmp:Bitmap = bmp_list[i];
+								var byteArray:ByteArray = PNGEncoder.encode(bmp.bitmapData);
+
+								try{
+									fsw.open(save_file, FileMode.WRITE);
+									fsw.writeBytes(byteArray, 0, byteArray.length);
+									fsw.close();
+								} catch (e:Error) {
+								}
+							}
+						}
+					);
+
+					//Exec
+					file.browseForSave(
+						"合成画像の保存"
+					);
+				} catch (e:Error) {
+				}
+//*/
+			}
+
+			private function Load():void{
+/*
+/*/
+				try{
+					var file:File = new File();
+
+					//OnSelect
+					file.addEventListener(
+						Event.SELECT,
+						function(e:Event):void{
+							//「絵」用の画像としてロードする
+							var file:File = e.target as File;
+
+							var loader:Loader = new Loader();
+
+							//OnComplete
+							loader.contentLoaderInfo.addEventListener(
+								Event.COMPLETE,
+								function(e:Event):void{
+									//bmp_list[i]→iを使うとまずいので、iかBitmaoを引数にすること
+									canvas_color.m_Bitmap.bitmapData.draw(loader.content);
+								}
+							);
+
+							loader.load(new URLRequest(file.nativePath));
+						}
+					);
+
+					//Exec
+					file.browseForOpen(
+						"画像ファイルの選択",
+						[new FileFilter("～.png, ～_G.png, ～_S.png", "*.png")]
+					);
+				}catch(e:Error){
+				}
+//*/
+			}
 		]]>
 	</mx:Script>
 
@@ -97,8 +188,24 @@
 					<!--Space-->
 					<mx:Spacer height="100%" />
 
+					<!--Button_Load-->
+					<mx:Button label="Load" buttonDown="Load()" />
+
+					<!--Space-->
+					<mx:Spacer height="100%" />
+
 					<!--Canvas_Result-->
-					<comp:Canvas_Result id="canvas_result" />
+					<mx:HBox width="100%" height="100%"><!--Centering-->
+						<mx:Spacer width="100%" />
+						<comp:Canvas_Result id="canvas_result" />
+						<mx:Spacer width="100%" />
+					</mx:HBox>
+
+					<!--Space-->
+					<mx:Spacer height="100%" />
+
+					<!--Button_Save-->
+					<mx:Button label="Save" buttonDown="Save()" />
 
 					<!--Space-->
 					<mx:Spacer height="100%" />

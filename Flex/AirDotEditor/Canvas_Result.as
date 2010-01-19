@@ -110,10 +110,13 @@ package{
 				ratio = dot;
 				if(ratio < 0.0){ratio = 0.0;}//clamp
 				if(ratio > 1.0){ratio = 1.0;}//clamp
+
+				//0.0～1.0 => 0.0～0.8
+				ratio *= 0.8;
 			}
 
 			//Lerp
-			var result_color;
+			var result_color:uint;
 			{
 				var a:int = (in_Color >> 24) & 0xFF;
 				var r:int = (in_Color >> 16) & 0xFF;

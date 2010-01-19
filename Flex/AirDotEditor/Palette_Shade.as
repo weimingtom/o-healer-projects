@@ -31,8 +31,14 @@ package{
 		//==Var==
 
 		//各値に対応したImage
+		public var m_Layer:Array;//Layer[PRIORITY_NUM]
+//*
 		public var m_Image:Array;//Image[NUM_Y][NUM_X]
 		public var m_Graphics:Array;//Graphics[NUM_Y][NUM_X]
+/*/
+		public var m_Image:Image;
+		public var m_IndexBitmapData:BitmapData;
+//*/
 		public var m_Nrm:Array;//Nrm[NUM_Y][NUM_X]
 
 		//対応するキャンバス
@@ -56,11 +62,47 @@ package{
 
 			//==Image==
 			{
+/*
+				{
+					var shape:Shape = new Shape();
+					{
+						var g:Graphics = shape.graphics;
+
+						g.lineStyle(0, 0x000000, 0.0);
+						g.beginFill(color, 1.0);
+
+						g.drawRect(x*40, y*40, 32, 32);
+
+						g.endFill();
+					}
+				}
+/*/
 				var x:int;
 				var y:int;
-				var NumXY:int = 5;
+				const PRIORITY_NUM:int = 5;
+				const PRIORITY_MAP:Array = [
+					[0, 2, 1, 2, 0, 2, 1, 2, 0],
+					[2, 1, 4, 3, 1, 3, 4, 1, 2],
+					[1, 4, 0, 2, 0, 2, 0, 4, 1],
+					[2, 3, 2, 2, 1, 2, 2, 3, 2],
+					[0, 1, 0, 1, 0, 1, 0, 1, 0],
+					[2, 3, 2, 2, 1, 2, 2, 3, 2],
+					[1, 4, 0, 2, 0, 2, 0, 4, 1],
+					[2, 1, 4, 3, 1, 3, 4, 1, 2],
+					[0, 2, 1, 2, 0, 2, 1, 2, 0],
+				];
+				var NumXY:int = PRIORITY_MAP.length;
 				var CenterX:Number = (NumXY-1)/2.0;
 				var CenterY:Number = (NumXY-1)/2.0;
+				const PALETTE_W:int = 20;
+
+				m_Layer = new Array(PRIORITY_NUM);
+				{
+					for(var i:int = PRIORITY_NUM-1; i >= 0; i -= 1){
+						m_Layer[i] = new Image();
+						addChild(m_Layer[i]);
+					}
+				}
 
 				m_Image    = new Array(NumXY);
 				m_Graphics = new Array(NumXY);
@@ -116,6 +158,8 @@ package{
 
 						//Graphic
 						{
+							var priority:int = PRIORITY_MAP[y][x];
+
 							var shape:Shape = new Shape();
 							m_Graphics[y][x] = shape.graphics;
 
@@ -125,17 +169,27 @@ package{
 								var color:uint = Canvas_Result.CalcColor(0xFFFFFFFF, NrmVector2NrmColor(nrm));
 //								var color:uint = NrmVector2NrmColor(nrm);//法線マップをそのまま表示する場合はこちらで
 
-								g.lineStyle(0, 0x000000, 0.0);
+								var val_ratio:Number = 1.0 * (PRIORITY_NUM - priority) / PRIORITY_NUM;
+								var color_frame:uint = 0x000088;//(uint(0xFF * val_ratio) << 16) | (uint(0x80 * val_ratio) << 8) | (0 << 0);
+								var alpha_frame:Number = 0.2 + 0.8*val_ratio;
+								g.lineStyle(1, color_frame, alpha_frame);
 								g.beginFill(color, 1.0);
 
-								g.drawRect(x*40, y*40, 32, 32);
+//								g.drawRect(x*40, y*40, 32, 32);
+								var RelPos:Vector3D = new Vector3D(x*PALETTE_W - CenterX*PALETTE_W, y*PALETTE_W - CenterY*PALETTE_W);
+								var RelPosLen:Number = RelPos.length;
+								if(RelPosLen > 0.01){
+									RelPos.scaleBy(Math.max(Math.abs(x*PALETTE_W-CenterX*PALETTE_W), Math.abs(y*PALETTE_W-CenterY*PALETTE_W)) / RelPosLen);
+								}
+								g.drawRect(CenterX*PALETTE_W + RelPos.x, CenterY*PALETTE_W + RelPos.y, PALETTE_W, PALETTE_W);
 
 								g.endFill();
 							}
 
 							m_Image[y][x] = new Image();
 							m_Image[y][x].addChild(shape);
-							addChild(m_Image[y][x]);
+
+							m_Layer[priority].addChild(m_Image[y][x]);
 						}
 
 						//Nrm
@@ -153,18 +207,12 @@ package{
 
 							m_Image[y][x].addEventListener(
 								MouseEvent.MOUSE_DOWN,
-/*
-								function(e:MouseEvent):void{
-									SelectNrm(nrm);//この書き方だとnrmの変動の影響を受ける？
-								}
-/*/
 								func(nrm)
-								//一度引数として別物にしてやれば大丈夫
-//*/
 							);
 						}
 					}
 				}
+//*/
 			}
 
 /*
