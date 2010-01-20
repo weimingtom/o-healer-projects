@@ -68,7 +68,7 @@
 
 							for(var i:int = 0; i < BitmapNum; i += 1){
 								var save_file_name:String = save_file_ori.name + save_file_ext[i];
-								var save_file:File = save_file.resolvePath(save_file_name);
+								var save_file:File = save_file_ori.parent.resolvePath(save_file_name);
 
 								var bmp:Bitmap = bmp_list[i];
 								var byteArray:ByteArray = PNGEncoder.encode(bmp.bitmapData);
