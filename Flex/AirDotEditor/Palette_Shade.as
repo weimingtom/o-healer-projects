@@ -163,25 +163,31 @@ package{
 							var shape:Shape = new Shape();
 							m_Graphics[y][x] = shape.graphics;
 
-							//あとで画像ロードで置き換えたい
 							{
+								var RelPos:Vector3D;
+								{
+									RelPos = new Vector3D(x*PALETTE_W - CenterX*PALETTE_W, y*PALETTE_W - CenterY*PALETTE_W);
+									var RelPosLen:Number = RelPos.length;
+									if(RelPosLen > 0.01){
+										RelPos.scaleBy(Math.max(Math.abs(x*PALETTE_W-CenterX*PALETTE_W), Math.abs(y*PALETTE_W-CenterY*PALETTE_W)) / RelPosLen);
+									}
+								}
+
+								var lx:int = CenterX*PALETTE_W + RelPos.x;
+								var uy:int = CenterY*PALETTE_W + RelPos.y;
+
 								var g:Graphics = m_Graphics[y][x];
-								var color:uint = Canvas_Result.CalcColor(0xFFFFFFFF, NrmVector2NrmColor(nrm));
+								var color:uint = Canvas_Result.CalcColor(0xFFFFFFFF, NrmVector2NrmColor(nrm), x*MyCanvas.DOT_NUM/NumXY, y*MyCanvas.DOT_NUM/NumXY, 0xFF222222);
 //								var color:uint = NrmVector2NrmColor(nrm);//法線マップをそのまま表示する場合はこちらで
 
 								var val_ratio:Number = 1.0 * (PRIORITY_NUM - priority) / PRIORITY_NUM;
-								var color_frame:uint = 0x000088;//(uint(0xFF * val_ratio) << 16) | (uint(0x80 * val_ratio) << 8) | (0 << 0);
+								var color_frame:uint = (priority == 0)? 0xFFCC99: 0x000088;//(uint(0xFF * val_ratio) << 16) | (uint(0x80 * val_ratio) << 8) | (0 << 0);
 								var alpha_frame:Number = 0.2 + 0.8*val_ratio;
 								g.lineStyle(1, color_frame, alpha_frame);
 								g.beginFill(color, 1.0);
 
 //								g.drawRect(x*40, y*40, 32, 32);
-								var RelPos:Vector3D = new Vector3D(x*PALETTE_W - CenterX*PALETTE_W, y*PALETTE_W - CenterY*PALETTE_W);
-								var RelPosLen:Number = RelPos.length;
-								if(RelPosLen > 0.01){
-									RelPos.scaleBy(Math.max(Math.abs(x*PALETTE_W-CenterX*PALETTE_W), Math.abs(y*PALETTE_W-CenterY*PALETTE_W)) / RelPosLen);
-								}
-								g.drawRect(CenterX*PALETTE_W + RelPos.x, CenterY*PALETTE_W + RelPos.y, PALETTE_W, PALETTE_W);
+								g.drawRect(lx, uy, PALETTE_W, PALETTE_W);
 
 								g.endFill();
 							}

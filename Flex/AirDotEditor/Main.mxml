@@ -22,6 +22,11 @@
 						canvas_result.Init(canvas_color, canvas_shade);
 					}
 
+					//palette
+					{//rootを参照するときはこのタイミングでInitする必要があるっぽい
+						palette_color.Init(canvas_color);
+					}
+
 				}
 				
 /*
@@ -140,7 +145,7 @@
 
 		<!--TabWindow_Color-->
 		<mx:TabNavigator id="tab_window_color" width="200" height="100%">
-			<comp:Palette_Color label="色" id="palette_color" creationComplete="palette_color.Init(canvas_color)" />
+			<comp:Palette_Color label="色" id="palette_color" />
 		</mx:TabNavigator>
 
 		<!--Space-->
