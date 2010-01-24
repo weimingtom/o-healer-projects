@@ -23,8 +23,8 @@ package{
 		//==Const==
 
 		//＃サイズ
-		static public const SIZE_W:int = 200;
-		static public const SIZE_H:int = 300;
+		static public const SIZE_W:int = 190;
+		static public const SIZE_H:int = 200;
 
 
 
@@ -32,13 +32,10 @@ package{
 
 		//各値に対応したImage
 		public var m_Layer:Array;//Layer[PRIORITY_NUM]
-//*
+
 		public var m_Image:Array;//Image[NUM_Y][NUM_X]
 		public var m_Graphics:Array;//Graphics[NUM_Y][NUM_X]
-/*/
-		public var m_Image:Image;
-		public var m_IndexBitmapData:BitmapData;
-//*/
+
 		public var m_Nrm:Array;//Nrm[NUM_Y][NUM_X]
 
 		//対応するキャンバス
@@ -62,21 +59,6 @@ package{
 
 			//==Image==
 			{
-/*
-				{
-					var shape:Shape = new Shape();
-					{
-						var g:Graphics = shape.graphics;
-
-						g.lineStyle(0, 0x000000, 0.0);
-						g.beginFill(color, 1.0);
-
-						g.drawRect(x*40, y*40, 32, 32);
-
-						g.endFill();
-					}
-				}
-/*/
 				var x:int;
 				var y:int;
 				const PRIORITY_NUM:int = 5;
@@ -94,7 +76,6 @@ package{
 				var NumXY:int = PRIORITY_MAP.length;
 				var CenterX:Number = (NumXY-1)/2.0;
 				var CenterY:Number = (NumXY-1)/2.0;
-				const PALETTE_W:int = 20;
 
 				m_Layer = new Array(PRIORITY_NUM);
 				{
@@ -162,7 +143,8 @@ package{
 
 							var shape:Shape = new Shape();
 							m_Graphics[y][x] = shape.graphics;
-
+/*
+							//以下の処理はRedrawに移す
 							{
 								var RelPos:Vector3D;
 								{
@@ -191,7 +173,7 @@ package{
 
 								g.endFill();
 							}
-
+//*/
 							m_Image[y][x] = new Image();
 							m_Image[y][x].addChild(shape);
 
@@ -218,245 +200,70 @@ package{
 						}
 					}
 				}
-//*/
-			}
 
-/*
-			//色を塗ったりレイアウト構築したり
-			{
-				//m_PalettePhaseのデフォルトの値に応じて構築
-				CreatePalette(m_PalettePhase);
-			}
-
-			//カーソルは1stの一番最初の奴に合わせておく
-			{
-				//m_PalettePhaseのデフォルトの値に応じて構築
-				SelectColor(m_PalettePhase);
-			}
-//*/
-		}
-
-/*
-		//
-		public function CreatePalette(in_Phase:int):void{
-			//Param
-			{
-				m_PalettePhase = in_Phase;
-			}
-
-			var i:int;
-			var p:int;
-			var Size:int;
-			var lx:int;
-			var uy:int;
-			var w:int;
-			var h:int;
-
-			var PhaseNum:int = COLOR_LIST.length;
-
-			//Draw
-			switch(in_Phase){
-			case 0://０段目だけ表示
-				{//[0]
-					//Draw Palette
-					p = 0;
-					Size = COLOR_LIST[p].length;
-
-					{//Param
-//						w = SIZE_W - SPACE_L - SPACE_R;
-						h = (SIZE_H - SPACE_U - SPACE_D - SPACE_Y*(Size-1)) / Size;//高さからスペースを除いたものをSizeで分割
-						w = h;
-
-						lx = SPACE_L;
-						uy = SPACE_U;
-					}
-
-					for(i = 0; i < Size; i += 1){
-						var g:Graphics = m_Graphics[p][i];
-
-						var color:uint = COLOR_LIST[p][i];
-
-						//gにパレットの絵を描く
-						{//Color
-							g.lineStyle(0, 0x000000, 0.0);
-							g.beginFill(COLOR_LIST[p][i] & 0xFFFFFF, 1.0);//透明色はないと仮定
-
-							g.drawRect(lx, uy, w, h);
-
-							g.endFill();
-						}
-						{//Frame
-							g.moveTo(lx, uy);
-
-							g.lineStyle(1, 0x000000, 0.8);
-							g.lineTo(lx+w, uy);
-
-							g.lineStyle(1, 0x606060, 0.8);
-							g.lineTo(lx+w, uy+h);
-
-							g.lineStyle(1, 0xFFFFFF, 0.8);
-							g.lineTo(lx, uy+h);
-
-							g.lineStyle(1, 0xA0A0A0, 0.8);
-							g.lineTo(lx, uy);
-						}
-
-						//Offset
-						uy += h + SPACE_Y;
-					}
+				//描画
+				{
+					Redraw();
 				}
-
-				{//[1]～
-					//No Draw => Clear
-					for(p = 1; p < PhaseNum; p += 1){
-						Size = COLOR_LIST[p].length;
-
-						for(i = 0; i < Size; i += 1){
-							m_Graphics[p][i].clear();
-						}
-					}
-				}
-				break;
-			case 1://０段と１段を表示
-				{//[0]
-					//Draw Palette
-					p = 0;
-					Size = COLOR_LIST[p].length;
-
-					{//Param
-//						w = SIZE_W - SPACE_L - SPACE_R;
-						h = (SIZE_H - SPACE_U - SPACE_D - SPACE_Y*(Size-1)) / Size;//高さからスペースを除いたものをSizeで分割
-						w = h;
-
-						lx = SPACE_L;
-						uy = SPACE_U;
-					}
-
-					for(i = 0; i < Size; i += 1){
-						var g:Graphics = m_Graphics[p][i];
-
-						var color:uint = COLOR_LIST[p][i];
-
-						//gにパレットの絵を描く
-						{//Color
-							g.lineStyle(0, 0x000000, 0.0);
-							g.beginFill(COLOR_LIST[p][i] & 0xFFFFFF, 1.0);//透明色はないと仮定
-
-							g.moveTo(lx, uy);
-
-							g.lineTo(lx+w, uy);
-
-							g.lineTo(lx+w+w/2, uy+h/2);
-
-							g.lineTo(lx+w, uy+h);
-
-							g.lineTo(lx, uy+h);
-
-							g.lineTo(lx, uy);
-
-							g.endFill();
-						}
-						{//Frame
-							g.moveTo(lx, uy);
-
-							g.lineStyle(1, 0x000000, 0.8);
-							g.lineTo(lx+w, uy);
-
-							g.lineStyle(1, 0x303030, 0.8);
-							g.lineTo(lx+w+w/2, uy+h/2);
-
-							g.lineStyle(1, 0xB0B0B0, 0.8);
-							g.lineTo(lx+w, uy+h);
-
-							g.lineStyle(1, 0xFFFFFF, 0.8);
-							g.lineTo(lx, uy+h);
-
-							g.lineStyle(1, 0xA0A0A0, 0.8);
-							g.lineTo(lx, uy);
-						}
-
-						//Offset
-						uy += h + SPACE_Y;
-					}
-				}
-
-				{//[1]
-					//Draw Palette
-					p = 1;
-					Size = COLOR_LIST[p].length;
-
-					{//Param
-//						w = SIZE_W - SPACE_L - SPACE_R;
-//						h = (SIZE_H - SPACE_U - SPACE_D - SPACE_Y*(Size-1)) / Size;//高さからスペースを除いたものをSizeで分割
-//						w = h;
-						//wとhの値は[0]のものを流用す
-
-						lx = SPACE_L + w*1.7;
-						uy = SPACE_U + h/2 + SPACE_Y/2;
-					}
-
-					for(i = 0; i < Size; i += 1){
-						var g:Graphics = m_Graphics[p][i];
-
-						var color:uint = COLOR_LIST[p][i];
-
-						//gにパレットの絵を描く
-						{//Color
-							g.lineStyle(0, 0x000000, 0.0);
-							g.beginFill(COLOR_LIST[p][i] & 0xFFFFFF, 1.0);//透明色はないと仮定
-
-							g.moveTo(lx, uy);
-
-							g.lineTo(lx+w, uy);
-
-							g.lineTo(lx+w, uy+h);
-
-							g.lineTo(lx, uy+h);
-
-							g.lineTo(lx-w/2, uy+h/2);
-
-							g.lineTo(lx, uy);
-
-							g.endFill();
-						}
-						{//Frame
-							g.moveTo(lx, uy);
-
-							g.lineStyle(1, 0x000000, 0.8);
-							g.lineTo(lx+w, uy);
-
-							g.lineStyle(1, 0x606060, 0.8);
-							g.lineTo(lx+w, uy+h);
-
-							g.lineStyle(1, 0xFFFFFF, 0.8);
-							g.lineTo(lx, uy+h);
-
-							g.lineStyle(1, 0xD0D0D0, 0.8);
-							g.lineTo(lx-w/2, uy+h/2);
-
-							g.lineStyle(1, 0x505050, 0.8);
-							g.lineTo(lx, uy);
-						}
-
-						//Offset
-						uy += h + SPACE_Y;
-					}
-				}
-
-				{//[2]～
-					//No Draw => Clear
-					for(p = 2; p < PhaseNum; p += 1){
-						Size = COLOR_LIST[p].length;
-
-						for(i = 0; i < Size; i += 1){
-							m_Graphics[p][i].clear();
-						}
-					}
-				}
-				break;
 			}
 		}
-//*/
+
+		//再描画（ライト位置やマテリアルを変更したときに呼ぶ）
+		public function Redraw():void{
+			var x:int;
+			var y:int;
+
+			var NumXY:int = m_Graphics.length;
+			var CenterX:Number = (NumXY-1)/2.0;
+			var CenterY:Number = (NumXY-1)/2.0;
+			const PALETTE_W:int = 20;
+
+			for(y = 0; y < NumXY; y += 1){
+				for(x = 0; x < NumXY; x += 1){
+					//Calc Nrm
+					var nrm:Vector3D;
+					{
+						nrm = m_Nrm[y][x];
+					}
+
+					//Graphic
+					{
+						{
+							var RelPos:Vector3D;
+							{
+								RelPos = new Vector3D(x*PALETTE_W - CenterX*PALETTE_W, y*PALETTE_W - CenterY*PALETTE_W);
+								var RelPosLen:Number = RelPos.length;
+								if(RelPosLen > 0.01){
+									RelPos.scaleBy(Math.max(Math.abs(x*PALETTE_W-CenterX*PALETTE_W), Math.abs(y*PALETTE_W-CenterY*PALETTE_W)) / RelPosLen);
+								}
+							}
+
+							var lx:int = CenterX*PALETTE_W + RelPos.x;
+							var uy:int = CenterY*PALETTE_W + RelPos.y;
+
+							var g:Graphics = m_Graphics[y][x];
+							var color:uint = 0xFFFFFF & Canvas_Result.CalcColor(0xFFFFFFFF, NrmVector2NrmColor(nrm), x*MyCanvas.DOT_NUM/NumXY, y*MyCanvas.DOT_NUM/NumXY);
+//							var color:uint = NrmVector2NrmColor(nrm);//法線マップをそのまま表示する場合はこちらで
+
+							var val_ratio:Number = 1.0;// * (PRIORITY_NUM - priority) / PRIORITY_NUM;
+							var color_frame:uint = 0x000088;//(priority == 0)? 0xFFCC99: 0x000088;//(uint(0xFF * val_ratio) << 16) | (uint(0x80 * val_ratio) << 8) | (0 << 0);
+							var alpha_frame:Number = 0.2 + 0.8*val_ratio;
+
+							g.clear();
+
+							g.lineStyle(1, color_frame, alpha_frame);
+							g.beginFill(color, 1.0);
+
+//								g.drawRect(x*40, y*40, 32, 32);
+							g.drawRect(lx, uy, PALETTE_W, PALETTE_W);
+
+							g.endFill();
+						}
+					}
+				}
+			}
+		}
+
 
 		//NrmVector => NrmColor
 		static public function NrmVector2NrmColor(in_Nrm:Vector3D):uint{
@@ -475,40 +282,8 @@ package{
 
 		//指定した法線を採用する時の処理
 		public function SelectNrm(in_Nrm:Vector3D):void{
-//*
 			m_Canvas.SetColor(NrmVector2NrmColor(in_Nrm));
-/*/
-			var Size:int;
-
-			var PhaseNum:int = COLOR_LIST.length;
-
-			var index:int = in_Index;
-			for(var p:int = 0; p < PhaseNum; p += 1){
-				Size = COLOR_LIST[p].length;
-
-				if(index < Size){//この段のパレットに含まれていれば対応する処理を行う
-					//キャンバスで使う色を変更
-					m_Canvas.SetColor(COLOR_LIST[p][index]);
-
-					//カーソル位置を変更
-					ResetCursor(in_Index);
-
-					return;
-				}
-
-				index -= Size;
-			}
-//*/
 		}
 
-/*
-		//カーソルの位置と形状を変更
-		public function ResetCursor(in_Index:int):void{
-			switch(m_PalettePhase){
-			case 0://０段目だけ表示の時
-				break;
-			}
-		}
-//*/
 	}
 }

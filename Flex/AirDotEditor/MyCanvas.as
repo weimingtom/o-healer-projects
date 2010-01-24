@@ -59,8 +59,7 @@ package{
 		public var m_GridType:int = GridButton.GRID_TYPE_8x8;//GRID_TYPE_32x32;//
 
 		//＃選択中のツール
-		//全キャンバスで共通にしてしまうため、staticにする
-		static public var m_ToolIndex:int = ToolButton.TOOL_PEN;
+		public var m_ToolIndex:int = ToolButton.TOOL_PEN;
 
 
 		//=継承先で変更するもの=
@@ -235,6 +234,20 @@ package{
 				}
 			}
 
+			//ShiftやCtrlを押しているなら別処理
+			{
+				//Shiftを押している
+				if(e.shiftKey){
+					//→スポイトとして処理する
+					SetColor(m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY));
+					return;
+				}
+
+				//Ctrlを押している
+				if(e.ctrlKey){
+				}
+			}
+
 			//ツールごとの処理
 			switch(m_ToolIndex){
 			//
@@ -251,7 +264,9 @@ package{
 			//
 			case ToolButton.TOOL_LINE:
 			case ToolButton.TOOL_RECT:
+			case ToolButton.TOOL_RECT_PAINT:
 			case ToolButton.TOOL_CIRCLE:
+			case ToolButton.TOOL_CIRCLE_PAINT:
 				//開始直前のBitmapを覚えておき、これに上書きしたものを毎フレーム見せて確認させる
 				m_BitmapData_Ori = m_Bitmap.bitmapData.clone();
 				break;
@@ -290,8 +305,14 @@ package{
 			case ToolButton.TOOL_RECT:
 				DrawRect(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY);
 				break;
+			case ToolButton.TOOL_RECT_PAINT:
+				DrawRect(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY, true);
+				break;
 			case ToolButton.TOOL_CIRCLE:
 				DrawCircle(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY);
+				break;
+			case ToolButton.TOOL_CIRCLE_PAINT:
+				DrawCircle(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY, true);
 				break;
 			//
 			case ToolButton.TOOL_SPOIT:
@@ -302,6 +323,20 @@ package{
 
 		public function OnMouseMove(e:MouseEvent):void{
 			if(m_IsMouseDown){
+				//ShiftやCtrlを押しているなら別処理
+				{
+					//Shiftを押している
+					if(e.shiftKey){
+						//→スポイトとして処理する
+						SetColor(m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY));
+						return;
+					}
+
+					//Ctrlを押している
+					if(e.ctrlKey){
+					}
+				}
+
 				//ツールごとの処理
 				switch(m_ToolIndex){
 				//
@@ -321,8 +356,54 @@ package{
 					break;
 				//
 				case ToolButton.TOOL_LINE:
+					//Oriでリセット
+					{
+						m_Bitmap.bitmapData = m_BitmapData_Ori.clone();
+					}
+					//Draw
+					{
+						DrawLine(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY);
+					}
+					break;
 				case ToolButton.TOOL_RECT:
+					//Oriでリセット
+					{
+						m_Bitmap.bitmapData = m_BitmapData_Ori.clone();
+					}
+					//Draw
+					{
+						DrawRect(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY);
+					}
+					break;
+				case ToolButton.TOOL_RECT_PAINT:
+					//Oriでリセット
+					{
+						m_Bitmap.bitmapData = m_BitmapData_Ori.clone();
+					}
+					//Draw
+					{
+						DrawRect(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY, true);
+					}
+					break;
 				case ToolButton.TOOL_CIRCLE:
+					//Oriでリセット
+					{
+						m_Bitmap.bitmapData = m_BitmapData_Ori.clone();
+					}
+					//Draw
+					{
+						DrawCircle(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY);
+					}
+					break;
+				case ToolButton.TOOL_CIRCLE_PAINT:
+					//Oriでリセット
+					{
+						m_Bitmap.bitmapData = m_BitmapData_Ori.clone();
+					}
+					//Draw
+					{
+						DrawCircle(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY, true);
+					}
 					break;
 				//
 				case ToolButton.TOOL_SPOIT:
@@ -340,7 +421,7 @@ package{
 
 		public function Update():void{
 			var DeltaTime:Number = 1.0 / 20.0;
-
+/*
 			//Tool
 			{
 				if(m_IsMouseDown){
@@ -392,7 +473,7 @@ package{
 					}
 				}
 			}
-
+//*/
 			//Cursor
 			{
 				var i:int;
@@ -664,7 +745,7 @@ package{
 		}
 
 		//#Rect
-		public function DrawRect(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int):void{
+		public function DrawRect(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int, in_PaintFlag:Boolean = false):void{
 			
 			//Gridに合わせてドットを荒くする
 			var SrcX:int;
@@ -720,27 +801,44 @@ package{
 
 			//Draw
 			{
-				//横線
-				for(var x:int = SrcX; x <= DstX; x += 1){
-					//上の線
-					DrawPoint(x, SrcY);
-					//下の線
-					DrawPoint(x, DstY);
-				}
-				
-				//縦線
-				for(var y:int = SrcY; y <= DstY; y += 1){
-					//左の線
-					DrawPoint(SrcX, y);
-					//右の線
-					DrawPoint(DstX, y);
+				var x:int;
+				var y:int;
+
+				if(in_PaintFlag){
+					//塗りつぶすバージョン
+
+					for(x = SrcX; x <= DstX; x += 1){
+						for(y = SrcY; y <= DstY; y += 1){
+							DrawPoint(x, y);
+						}
+					}
+				}else{
+					//枠だけ描くバージョン
+
+					//横線
+					for(x = SrcX; x <= DstX; x += 1){
+						//上の線
+						DrawPoint(x, SrcY);
+						//下の線
+						DrawPoint(x, DstY);
+					}
+					
+					//縦線
+					for(y = SrcY; y <= DstY; y += 1){
+						//左の線
+						DrawPoint(SrcX, y);
+						//右の線
+						DrawPoint(DstX, y);
+					}
 				}
 			}
 		}
 
 		//#Circle
-		public function DrawCircle(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int):void{
+		public function DrawCircle(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int, in_PaintFlag:Boolean = false):void{
 			//アンチェリをかけたくないので、自前で描く
+
+			var x:Number;
 
 			//Gridに合わせてドットを荒くする
 			var SrcX:int;
@@ -823,14 +921,31 @@ package{
 				{
 					//始点を打つ
 					{
-						//X+Y+
-						DrawPoint(CenterX + OffsetX, CenterY + OffsetY);
-						//X+Y-
-						DrawPoint(CenterX + OffsetX, CenterY - OffsetY);
-						//X-Y+
-						DrawPoint(CenterX - OffsetX, CenterY + OffsetY);
-						//X-Y-
-						DrawPoint(CenterX - OffsetX, CenterY - OffsetY);
+						if(in_PaintFlag){
+							//塗りつぶすバージョン
+
+							for(x = OffsetX; x >= 0.0; x -= 1.0){//塗りつぶし用ループ
+								//X+Y+
+								DrawPoint(CenterX + x, CenterY + OffsetY);
+								//X+Y-
+								DrawPoint(CenterX + x, CenterY - OffsetY);
+								//X-Y+
+								DrawPoint(CenterX - x, CenterY + OffsetY);
+								//X-Y-
+								DrawPoint(CenterX - x, CenterY - OffsetY);
+							}
+						}else{
+							//枠だけ描くバージョン
+
+							//X+Y+
+							DrawPoint(CenterX + OffsetX, CenterY + OffsetY);
+							//X+Y-
+							DrawPoint(CenterX + OffsetX, CenterY - OffsetY);
+							//X-Y+
+							DrawPoint(CenterX - OffsetX, CenterY + OffsetY);
+							//X-Y-
+							DrawPoint(CenterX - OffsetX, CenterY - OffsetY);
+						}
 					}
 
 					while(OffsetX > 0){
@@ -882,14 +997,31 @@ package{
 
 						//点を打つ
 						{
-							//X+Y+
-							DrawPoint(CenterX + OffsetX, CenterY + OffsetY);
-							//X+Y-
-							DrawPoint(CenterX + OffsetX, CenterY - OffsetY);
-							//X-Y+
-							DrawPoint(CenterX - OffsetX, CenterY + OffsetY);
-							//X-Y-
-							DrawPoint(CenterX - OffsetX, CenterY - OffsetY);
+							if(in_PaintFlag){
+								//塗りつぶすバージョン
+
+								for(x = OffsetX; x >= 0.0; x -= 1.0){//塗りつぶし用ループ
+									//X+Y+
+									DrawPoint(CenterX + x, CenterY + OffsetY);
+									//X+Y-
+									DrawPoint(CenterX + x, CenterY - OffsetY);
+									//X-Y+
+									DrawPoint(CenterX - x, CenterY + OffsetY);
+									//X-Y-
+									DrawPoint(CenterX - x, CenterY - OffsetY);
+								}
+							}else{
+								//枠だけ描くバージョン
+
+								//X+Y+
+								DrawPoint(CenterX + OffsetX, CenterY + OffsetY);
+								//X+Y-
+								DrawPoint(CenterX + OffsetX, CenterY - OffsetY);
+								//X-Y+
+								DrawPoint(CenterX - OffsetX, CenterY + OffsetY);
+								//X-Y-
+								DrawPoint(CenterX - OffsetX, CenterY - OffsetY);
+							}
 						}
 
 						//もっと最適化できるはずなんだけど、実用上問題ないのでこのままで

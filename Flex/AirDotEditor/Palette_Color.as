@@ -32,13 +32,6 @@ package{
 		static public const BRIGHTNESS_W:int = 100;
 		static public const BRIGHTNESS_H:int = 32;
 
-		//＃スペース
-		static public const SPACE_L:int = 3;
-		static public const SPACE_R:int = 3;
-		static public const SPACE_U:int = 3;
-		static public const SPACE_D:int = 3;
-		static public const SPACE_Y:int = 6;
-
 
 
 		//==Var==

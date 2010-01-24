@@ -72,7 +72,7 @@ package{
 			for(var y:int = 0; y < DOT_NUM; y += 1){
 				for(var x:int = 0; x < DOT_NUM; x += 1){
 					var nrm_color:uint = m_Bitmap.bitmapData.getPixel32(x, y);
-					var color:uint = Canvas_Result.CalcColor(0xFFFFFFFF, nrm_color, x, y, 0xFF222222);
+					var color:uint = Canvas_Result.CalcColor(0xFFFFFFFF, nrm_color, x, y);
 					m_Bitmap_Show.bitmapData.setPixel32(x, y, color);
 				}
 			}
@@ -90,15 +90,15 @@ package{
 		}
 
 		//#Rect
-		override public function DrawRect(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int):void{
-			super.DrawRect(in_SrcX, in_SrcY, in_DstX, in_DstY);
+		override public function DrawRect(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int, in_PaintFlag:Boolean = false):void{
+			super.DrawRect(in_SrcX, in_SrcY, in_DstX, in_DstY, in_PaintFlag);
 
 			Redraw();
 		}
 
 //*
 		//#Circle
-		override public function DrawCircle(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int):void{
+		override public function DrawCircle(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int, in_PaintFlag:Boolean = false):void{
 			//法線をピクセルごとに計算したいので独自に描く
 
 			var x:Number;
@@ -132,14 +132,6 @@ package{
 					var rx:int = lx + GridOffset;
 					var dy:int = uy + GridOffset;
 
-					//!!!!!!!!!!!!!
-					//!!!!!!!!!!!!!
-					//!!!!!!!!!!!!!
-//					var color:uint = 
-					//!!!!!!!!!!!!!
-					//!!!!!!!!!!!!!
-					//!!!!!!!!!!!!!
-					//!!!!!!!!!!!!!
 					var ratio_x:Number = (in_X - CenterX) / (RadX + 1.0);
 					var ratio_y:Number = (in_Y - CenterY) / (RadY + 1.0);
 					var ratio_z:Number = Math.sqrt(1.0 - (ratio_x*ratio_x + ratio_y*ratio_y));
@@ -186,15 +178,30 @@ package{
 				{
 					//始点を打つ
 					{
-						for(x = OffsetX; x >= 0.0; x -= 1.0){//塗りつぶし用ループ
+						if(in_PaintFlag){
+							//塗りつぶすバージョン
+
+							for(x = OffsetX; x >= 0.0; x -= 1.0){//塗りつぶし用ループ
+								//X+Y+
+								DrawPoint(CenterX + x, CenterY + OffsetY);
+								//X+Y-
+								DrawPoint(CenterX + x, CenterY - OffsetY);
+								//X-Y+
+								DrawPoint(CenterX - x, CenterY + OffsetY);
+								//X-Y-
+								DrawPoint(CenterX - x, CenterY - OffsetY);
+							}
+						}else{
+							//枠だけ描くバージョン
+
 							//X+Y+
-							DrawPoint(CenterX + x, CenterY + OffsetY);
+							DrawPoint(CenterX + OffsetX, CenterY + OffsetY);
 							//X+Y-
-							DrawPoint(CenterX + x, CenterY - OffsetY);
+							DrawPoint(CenterX + OffsetX, CenterY - OffsetY);
 							//X-Y+
-							DrawPoint(CenterX - x, CenterY + OffsetY);
+							DrawPoint(CenterX - OffsetX, CenterY + OffsetY);
 							//X-Y-
-							DrawPoint(CenterX - x, CenterY - OffsetY);
+							DrawPoint(CenterX - OffsetX, CenterY - OffsetY);
 						}
 					}
 
@@ -247,15 +254,30 @@ package{
 
 						//点を打つ
 						{
-							for(x = OffsetX; x >= 0.0; x -= 1.0){//塗りつぶし用ループ
+							if(in_PaintFlag){
+								//塗りつぶすバージョン
+
+								for(x = OffsetX; x >= 0.0; x -= 1.0){//塗りつぶし用ループ
+									//X+Y+
+									DrawPoint(CenterX + x, CenterY + OffsetY);
+									//X+Y-
+									DrawPoint(CenterX + x, CenterY - OffsetY);
+									//X-Y+
+									DrawPoint(CenterX - x, CenterY + OffsetY);
+									//X-Y-
+									DrawPoint(CenterX - x, CenterY - OffsetY);
+								}
+							}else{
+								//枠だけ描くバージョン
+
 								//X+Y+
-								DrawPoint(CenterX + x, CenterY + OffsetY);
+								DrawPoint(CenterX + OffsetX, CenterY + OffsetY);
 								//X+Y-
-								DrawPoint(CenterX + x, CenterY - OffsetY);
+								DrawPoint(CenterX + OffsetX, CenterY - OffsetY);
 								//X-Y+
-								DrawPoint(CenterX - x, CenterY + OffsetY);
+								DrawPoint(CenterX - OffsetX, CenterY + OffsetY);
 								//X-Y-
-								DrawPoint(CenterX - x, CenterY - OffsetY);
+								DrawPoint(CenterX - OffsetX, CenterY - OffsetY);
 							}
 						}
 

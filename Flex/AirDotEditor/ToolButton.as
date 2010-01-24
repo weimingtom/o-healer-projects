@@ -26,20 +26,22 @@ package{
 
 		//＃ツールの種類
 		//
-		static public const TOOL_PEN:int	= 0;
+		static public const TOOL_PEN:int			= 0;
 		//
-		static public const TOOL_SPRAY:int	= 1;
+		static public const TOOL_SPRAY:int			= 1;
 		//
-		static public const TOOL_PAINT:int	= 2;
+		static public const TOOL_PAINT:int			= 2;
 		//
-		static public const TOOL_LINE:int	= 3;
-		static public const TOOL_RECT:int	= 4;
-		static public const TOOL_CIRCLE:int	= 5;
+		static public const TOOL_LINE:int			= 3;
+		static public const TOOL_RECT:int			= 4;
+		static public const TOOL_RECT_PAINT:int		= 5;
+		static public const TOOL_CIRCLE:int			= 6;
+		static public const TOOL_CIRCLE_PAINT:int	= 7;
 		//
-		static public const TOOL_SPOIT:int	= 6;
+		static public const TOOL_SPOIT:int			= 8;
 		//
-		static public const TOOL_UNDO:int	= 7;
-		static public const TOOL_REDO:int	= 8;
+		static public const TOOL_UNDO:int			= 9;
+		static public const TOOL_REDO:int			= 10;
 
 		//==Embed==
 		[Embed(source='Tool_Pen.png')]
@@ -52,8 +54,12 @@ package{
 		 private static var Bitmap_Line: Class;
 		[Embed(source='Tool_Rect.png')]
 		 private static var Bitmap_Rect: Class;
+		[Embed(source='Tool_RectP.png')]
+		 private static var Bitmap_Rect_Paint: Class;
 		[Embed(source='Tool_Circle.png')]
 		 private static var Bitmap_Circle: Class;
+		[Embed(source='Tool_CircleP.png')]
+		 private static var Bitmap_Circle_Paint: Class;
 		[Embed(source='Tool_Spoit.png')]
 		 private static var Bitmap_Spoit: Class;
 		[Embed(source='Tool_Undo.png')]
@@ -67,7 +73,9 @@ package{
 			new Bitmap_Paint(),
 			new Bitmap_Line(),
 			new Bitmap_Rect(),
+			new Bitmap_Rect_Paint(),
 			new Bitmap_Circle(),
+			new Bitmap_Circle_Paint(),
 			new Bitmap_Spoit(),
 			new Bitmap_Undo(),
 			new Bitmap_Redo(),
@@ -76,16 +84,19 @@ package{
 		//==Var==
 
 		//＃Cursor
-		static public var m_Cursor:Image;//ツールで一つを共有
+		static public var m_Cursor:Object = {};//Image;//ツールで一つを共有
 
 		//＃こいつのIndex
 		public var m_ToolIndex:int;
+
+		//
+		public var m_Canvas:MyCanvas;
 
 
 		//==Function==
 
 		//!stageなどの初期化が終了した後に呼んでもらう
-		public function Init(in_ToolIndex:int):void{
+		public function Init(in_ToolIndex:int, in_Canvas:MyCanvas):void{
 			var i:int;
 			var j:int;
 
@@ -99,12 +110,13 @@ package{
 			//==Param==
 			{
 				m_ToolIndex = in_ToolIndex;
+				m_Canvas    = in_Canvas;
 			}
 
 			//==Image==
 			{
 				var img:Image = new Image();
-				img.addChild(m_BitmapList[in_ToolIndex]);
+				img.addChild(new Bitmap(m_BitmapList[in_ToolIndex].bitmapData.clone()));
 
 				addChild(img);
 			}
@@ -112,13 +124,13 @@ package{
 			//==Cursor==
 			{
 				//初めて作るのがこいつなら、こいつにカーソルを合わせた状態で生成
-				if(m_Cursor == null){
+				if(m_Cursor[in_Canvas.toString()] == null){
 					//Draw
 					{
-						m_Cursor = new Image();
+						m_Cursor[in_Canvas.toString()] = new Image();
 
 						var shape:Shape = new Shape();
-						m_Cursor.addChild(shape);
+						m_Cursor[in_Canvas.toString()].addChild(shape);
 
 						var g:Graphics = shape.graphics;
 						{
@@ -152,13 +164,13 @@ package{
 		public function ChangeToolIndex():void{
 			//SetToolIndex
 			{
-				MyCanvas.m_ToolIndex = m_ToolIndex;
+				m_Canvas.m_ToolIndex = m_ToolIndex;
 			}
 
 			//CursorImage
 			{
 				//カーソルを自分につける
-				addChild(m_Cursor);
+				addChild(m_Cursor[m_Canvas.toString()]);
 			}
 		}
 	}

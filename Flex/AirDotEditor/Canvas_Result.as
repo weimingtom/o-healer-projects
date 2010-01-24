@@ -78,24 +78,32 @@ package{
 		}
 
 		//Bitmapの中央を原点、単位はドットと考える
-		//ライト位置
-		static public var m_LightPosition:Vector3D = new Vector3D(-MyCanvas.DOT_NUM/8, -MyCanvas.DOT_NUM/16, 10.0);
+		//マテリアル名
+		static public var m_MaterialName:String = "N";//デフォルト：ノーマル
 		//
-		static public function CalcColor(in_Color:uint, in_NrmColor:uint, in_X:int = 0, in_Y:int = 0, in_AmbientColor:uint = 0xFF222222):uint{
-			var m_MaterialType:int = 1;
-			switch(m_MaterialType){
-			case 0:
-				return CalcColor_Normal(in_Color, in_NrmColor, in_X, in_Y, in_AmbientColor);
-			case 1:
-				return CalcColor_Metal(in_Color, in_NrmColor, in_X, in_Y, in_AmbientColor);
-			}
+		static public function SetMaterialName(in_MaterialName:String):void{
+			m_MaterialName = in_MaterialName;
+		}
+		//
+		static public function CalcColor(in_Color:uint, in_NrmColor:uint, in_X:int = 0, in_Y:int = 0):uint{
+			const calcMap:Object = {
+				//ノーマル
+				N:CalcColor_Normal,
+				//金属
+				M:CalcColor_Metal,
 
-			//default
-			return CalcColor_Normal(in_Color, in_NrmColor, in_X, in_Y, in_AmbientColor);
+				//デバッグ
+				D:function(in_Color:uint, in_NrmColor:uint, in_X:int, in_Y:int):uint{return in_NrmColor;}
+			};
+
+			return calcMap[m_MaterialName](in_Color, in_NrmColor, in_X, in_Y);
 		}
 		//#Normal
-		static public function CalcColor_Normal(in_Color:uint, in_NrmColor:uint, in_X:int = 0, in_Y:int = 0, in_AmbientColor:uint = 0xFF222222):uint{
+		static public function CalcColor_Normal(in_Color:uint, in_NrmColor:uint, in_X:int = 0, in_Y:int = 0):uint{
 //*
+//			var LightColor:uint = Palette_Light.m_LightColor;
+			var AmbientColor:uint = Palette_Light.m_AmbientColor;
+
 			//NrmColor => NrmVector
 			var Nrm:Vector3D;
 			{
@@ -107,9 +115,9 @@ package{
 			var RelLightDir:Vector3D;
 			{
 				RelLightDir = new Vector3D(
-					m_LightPosition.x - in_X,
-					m_LightPosition.y - in_Y,
-					m_LightPosition.z
+					Palette_Light.m_LightPosition.x - in_X,
+					Palette_Light.m_LightPosition.y - in_Y,
+					Palette_Light.m_LightPosition.z
 				);
 
 				RelLightDir.normalize();
@@ -121,8 +129,10 @@ package{
 				var dot:Number = Nrm.dotProduct(RelLightDir);
 
 				ratio = dot;
-				//-01.8～1.0→0.0～1.0：独自処理
-				ratio = (ratio + 0.8) * (1.0 / 1.8);
+//				//-0.8～1.0→0.0～1.0：独自処理
+//				ratio = (ratio + 0.8) * (1.0 / 1.8);
+				//-0.2～1.0→0.0～1.0：独自処理
+				ratio = (ratio + 0.2) * (1.0 / 1.2);
 				if(ratio < 0.0){ratio = 0.0;}//clamp
 				if(ratio > 1.0){ratio = 1.0;}//clamp
 			}
@@ -135,9 +145,9 @@ package{
 				var g:uint = (in_Color >>  8) & 0xFF;
 				var b:uint = (in_Color >>  0) & 0xFF;
 
-				var r_dst:uint = (in_AmbientColor >> 16) & 0xFF;
-				var g_dst:uint = (in_AmbientColor >>  8) & 0xFF;
-				var b_dst:uint = (in_AmbientColor >>  0) & 0xFF;
+				var r_dst:uint = (AmbientColor >> 16) & 0xFF;
+				var g_dst:uint = (AmbientColor >>  8) & 0xFF;
+				var b_dst:uint = (AmbientColor >>  0) & 0xFF;
 
 				r = (r * ratio) + (r_dst * (1 - ratio));
 				g = (g * ratio) + (g_dst * (1 - ratio));
@@ -155,16 +165,17 @@ package{
 
 
 //*
-		static public function CalcColor_Metal(in_Color:uint, in_NrmColor:uint, in_X:int = 0, in_Y:int = 0, in_AmbientColor:uint = 0xFF222222):uint{
+		static public function CalcColor_Metal(in_Color:uint, in_NrmColor:uint, in_X:int = 0, in_Y:int = 0):uint{
 			//金属マテリアル（クック・トランス）
 
-			var m_LightColor:uint = 0xFFFFFFFF;
+			var LightColor:uint = Palette_Light.m_LightColor;
+//			var AmbientColor:uint = Palette_Light.m_AmbientColor;
 
 
 			//#ベクトル
 
 			//ライトベクトル
-			var L:Vector3D = new Vector3D(m_LightPosition.x - in_X, m_LightPosition.y - in_Y, m_LightPosition.z); L.normalize();
+			var L:Vector3D = new Vector3D(Palette_Light.m_LightPosition.x - in_X, Palette_Light.m_LightPosition.y - in_Y, Palette_Light.m_LightPosition.z); L.normalize();
 
 			//法線ベクトル
 			var N:Vector3D = NrmColor2NrmVector(in_NrmColor);
@@ -228,10 +239,10 @@ package{
 			{
 				var a:uint = (in_Color >> 24) & 0xFF;
 
-				var ori_color:uint = CalcColor_Normal(in_Color, in_NrmColor, in_X, in_Y, in_AmbientColor);
+				var ori_color:uint = CalcColor_Normal(in_Color, in_NrmColor, in_X, in_Y);
 
 				var Color_Ori:Vector3D = new Vector3D((in_Color>>16)&0xFF, (in_Color>>8)&0xFF, (in_Color>>0)&0xFF);
-				var Color_Light:Vector3D = new Vector3D((m_LightColor>>16)&0xFF, (m_LightColor>>8)&0xFF, (m_LightColor>>0)&0xFF);
+				var Color_Light:Vector3D = new Vector3D((LightColor>>16)&0xFF, (LightColor>>8)&0xFF, (LightColor>>0)&0xFF);
 				var Color_Ambient:Vector3D = new Vector3D((ori_color>>16)&0xFF, (ori_color>>8)&0xFF, (ori_color>>0)&0xFF);
 
 				//Color Shift
@@ -262,7 +273,6 @@ package{
 
 		//ColorとShadeを合成したグラフィックに更新する
 		public function Update():void{
-			var m_AmbientColor:uint = 0xFF222222;
 			for(var y:int = 0; y < MyCanvas.DOT_NUM; y += 1){
 				for(var x:int = 0; x < MyCanvas.DOT_NUM; x += 1){
 					var color:uint     = m_Canvas_Color.m_Bitmap.bitmapData.getPixel32(x, y);
@@ -270,7 +280,7 @@ package{
 
 					var result_color:uint;
 //*
-					result_color = CalcColor(color, nrm_color, x, y, m_AmbientColor);
+					result_color = CalcColor(color, nrm_color, x, y);
 /*/
 					result_color = color;
 //*/

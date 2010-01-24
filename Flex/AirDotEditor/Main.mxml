@@ -134,6 +134,20 @@
 				}
 //*/
 			}
+
+			private function ChangeMaterial(in_MaterialName:String):void{
+				//CanvasResultでのマテリアルを変更
+				Canvas_Result.SetMaterialName(in_MaterialName);
+
+				//CanvasResultの見た目の更新
+				//canvas_result.Update();//自動でなるので放置
+
+				//PaletteShadeの影の更新
+				palette_shade.Redraw();
+
+				//CanvasShadeの更新
+				canvas_shade.Redraw();
+			}
 		]]>
 	</mx:Script>
 
@@ -182,6 +196,73 @@
 
 					<!--Space-->
 					<mx:Spacer height="100%" />
+
+					<!--Area_Tool-->
+					<mx:HBox width="100%" height="100%">
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Pen-->
+						<comp:ToolButton id="tool_pen_c" creationComplete="tool_pen_c.Init(ToolButton.TOOL_PEN, canvas_color)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Paint-->
+						<comp:ToolButton id="tool_paint_c" creationComplete="tool_paint_c.Init(ToolButton.TOOL_PAINT, canvas_color)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Line-->
+						<comp:ToolButton id="tool_line_c" creationComplete="tool_line_c.Init(ToolButton.TOOL_LINE, canvas_color)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Rect-->
+						<comp:ToolButton id="tool_rect_c" creationComplete="tool_rect_c.Init(ToolButton.TOOL_RECT, canvas_color)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+					</mx:HBox>
+
+					<mx:HBox width="100%" height="100%">
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Circle-->
+						<comp:ToolButton id="tool_circle_c" creationComplete="tool_circle_c.Init(ToolButton.TOOL_CIRCLE, canvas_color)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Spoit-->
+						<comp:ToolButton id="tool_spoit_c" creationComplete="tool_spoit_c.Init(ToolButton.TOOL_SPOIT, canvas_color)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Circle_Paint-->
+						<comp:ToolButton id="tool_circle_p_c" creationComplete="tool_circle_p_c.Init(ToolButton.TOOL_CIRCLE_PAINT, canvas_color)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Rect_Paint-->
+						<comp:ToolButton id="tool_rect_p_c" creationComplete="tool_rect_p_c.Init(ToolButton.TOOL_RECT_PAINT, canvas_color)" />
+
+<!--
+						<comp:ToolButton id="tool_undo_c" creationComplete="tool_undo_c.Init(ToolButton.TOOL_UNDO, canvas_color)" />
+						<comp:ToolButton id="tool_redo_c" creationComplete="tool_redo_c.Init(ToolButton.TOOL_REDO, canvas_color)" />
+-->
+						<!--Space-->
+						<mx:Spacer width="100%" />
+					</mx:HBox>
+
+					<!--Space-->
+					<mx:Spacer height="100%" />
+
 				</mx:VBox>
 
 				<!--Space-->
@@ -244,74 +325,71 @@
 
 					<!--Space-->
 					<mx:Spacer height="100%" />
+
+					<!--Area_Tool-->
+					<mx:HBox width="100%" height="100%">
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Pen-->
+						<comp:ToolButton id="tool_pen_s" creationComplete="tool_pen_s.Init(ToolButton.TOOL_PEN, canvas_shade)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Paint-->
+						<comp:ToolButton id="tool_paint_s" creationComplete="tool_paint_s.Init(ToolButton.TOOL_PAINT, canvas_shade)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Line-->
+						<comp:ToolButton id="tool_line_s" creationComplete="tool_line_s.Init(ToolButton.TOOL_LINE, canvas_shade)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Rect-->
+						<comp:ToolButton id="tool_rect_s" creationComplete="tool_rect_s.Init(ToolButton.TOOL_RECT, canvas_shade)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+					</mx:HBox>
+
+					<mx:HBox width="100%" height="100%">
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Circle-->
+						<comp:ToolButton id="tool_circle_s" creationComplete="tool_circle_s.Init(ToolButton.TOOL_CIRCLE, canvas_shade)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Spoit-->
+						<comp:ToolButton id="tool_spoit_s" creationComplete="tool_spoit_s.Init(ToolButton.TOOL_SPOIT, canvas_shade)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Circle_Paint-->
+						<comp:ToolButton id="tool_circle_p_s" creationComplete="tool_circle_p_s.Init(ToolButton.TOOL_CIRCLE_PAINT, canvas_shade)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+
+						<!--Tool_Rect_Paint-->
+						<comp:ToolButton id="tool_rect_p_s" creationComplete="tool_rect_p_s.Init(ToolButton.TOOL_RECT_PAINT, canvas_shade)" />
+
+						<!--Space-->
+						<mx:Spacer width="100%" />
+					</mx:HBox>
+
+					<!--Space-->
+					<mx:Spacer height="100%" />
 				</mx:VBox>
 			</mx:HBox>
 
-			<!--Space-->
-			<mx:Spacer height="100%" />
-
-			<!--Area_Tool-->
-			<mx:HBox width="100%" height="100%">
-				<!--Space-->
-				<mx:Spacer width="100%" />
-
-				<!--Tool_Pen-->
-				<comp:ToolButton id="tool_pen" creationComplete="tool_pen.Init(ToolButton.TOOL_PEN)" />
-
-				<!--Space-->
-<!--
-				<mx:Spacer width="100%" />
--->
-
-				<!--Tool_Spray-->
-<!--
-				<comp:ToolButton id="tool_spray" creationComplete="tool_spray.Init(ToolButton.TOOL_SPRAY)" />
--->
-				<!--Space-->
-				<mx:Spacer width="100%" />
-
-				<!--Tool_Paint-->
-				<comp:ToolButton id="tool_paint" creationComplete="tool_paint.Init(ToolButton.TOOL_PAINT)" />
-
-				<!--Space-->
-				<mx:Spacer width="100%" />
-
-				<!--Tool_Line-->
-				<comp:ToolButton id="tool_line" creationComplete="tool_line.Init(ToolButton.TOOL_LINE)" />
-
-				<!--Space-->
-				<mx:Spacer width="100%" />
-
-				<!--Tool_Rect-->
-				<comp:ToolButton id="tool_rect" creationComplete="tool_rect.Init(ToolButton.TOOL_RECT)" />
-
-				<!--Space-->
-				<mx:Spacer width="100%" />
-
-				<!--Tool_Circle-->
-				<comp:ToolButton id="tool_circle" creationComplete="tool_circle.Init(ToolButton.TOOL_CIRCLE)" />
-
-				<!--Space-->
-				<mx:Spacer width="100%" />
-
-				<!--Tool_Spoit-->
-				<comp:ToolButton id="tool_spoit" creationComplete="tool_spoit.Init(ToolButton.TOOL_SPOIT)" />
-
-				<!--Space-->
-				<mx:Spacer width="100%" />
-
-				<!--Tool_Undo-->
-				<comp:ToolButton id="tool_undo" creationComplete="tool_undo.Init(ToolButton.TOOL_UNDO)" />
-
-				<!--Space-->
-				<mx:Spacer width="100%" />
-
-				<!--Tool_Redo-->
-				<comp:ToolButton id="tool_redo" creationComplete="tool_redo.Init(ToolButton.TOOL_REDO)" />
-
-				<!--Space-->
-				<mx:Spacer width="100%" />
-			</mx:HBox>
 
 			<!--Space-->
 			<mx:Spacer height="100%" />
@@ -322,7 +400,20 @@
 
 		<!--TabWindow_Shade-->
 		<mx:TabNavigator id="tab_window_shade" width="200" height="100%">
-			<comp:Palette_Shade label="傾き" id="palette_shade" creationComplete="palette_shade.Init(canvas_shade)" />
+			<mx:VBox label="面" width="100%" height="100%">
+				<!--Palette_Shade-->
+				<comp:Palette_Shade id="palette_shade" creationComplete="palette_shade.Init(canvas_shade)" />
+
+				<!--Material Radio Button-->
+				<mx:RadioButtonGroup id="RadioGroup_Material" selectedValue="N" change="ChangeMaterial(RadioGroup_Material.selectedValue.toString())"/>
+				<mx:RadioButton label="ノーマル" groupName="RadioGroup_Material" width="100%" value="N"/>
+				<mx:RadioButton label="金属"     groupName="RadioGroup_Material" width="100%" value="M"/>
+				<mx:RadioButton label="デバッグ（法線マップ）" groupName="RadioGroup_Material" width="100%" value="D"/>
+			</mx:VBox>
+			<mx:VBox label="ライト" width="100%" height="100%">
+				<!--Palette_Light-->
+				<comp:Palette_Light id="palette_light" creationComplete="palette_light.Init(palette_shade, canvas_shade)" />
+			</mx:VBox>
 		</mx:TabNavigator>
 
 		<!--Space-->
