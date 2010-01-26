@@ -68,7 +68,7 @@ package{
 		}
 
 		//!法線の値から（灰色をベースにした）実際の色に描画
-		public function Redraw():void{
+		override public function Redraw():void{
 			for(var y:int = 0; y < DOT_NUM; y += 1){
 				for(var x:int = 0; x < DOT_NUM; x += 1){
 					var nrm_color:uint = m_Bitmap.bitmapData.getPixel32(x, y);

@@ -114,11 +114,21 @@ package{
 			//原点から見たライト方向
 			var RelLightDir:Vector3D;
 			{
+/*
+				//点光源
 				RelLightDir = new Vector3D(
 					Palette_Light.m_LightPosition.x - in_X,
 					Palette_Light.m_LightPosition.y - in_Y,
 					Palette_Light.m_LightPosition.z
 				);
+/*/
+				//平行光源
+				RelLightDir = new Vector3D(
+					Palette_Light.m_LightPosition.x,
+					Palette_Light.m_LightPosition.y,
+					Palette_Light.m_LightPosition.z
+				);
+//*/
 
 				RelLightDir.normalize();
 			}
@@ -175,7 +185,13 @@ package{
 			//#ベクトル
 
 			//ライトベクトル
+/*
+			//点光源
 			var L:Vector3D = new Vector3D(Palette_Light.m_LightPosition.x - in_X, Palette_Light.m_LightPosition.y - in_Y, Palette_Light.m_LightPosition.z); L.normalize();
+/*/
+			//平行光源
+			var L:Vector3D = new Vector3D(Palette_Light.m_LightPosition.x, Palette_Light.m_LightPosition.y, Palette_Light.m_LightPosition.z); L.normalize();
+//*/
 
 			//法線ベクトル
 			var N:Vector3D = NrmColor2NrmVector(in_NrmColor);

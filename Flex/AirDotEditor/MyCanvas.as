@@ -42,6 +42,9 @@ package{
 
 		//==Var==
 
+		//#Layer
+		public var m_Layer_Base:Image;
+
 		//＃Bitmap
 		public var m_Bitmap:Bitmap;
 
@@ -85,6 +88,12 @@ package{
 				this.height = SIZE_H;
 			}
 
+			//==Layer==
+			{
+				m_Layer_Base = new Image();
+				addChild(m_Layer_Base);
+			}
+
 			//==Bitmap==
 			{
 				//Ori : Bitmap
@@ -101,7 +110,7 @@ package{
 					img.scaleX = SIZE_RATIO;
 					img.scaleY = SIZE_RATIO;
 
-					addChild(img);
+					m_Layer_Base.addChild(img);
 				}
 			}
 
@@ -133,7 +142,7 @@ package{
 					m_Grid[i].addChild(shape);
 				}
 
-				addChild(m_Grid[m_GridType]);
+				m_Layer_Base.addChild(m_Grid[m_GridType]);
 			}
 
 			//==Cursor==
@@ -160,14 +169,14 @@ package{
 						//最初は何も描かないことで非表示にしておく
 					}
 
-					addChild(m_Cursor);
+					m_Layer_Base.addChild(m_Cursor);
 				}
 			}
 
 			//==Mouse==
 			{
 				//Down
-				addEventListener(//Down位置はこれの上を検出する必要があるので普通にaddEventListener
+				m_Layer_Base.addEventListener(//Down位置はこれの上を検出する必要があるので普通にaddEventListener
 					MouseEvent.MOUSE_DOWN,
 					OnMouseDown
 				);
@@ -194,6 +203,14 @@ package{
 				addEventListener(
 					MouseEvent.ROLL_OUT,
 					OnMouseOut
+				);
+			}
+
+			//==Keyboard==
+			{
+				stage.addEventListener(
+					KeyboardEvent.KEY_DOWN,
+					OnKeyDown
 				);
 			}
 
@@ -274,6 +291,10 @@ package{
 			case ToolButton.TOOL_SPOIT:
 				SetColor(m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY));
 				break;
+			//
+			case ToolButton.TOOL_RANGE:
+				SelectRange(m_SrcPosX, m_SrcPosY, m_SrcPosX, m_SrcPosY);
+				break;
 			}
 		}
 
@@ -317,6 +338,10 @@ package{
 			//
 			case ToolButton.TOOL_SPOIT:
 				SetColor(m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY));
+				break;
+			//
+			case ToolButton.TOOL_RANGE:
+				DecideRange(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY);
 				break;
 			}
 		}
@@ -409,6 +434,10 @@ package{
 				case ToolButton.TOOL_SPOIT:
 					SetColor(m_Bitmap.bitmapData.getPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY));
 					break;
+				//
+				case ToolButton.TOOL_RANGE:
+					SelectRange(m_SrcPosX, m_SrcPosY, m_Bitmap.mouseX, m_Bitmap.mouseY);
+					break;
 				}
 			}
 		}
@@ -418,6 +447,322 @@ package{
 
 		public function OnMouseOut(e:MouseEvent):void{
 		}
+
+
+		//==Keyboard==
+
+		static public const KEY_0:int	= 	48;
+		static public const KEY_1:int	= 	49;
+		static public const KEY_2:int	= 	50;
+		static public const KEY_3:int	= 	51;
+		static public const KEY_4:int	= 	52;
+		static public const KEY_5:int	= 	53;
+		static public const KEY_6:int	= 	54;
+		static public const KEY_7:int	= 	55;
+		static public const KEY_8:int	= 	56;
+		static public const KEY_9:int	= 	57;
+		static public const KEY_A:int	= 	65;
+		static public const KEY_B:int	= 	66;
+		static public const KEY_C:int	= 	67;
+		static public const KEY_D:int	= 	68;
+		static public const KEY_E:int	= 	69;
+		static public const KEY_F:int	= 	70;
+		static public const KEY_G:int	= 	71;
+		static public const KEY_H:int	= 	72;
+		static public const KEY_I:int	= 	73;
+		static public const KEY_J:int	= 	74;
+		static public const KEY_K:int	= 	75;
+		static public const KEY_L:int	= 	76;
+		static public const KEY_M:int	= 	77;
+		static public const KEY_N:int	= 	78;
+		static public const KEY_O:int	= 	79;
+		static public const KEY_P:int	= 	80;
+		static public const KEY_Q:int	= 	81;
+		static public const KEY_R:int	= 	82;
+		static public const KEY_S:int	= 	83;
+		static public const KEY_T:int	= 	84;
+		static public const KEY_U:int	= 	85;
+		static public const KEY_V:int	= 	86;
+		static public const KEY_W:int	= 	87;
+		static public const KEY_X:int	= 	88;
+		static public const KEY_Y:int	= 	89;
+		static public const KEY_Z:int	= 	90;
+
+		public function OnKeyDown(e:KeyboardEvent):void{
+			//Ctrl+C
+			if(e.ctrlKey && e.keyCode == KEY_C){
+				Copy();
+			}
+
+			//Ctrl+V
+			if(e.ctrlKey && e.keyCode == KEY_V){
+				Paste();
+			}
+		}
+
+
+		//==Copy & Paste==
+
+		//範囲選択関連を統括するグラフィック（これ自体は空）
+		public var m_RangeImage:Image;
+
+		//選択範囲の内容のBitmap
+		public var m_RangeBitmap:Bitmap;
+
+		//範囲の枠表示用グラフィック
+		public var m_RangeGraphics:Graphics;
+
+		//選択範囲に関わる値を記憶
+		public var m_RangeRect:Rectangle = new Rectangle(0, 0, 0, 0);
+
+		//コピーしたやつ
+		public var m_ClipboardBitmap:Bitmap;
+
+		//定数：原点
+		static public const POINT_ZERO:Point = new Point(0,0);
+
+		//
+		public function CreateRangeImage():void{
+			//Create
+			m_RangeImage = new Image();
+
+			//Mouse
+			{
+				var DragFlag:Boolean = false;
+
+				var SrcBitmapX:int;
+				var SrcBitmapY:int;
+
+				var SrcImageX:int;
+				var SrcImageY:int;
+
+				m_RangeImage.addEventListener(
+					MouseEvent.MOUSE_DOWN,
+					function(e:MouseEvent):void{
+						SrcBitmapX = m_Bitmap.mouseX;
+						SrcBitmapY = m_Bitmap.mouseY;
+
+						SrcImageX = m_RangeImage.x;
+						SrcImageY = m_RangeImage.y;
+
+						DragFlag = true;
+					}
+				);
+
+				root.addEventListener(
+					MouseEvent.MOUSE_MOVE,
+					function(e:MouseEvent):void{
+						if(DragFlag){
+							var GridOffset:int = GRID_OFFSET[m_GridType];// * SIZE_RATIO;
+
+							var GapX:int = (m_Bitmap.mouseX - SrcBitmapX) / GridOffset;
+							var GapY:int = (m_Bitmap.mouseY - SrcBitmapY) / GridOffset;
+
+							m_RangeImage.x = SrcImageX + GapX * GridOffset * SIZE_RATIO;
+							m_RangeImage.y = SrcImageY + GapY * GridOffset * SIZE_RATIO;
+						}
+					}
+				);
+
+				root.addEventListener(
+					MouseEvent.MOUSE_UP,
+					function(e:MouseEvent):void{
+						DragFlag = false;
+					}
+				);
+			}
+
+			//Regist
+			addChild(m_RangeImage);
+		}
+
+		//指定範囲を選ぶ
+		public function SelectRange(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int):void{
+			//何か選択中であれば、それを解除する
+			{
+				UnselectRange();
+			}
+
+			//まだ指定範囲用グラフィックを作っていなければ、この段階で生成する
+			{
+				if(m_RangeImage == null){
+					CreateRangeImage();
+				}
+
+				if(m_RangeGraphics == null){
+					var shape:Shape = new Shape();
+
+					shape.scaleX = SIZE_RATIO;
+					shape.scaleY = SIZE_RATIO;
+
+					m_RangeGraphics = shape.graphics;
+
+					m_RangeImage.addChild(shape);
+				}
+			}
+
+			//Save Param
+			{
+				m_RangeRect.x = Math.min(in_SrcX, in_DstX);
+				m_RangeRect.y = Math.min(in_SrcY, in_DstY);
+				m_RangeRect.width  = Math.abs(in_SrcX - in_DstX) + 1;
+				m_RangeRect.height = Math.abs(in_SrcY - in_DstY) + 1;
+			}
+
+			//左上をm_RangeImageの原点にする
+			{
+				m_RangeImage.x = m_RangeRect.x * SIZE_RATIO;
+				m_RangeImage.y = m_RangeRect.y * SIZE_RATIO;
+			}
+
+			//指定範囲を囲むようにグラフィックを変更
+			{
+				//clear
+				{
+					m_RangeGraphics.clear();
+				}
+
+				//draw
+				{
+					m_RangeGraphics.lineStyle(0.1, 0xFFFFFF, 0.9);
+					m_RangeGraphics.drawRect(0, 0, m_RangeRect.width, m_RangeRect.height);
+				}
+			}
+		}
+
+		//指定範囲を正式にBitmapとして抜き取る
+		public function DecideRange(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int):void{
+			//Save Param
+			{
+				m_RangeRect.x = Math.min(in_SrcX, in_DstX);
+				m_RangeRect.y = Math.min(in_SrcY, in_DstY);
+				m_RangeRect.width  = Math.abs(in_SrcX - in_DstX) + 1;
+				m_RangeRect.height = Math.abs(in_SrcY - in_DstY) + 1;
+			}
+
+			//Src => Dst : (m_Bitmap => m_RangeBitmap)
+			{
+				//指定範囲のビットマップデータ
+				var bmp_data:BitmapData;
+				{
+					bmp_data = new BitmapData(m_RangeRect.width, m_RangeRect.height, true, 0x00000000);
+
+					bmp_data.copyPixels(m_Bitmap.bitmapData, m_RangeRect, POINT_ZERO);
+				}
+
+				m_RangeBitmap = new Bitmap(bmp_data);
+
+				m_RangeBitmap.scaleX = SIZE_RATIO;
+				m_RangeBitmap.scaleY = SIZE_RATIO;
+
+				m_RangeImage.addChild(m_RangeBitmap);
+			}
+
+			//Clear Src
+			{
+				m_Bitmap.bitmapData.fillRect(m_RangeRect, m_ClearColor);
+
+				Redraw();
+			}
+		}
+
+		//範囲選択を解除
+		public function UnselectRange():void{
+			//clear : Graphic
+			{
+				if(m_RangeGraphics){
+					m_RangeGraphics.clear();
+				}
+			}
+
+			//RangeBitmap => Bitmap
+			{
+				if(m_RangeBitmap){
+					m_Bitmap.bitmapData.copyPixels(m_RangeBitmap.bitmapData, m_RangeBitmap.bitmapData.rect, new Point(m_RangeImage.x/SIZE_RATIO, m_RangeImage.y/SIZE_RATIO));
+
+					Redraw();
+
+					m_RangeImage.removeChild(m_RangeBitmap);
+
+					m_RangeBitmap = null;
+				}
+			}
+
+			//clear : Param
+			{
+				m_RangeRect.x = 0;
+				m_RangeRect.y = 0;
+				m_RangeRect.width  = 0;
+				m_RangeRect.height = 0;
+			}
+		}
+
+		//選択範囲のコピー
+		public function Copy():void{
+//*
+			//Check
+			{
+				//選択されていないようならコピーしない
+				if(m_RangeRect.width  <= 0){return;}
+				if(m_RangeRect.height <= 0){return;}
+			}
+
+			//m_ClipboardBitmap
+			{
+				m_ClipboardBitmap = new Bitmap(m_RangeBitmap.bitmapData.clone());
+			}
+//*/
+		}
+
+		//コピーしたものをペースト
+		public function Paste():void{
+//*
+			//Check
+			{
+				if(m_ClipboardBitmap == null){
+					return;//何もコピーしてないので、何もペーストできない
+				}
+			}
+
+			//選択しているものがあれば解放
+			{
+				UnselectRange();
+			}
+
+			//クリップボードのやつを新しく生成＆描画登録
+			{
+				m_RangeBitmap = new Bitmap(m_ClipboardBitmap.bitmapData.clone());
+
+				m_RangeBitmap.scaleX = SIZE_RATIO;
+				m_RangeBitmap.scaleY = SIZE_RATIO;
+
+				m_RangeImage.addChild(m_RangeBitmap);
+			}
+
+			//Reset Param
+			{
+				m_RangeRect.width  = m_RangeBitmap.bitmapData.rect.width;
+				m_RangeRect.height = m_RangeBitmap.bitmapData.rect.height;
+			}
+
+			//指定範囲を囲むようにグラフィックを変更
+			{
+				//clear
+				{
+					m_RangeGraphics.clear();
+				}
+
+				//draw
+				{
+					m_RangeGraphics.lineStyle(0.1, 0xFFFFFF, 0.9);
+					m_RangeGraphics.drawRect(0, 0, m_RangeRect.width, m_RangeRect.height);
+				}
+			}
+//*/
+		}
+
+
+		//==Update==
 
 		public function Update():void{
 			var DeltaTime:Number = 1.0 / 20.0;
@@ -1052,12 +1397,12 @@ package{
 			{
 				//Remove
 				{
-					removeChild(m_Grid[m_GridType]);
+					m_Layer_Base.removeChild(m_Grid[m_GridType]);
 				}
 
 				//Add
 				{
-					addChild(m_Grid[in_GridType]);
+					m_Layer_Base.addChild(m_Grid[in_GridType]);
 				}
 			}
 
@@ -1072,6 +1417,13 @@ package{
 
 		public function SetColor(in_Color:uint):void{
 			m_Color = in_Color;
+		}
+
+
+		//===Draw==
+
+		//再描画（overrideして使う）（変更があったときに呼ばれる）
+		public function Redraw():void{
 		}
 	}
 }

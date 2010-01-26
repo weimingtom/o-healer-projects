@@ -42,6 +42,8 @@ package{
 		//
 		static public const TOOL_UNDO:int			= 9;
 		static public const TOOL_REDO:int			= 10;
+		//
+		static public const TOOL_RANGE:int			= 11;
 
 		//==Embed==
 		[Embed(source='Tool_Pen.png')]
@@ -66,6 +68,8 @@ package{
 		 private static var Bitmap_Undo: Class;
 		[Embed(source='Tool_Redo.png')]
 		 private static var Bitmap_Redo: Class;
+		[Embed(source='Tool_Range.png')]
+		 private static var Bitmap_Range: Class;
 
 		static public var m_BitmapList:Array = [
 			new Bitmap_Pen(),
@@ -79,6 +83,7 @@ package{
 			new Bitmap_Spoit(),
 			new Bitmap_Undo(),
 			new Bitmap_Redo(),
+			new Bitmap_Range(),
 		];
 
 		//==Var==
@@ -165,6 +170,11 @@ package{
 			//SetToolIndex
 			{
 				m_Canvas.m_ToolIndex = m_ToolIndex;
+			}
+
+			//選択中ならそれを解除する
+			{
+				m_Canvas.UnselectRange();
 			}
 
 			//CursorImage

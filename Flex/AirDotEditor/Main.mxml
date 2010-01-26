@@ -237,8 +237,8 @@
 						<!--Space-->
 						<mx:Spacer width="100%" />
 
-						<!--Tool_Spoit-->
-						<comp:ToolButton id="tool_spoit_c" creationComplete="tool_spoit_c.Init(ToolButton.TOOL_SPOIT, canvas_color)" />
+						<!--Tool_Range-->
+						<comp:ToolButton id="tool_range_c" creationComplete="tool_range_c.Init(ToolButton.TOOL_RANGE, canvas_color)" />
 
 						<!--Space-->
 						<mx:Spacer width="100%" />
@@ -366,8 +366,8 @@
 						<!--Space-->
 						<mx:Spacer width="100%" />
 
-						<!--Tool_Spoit-->
-						<comp:ToolButton id="tool_spoit_s" creationComplete="tool_spoit_s.Init(ToolButton.TOOL_SPOIT, canvas_shade)" />
+						<!--Tool_Range-->
+						<comp:ToolButton id="tool_range_s" creationComplete="tool_range_s.Init(ToolButton.TOOL_RANGE, canvas_shade)" />
 
 						<!--Space-->
 						<mx:Spacer width="100%" />
