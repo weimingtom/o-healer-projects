@@ -78,6 +78,161 @@ package{
 			}
 		}
 
+		//==システム操作系のoverride==
+
+		//回転時は「面の向き」の値も一緒に回転させる必要があるのでoverride
+
+		//選択範囲を右回転
+		override public function TurnRight():void{
+			//Check
+			{
+				//選択されていないようならコピーしない
+				if(m_RangeRect.width  <= 0){return;}
+				if(m_RangeRect.height <= 0){return;}
+			}
+
+			//Rotate Param
+			var w:int;//以前の幅
+			var h:int;
+			{
+				w = m_RangeRect.width;
+				h = m_RangeRect.height;
+
+				m_RangeRect.width  = h;
+				m_RangeRect.height = w;
+			}
+
+			//Rotate Bitmap
+			{
+				if(m_RangeBitmap){
+					//指定範囲のビットマップデータ
+					var bmp_data:BitmapData;
+					{
+						bmp_data = new BitmapData(h, w, true, 0x00000000);//wとhは逆にする
+
+						for(var x:int = 0; x < w; x += 1){
+							for(var y:int = 0; y < h; y += 1){
+								var color_ori:uint = m_RangeBitmap.bitmapData.getPixel32(x, y);
+								var a:uint = (color_ori >> 24) & 0xFF;
+								var r:uint = (color_ori >> 16) & 0xFF;//X
+								var g:uint = (color_ori >>  8) & 0xFF;//Y
+								var b:uint = (color_ori >>  0) & 0xFF;//Z
+								var color:uint = (a << 24) | ((0xFF-g) << 16) | (r << 8) | (b << 0);//"X+ => Y+", "Y+ => X-"
+								bmp_data.setPixel32(h-1-y, x, color);
+							}
+						}
+					}
+
+					//remove old
+					{
+						m_RangeImage.removeChild(m_RangeBitmap);
+					}
+
+					//create new
+					{
+						m_RangeBitmap = new Bitmap(bmp_data);
+
+						m_RangeBitmap.scaleX = SIZE_RATIO;
+						m_RangeBitmap.scaleY = SIZE_RATIO;
+
+						m_RangeImage.addChild(m_RangeBitmap);
+					}
+
+					Redraw();
+				}
+			}
+
+			//枠の再描画
+			{
+				//clear
+				{
+					m_RangeGraphics.clear();
+				}
+
+				//draw
+				{
+					m_RangeGraphics.lineStyle(0.1, 0xFFFFFF, 0.9);
+					m_RangeGraphics.drawRect(0, 0, m_RangeRect.width, m_RangeRect.height);
+				}
+			}
+		}
+
+		//選択範囲を左回転
+		override public function TurnLeft():void{
+			//Check
+			{
+				//選択されていないようならコピーしない
+				if(m_RangeRect.width  <= 0){return;}
+				if(m_RangeRect.height <= 0){return;}
+			}
+
+			//Rotate Param
+			var w:int;//以前の幅
+			var h:int;
+			{
+				w = m_RangeRect.width;
+				h = m_RangeRect.height;
+
+				m_RangeRect.width  = h;
+				m_RangeRect.height = w;
+			}
+
+			//Rotate Bitmap
+			{
+				if(m_RangeBitmap){
+					//指定範囲のビットマップデータ
+					var bmp_data:BitmapData;
+					{
+						bmp_data = new BitmapData(h, w, true, 0x00000000);//wとhは逆にする
+
+						for(var x:int = 0; x < w; x += 1){
+							for(var y:int = 0; y < h; y += 1){
+								var color_ori:uint = m_RangeBitmap.bitmapData.getPixel32(x, y);
+								var a:uint = (color_ori >> 24) & 0xFF;
+								var r:uint = (color_ori >> 16) & 0xFF;//X
+								var g:uint = (color_ori >>  8) & 0xFF;//Y
+								var b:uint = (color_ori >>  0) & 0xFF;//Z
+								var color:uint = (a << 24) | (g << 16) | ((0xFF - r) << 8) | (b << 0);//"X+ => Y-", "Y+ => X+"
+								bmp_data.setPixel32(y, w-1-x, color);//TurnRightとはここが違うだけ
+							}
+						}
+					}
+
+					//remove old
+					{
+						m_RangeImage.removeChild(m_RangeBitmap);
+					}
+
+					//create new
+					{
+						m_RangeBitmap = new Bitmap(bmp_data);
+
+						m_RangeBitmap.scaleX = SIZE_RATIO;
+						m_RangeBitmap.scaleY = SIZE_RATIO;
+
+						m_RangeImage.addChild(m_RangeBitmap);
+					}
+
+					Redraw();
+				}
+			}
+
+			//枠の再描画
+			{
+				//clear
+				{
+					m_RangeGraphics.clear();
+				}
+
+				//draw
+				{
+					m_RangeGraphics.lineStyle(0.1, 0xFFFFFF, 0.9);
+					m_RangeGraphics.drawRect(0, 0, m_RangeRect.width, m_RangeRect.height);
+				}
+			}
+		}
+
+
 		//==描画関数のoverride==
 
 		//余裕があれば、変更部分だけRedrawするために、描画関数を渡したりしたい

@@ -498,6 +498,23 @@ package{
 			if(e.ctrlKey && e.keyCode == KEY_V){
 				Paste();
 			}
+
+			//Ctrl+Right
+			if(e.ctrlKey && e.keyCode == Keyboard.RIGHT){
+				TurnRight();
+				return;
+			}
+
+			//Ctrl+Left
+			if(e.ctrlKey && e.keyCode == Keyboard.LEFT){
+				TurnLeft();
+				return;
+			}
+
+			//Up
+			//Down
+			//Left
+			//Right
 		}
 
 
@@ -699,7 +716,6 @@ package{
 
 		//選択範囲のコピー
 		public function Copy():void{
-//*
 			//Check
 			{
 				//選択されていないようならコピーしない
@@ -711,12 +727,10 @@ package{
 			{
 				m_ClipboardBitmap = new Bitmap(m_RangeBitmap.bitmapData.clone());
 			}
-//*/
 		}
 
 		//コピーしたものをペースト
 		public function Paste():void{
-//*
 			//Check
 			{
 				if(m_ClipboardBitmap == null){
@@ -758,7 +772,145 @@ package{
 					m_RangeGraphics.drawRect(0, 0, m_RangeRect.width, m_RangeRect.height);
 				}
 			}
-//*/
+		}
+
+
+		//選択範囲を右回転
+		public function TurnRight():void{
+			//Check
+			{
+				//選択されていないようならコピーしない
+				if(m_RangeRect.width  <= 0){return;}
+				if(m_RangeRect.height <= 0){return;}
+			}
+
+			//Rotate Param
+			var w:int;//以前の幅
+			var h:int;
+			{
+				w = m_RangeRect.width;
+				h = m_RangeRect.height;
+
+				m_RangeRect.width  = h;
+				m_RangeRect.height = w;
+			}
+
+			//Rotate Bitmap
+			{
+				if(m_RangeBitmap){
+					//指定範囲のビットマップデータ
+					var bmp_data:BitmapData;
+					{
+						bmp_data = new BitmapData(h, w, true, 0x00000000);//wとhは逆にする
+
+						for(var x:int = 0; x < w; x += 1){
+							for(var y:int = 0; y < h; y += 1){
+								bmp_data.setPixel32(h-1-y, x, m_RangeBitmap.bitmapData.getPixel32(x, y));
+							}
+						}
+					}
+
+					//remove old
+					{
+						m_RangeImage.removeChild(m_RangeBitmap);
+					}
+
+					//create new
+					{
+						m_RangeBitmap = new Bitmap(bmp_data);
+
+						m_RangeBitmap.scaleX = SIZE_RATIO;
+						m_RangeBitmap.scaleY = SIZE_RATIO;
+
+						m_RangeImage.addChild(m_RangeBitmap);
+					}
+
+					Redraw();
+				}
+			}
+
+			//枠の再描画
+			{
+				//clear
+				{
+					m_RangeGraphics.clear();
+				}
+
+				//draw
+				{
+					m_RangeGraphics.lineStyle(0.1, 0xFFFFFF, 0.9);
+					m_RangeGraphics.drawRect(0, 0, m_RangeRect.width, m_RangeRect.height);
+				}
+			}
+		}
+
+		//選択範囲を左回転
+		public function TurnLeft():void{
+			//Check
+			{
+				//選択されていないようならコピーしない
+				if(m_RangeRect.width  <= 0){return;}
+				if(m_RangeRect.height <= 0){return;}
+			}
+
+			//Rotate Param
+			var w:int;//以前の幅
+			var h:int;
+			{
+				w = m_RangeRect.width;
+				h = m_RangeRect.height;
+
+				m_RangeRect.width  = h;
+				m_RangeRect.height = w;
+			}
+
+			//Rotate Bitmap
+			{
+				if(m_RangeBitmap){
+					//指定範囲のビットマップデータ
+					var bmp_data:BitmapData;
+					{
+						bmp_data = new BitmapData(h, w, true, 0x00000000);//wとhは逆にする
+
+						for(var x:int = 0; x < w; x += 1){
+							for(var y:int = 0; y < h; y += 1){
+								bmp_data.setPixel32(y, w-1-x, m_RangeBitmap.bitmapData.getPixel32(x, y));//TurnRightとはここが違うだけ
+							}
+						}
+					}
+
+					//remove old
+					{
+						m_RangeImage.removeChild(m_RangeBitmap);
+					}
+
+					//create new
+					{
+						m_RangeBitmap = new Bitmap(bmp_data);
+
+						m_RangeBitmap.scaleX = SIZE_RATIO;
+						m_RangeBitmap.scaleY = SIZE_RATIO;
+
+						m_RangeImage.addChild(m_RangeBitmap);
+					}
+
+					Redraw();
+				}
+			}
+
+			//枠の再描画
+			{
+				//clear
+				{
+					m_RangeGraphics.clear();
+				}
+
+				//draw
+				{
+					m_RangeGraphics.lineStyle(0.1, 0xFFFFFF, 0.9);
+					m_RangeGraphics.drawRect(0, 0, m_RangeRect.width, m_RangeRect.height);
+				}
+			}
 		}
 
 

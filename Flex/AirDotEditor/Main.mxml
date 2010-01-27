@@ -97,7 +97,7 @@
 //*/
 			}
 
-			private function Load():void{
+			private function LoadC():void{
 /*
 /*/
 				try{
@@ -116,8 +116,44 @@
 							loader.contentLoaderInfo.addEventListener(
 								Event.COMPLETE,
 								function(e:Event):void{
-									//bmp_list[i]→iを使うとまずいので、iかBitmaoを引数にすること
 									canvas_color.m_Bitmap.bitmapData.draw(loader.content);
+								}
+							);
+
+							loader.load(new URLRequest(file.nativePath));
+						}
+					);
+
+					//Exec
+					file.browseForOpen(
+						"画像ファイルの選択",
+						[new FileFilter("～.png, ～_G.png, ～_S.png", "*.png")]
+					);
+				}catch(e:Error){
+				}
+//*/
+			}
+
+			private function LoadS():void{
+/*
+/*/
+				try{
+					var file:File = new File();
+
+					//OnSelect
+					file.addEventListener(
+						Event.SELECT,
+						function(e:Event):void{
+							//「陰」用の画像としてロードする
+							var file:File = e.target as File;
+
+							var loader:Loader = new Loader();
+
+							//OnComplete
+							loader.contentLoaderInfo.addEventListener(
+								Event.COMPLETE,
+								function(e:Event):void{
+									canvas_shade.m_Bitmap.bitmapData.draw(loader.content);
 								}
 							);
 
@@ -174,6 +210,12 @@
 			<mx:HBox width="100%" height="100%">
 				<!--Area_Color-->
 				<mx:VBox width="100%" height="100%">
+					<!--Space-->
+					<mx:Spacer height="100%" />
+
+					<!--Button_Load-->
+					<mx:Button label="LoadC" buttonDown="LoadC()" />
+
 					<!--Space-->
 					<mx:Spacer height="100%" />
 
@@ -274,12 +316,6 @@
 					<!--Space-->
 					<mx:Spacer height="100%" />
 
-					<!--Button_Load-->
-					<mx:Button label="Load" buttonDown="Load()" />
-
-					<!--Space-->
-					<mx:Spacer height="100%" />
-
 					<!--Canvas_Result-->
 					<mx:HBox width="100%" height="100%"><!--Centering-->
 						<mx:Spacer width="100%" />
@@ -303,6 +339,12 @@
 
 				<!--Area_Shade-->
 				<mx:VBox width="100%" height="100%">
+					<!--Space-->
+					<mx:Spacer height="100%" />
+
+					<!--Button_Load-->
+					<mx:Button label="LoadS" buttonDown="LoadS()" />
+
 					<!--Space-->
 					<mx:Spacer height="100%" />
 
