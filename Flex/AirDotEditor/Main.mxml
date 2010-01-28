@@ -154,6 +154,7 @@
 								Event.COMPLETE,
 								function(e:Event):void{
 									canvas_shade.m_Bitmap.bitmapData.draw(loader.content);
+									canvas_shade.Redraw();
 								}
 							);
 

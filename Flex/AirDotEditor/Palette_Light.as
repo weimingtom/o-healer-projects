@@ -36,7 +36,7 @@ package{
 		//==Var==
 
 		//ライト位置
-		static public var m_LightPosition:Vector3D = new Vector3D(MyCanvas.DOT_NUM/16, MyCanvas.DOT_NUM/32, 50.0);
+		static public var m_LightPosition:Vector3D = new Vector3D(MyCanvas.DOT_NUM/16, MyCanvas.DOT_NUM/32, 300.0);
 
 		//ライト色
 		static public var m_LightColor:uint = 0xFFFFFF;

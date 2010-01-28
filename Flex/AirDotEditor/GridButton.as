@@ -28,7 +28,9 @@ package{
 		static public const GRID_TYPE_8x8:int   = 0;
 		static public const GRID_TYPE_16x16:int = 1;
 		static public const GRID_TYPE_32x32:int = 2;
-		static public const GRID_TYPE_NUM:int   = 3;
+//		static public const GRID_TYPE_64x64:int = 3;
+//		static public const GRID_TYPE_NUM:int	= 4;
+		static public const GRID_TYPE_NUM:int	= 3;
 
 
 		//==Embed==
@@ -38,11 +40,14 @@ package{
 		 private static var Bitmap_16x16: Class;
 		[Embed(source='Button_32x32.png')]
 		 private static var Bitmap_32x32: Class;
+//		[Embed(source='Button_64x64.png')]
+//		 private static var Bitmap_64x64: Class;
 
 		static public var m_BitmapList:Array = [
 			new Bitmap_8x8(),
 			new Bitmap_16x16(),
 			new Bitmap_32x32(),
+//			new Bitmap_64x64(),
 		];
 
 		//==Var==

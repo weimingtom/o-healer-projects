@@ -20,6 +20,9 @@ package{
 	public class Canvas_Result extends Canvas{
 		//==Const==
 
+		//光源のタイプ
+		static public const LIGHT_POINT:int = 0;
+		static public const LIGHT_DIR:int   = 1;
 
 		//==Var==
 
@@ -29,6 +32,10 @@ package{
 
 		//＃Bitmap
 		public var m_Bitmap:Bitmap;
+
+
+		//光源のタイプ
+		static public var m_LightType:int = LIGHT_POINT;
 
 
 		//==Function==
@@ -114,21 +121,24 @@ package{
 			//原点から見たライト方向
 			var RelLightDir:Vector3D;
 			{
-/*
-				//点光源
-				RelLightDir = new Vector3D(
-					Palette_Light.m_LightPosition.x - in_X,
-					Palette_Light.m_LightPosition.y - in_Y,
-					Palette_Light.m_LightPosition.z
-				);
-/*/
-				//平行光源
-				RelLightDir = new Vector3D(
-					Palette_Light.m_LightPosition.x,
-					Palette_Light.m_LightPosition.y,
-					Palette_Light.m_LightPosition.z
-				);
-//*/
+				switch(m_LightType){
+				case LIGHT_POINT:
+					//点光源
+					RelLightDir = new Vector3D(
+						Palette_Light.m_LightPosition.x - in_X,
+						Palette_Light.m_LightPosition.y - in_Y,
+						Palette_Light.m_LightPosition.z
+					);
+					break;
+				case LIGHT_DIR:
+					//平行光源
+					RelLightDir = new Vector3D(
+						Palette_Light.m_LightPosition.x,
+						Palette_Light.m_LightPosition.y,
+						Palette_Light.m_LightPosition.z
+					);
+					break;
+				}
 
 				RelLightDir.normalize();
 			}
@@ -185,13 +195,17 @@ package{
 			//#ベクトル
 
 			//ライトベクトル
-/*
-			//点光源
-			var L:Vector3D = new Vector3D(Palette_Light.m_LightPosition.x - in_X, Palette_Light.m_LightPosition.y - in_Y, Palette_Light.m_LightPosition.z); L.normalize();
-/*/
-			//平行光源
-			var L:Vector3D = new Vector3D(Palette_Light.m_LightPosition.x, Palette_Light.m_LightPosition.y, Palette_Light.m_LightPosition.z); L.normalize();
-//*/
+			var L:Vector3D;
+			switch(m_LightType){
+			case LIGHT_POINT:
+				//点光源
+				L = new Vector3D(Palette_Light.m_LightPosition.x - in_X, Palette_Light.m_LightPosition.y - in_Y, Palette_Light.m_LightPosition.z); L.normalize();
+				break;
+			case LIGHT_DIR:
+				//平行光源
+				L = new Vector3D(Palette_Light.m_LightPosition.x, Palette_Light.m_LightPosition.y, Palette_Light.m_LightPosition.z); L.normalize();
+				break;
+			}
 
 			//法線ベクトル
 			var N:Vector3D = NrmColor2NrmVector(in_NrmColor);
@@ -269,9 +283,9 @@ package{
 				Color_Ori = Color_Ori.add(new Vector3D(Offset, Offset, Offset));
 
 				var Color_Result:Vector3D = new Vector3D(
-					Color_Ambient.x + Color_Ori.x * Color_Light.x * Ratio,
-					Color_Ambient.y + Color_Ori.y * Color_Light.y * Ratio,
-					Color_Ambient.z + Color_Ori.z * Color_Light.z * Ratio
+					Color_Ambient.x + 0xFF * (Color_Ori.x/0xFF * Color_Light.x/0xFF * Ratio),
+					Color_Ambient.y + 0xFF * (Color_Ori.y/0xFF * Color_Light.y/0xFF * Ratio),
+					Color_Ambient.z + 0xFF * (Color_Ori.z/0xFF * Color_Light.z/0xFF * Ratio)
 				);
 
 				var r:uint = Math.min(Math.max(Color_Result.x, 0x00), 0xFF);
