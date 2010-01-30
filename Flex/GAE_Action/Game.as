@@ -18,7 +18,7 @@ package{
 	import mx.containers.*;
 	import mx.controls.*;
 
-	public class Game extends Box{
+	public class Game extends Canvas{
 		//==Const==
 
 		//＃表示画面の大きさ
@@ -62,7 +62,7 @@ package{
 		public var m_ForEditor:Boolean =false;
 
 		//＃画面構成
-		public var m_Root:Image;//本体がBoxなので、BoxにaddChildすると縦に並ぶので、一段普通のImageをかます
+		public var m_Root:Image;
 		public var  m_Root_Game:Image;
 		public var   m_Root_BG:Image;
 		public var   m_Root_Obj:Image;
@@ -208,6 +208,18 @@ package{
 					m_Root_Intetrface = new Image();
 					m_Root.addChild(m_Root_Intetrface);
 				}
+			}
+
+			//Mask
+			{
+				var root_mask:Sprite = new Sprite();
+				{
+					var g:Graphics = root_mask.graphics;
+					g.beginFill(0x000000, 1.0);
+					g.drawRect(0, 0, CAMERA_W, CAMERA_H);
+				}
+				m_Root.mask = root_mask;
+				m_Root.addChild(root_mask);
 			}
 
 			//＃GameObject
@@ -676,8 +688,16 @@ package{
 		//エディットモードか
 		private var m_EditFlag:Boolean = true;
 
-		//カーソル表示用レイヤー
-		public var m_Root_Cursor:Image;
+		//レイヤー
+		public var m_EditRoot:Image;//エディタ用ルート
+		public var  m_GameLayer:Image;//ゲーム画面まわりのレイヤー
+//		public var   m_Game_Root:Imagge;//ゲーム画面のレイヤー（上にあるやつを使う）
+		public var    m_Game_Cursor:Image;//カーソル表示用レイヤー
+		public var   m_Game_Frame:Image;//ゲーム画面まわりの額縁用レイヤー
+		public var  m_TabWindowLayer:Image;
+
+		//ゲームの枠
+		public var m_GameFrameImage:Image;
 
 		//カーソル
 		private var m_CursorImage:Image;
@@ -709,21 +729,54 @@ package{
 		}
 
 		public function Reset_ForEditor():void{
-			//カーソル表示用レイヤー
+			//レイヤー構築
 			{
-				m_Root_Cursor = new Image();
-				m_Root_Game.addChild(m_Root_Cursor);
+				//m_EditRoot
+				m_EditRoot = new Image();
+				addChild(m_EditRoot);
+				{
+					//m_GameLayer
+					m_GameLayer = new Image();
+					m_EditRoot.addChild(m_GameLayer);
+					{
+						//m_Game_Root (= m_Root)
+						removeChild(m_Root);
+						m_GameLayer.addChild(m_Root);
+						m_Root.x = ImageManager.GAME_FRAME_W;
+						m_Root.y = ImageManager.GAME_FRAME_H;
+						{
+							//（さらにゲームの方にくっつける）
+							//m_Game_Cursor
+							m_Game_Cursor = new Image();
+							m_Root_Game.addChild(m_Game_Cursor);
+						}
+
+						//m_Game_Frame
+						m_Game_Frame = new Image();
+						m_GameLayer.addChild(m_Game_Frame);
+					}
+
+					//m_TabWindowLayer
+					m_TabWindowLayer = new Image();
+					m_EditRoot.addChild(m_TabWindowLayer);
+				}
+			}
+
+			//ゲームの枠
+			{
+				m_GameFrameImage = ImageManager.CreateGameFrameImage(CAMERA_W, CAMERA_H);
+				m_Game_Frame.addChild(m_GameFrameImage);
 			}
 
 			//カーソル
 			{
 				m_CursorImage = ImageManager.CreateCursorImage();
-				m_Root_Cursor.addChild(m_CursorImage);
+				m_Game_Cursor.addChild(m_CursorImage);
 			}
 
 			//右側のタブウィンドウ
 			{
-				var TabWindowX:int = CAMERA_W;
+				var TabWindowX:int = CAMERA_W + 2*ImageManager.GAME_FRAME_W + 50;
 				var TabWindowY:int = 0;
 				var TabWindowW:int = TAB_WINDOW_W;
 				var TabWindowH:int = TAB_WINDOW_H;
@@ -734,7 +787,7 @@ package{
 				m_TabWindow.AddTab(new Tab_Save());
 			//	m_TabWindow.AddTab(new Tab_Upload());
 
-				m_Root.addChild(m_TabWindow);
+				m_TabWindowLayer.addChild(m_TabWindow);
 			}
 
 			//一度Updateをまわす（位置などの設定のため）

@@ -63,6 +63,10 @@ package{
 			}
 		}
 
+		//このタブの登録が終わったときに呼ばれる：overrideして使う
+		public function OnRegister():void{
+		}
+
 		//Create Tab Image
 		public function CreateTab():void{
 			//Create

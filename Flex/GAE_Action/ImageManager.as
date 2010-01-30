@@ -5,6 +5,7 @@ package{
 	import flash.text.*;
 	import flash.utils.*;
 	import flash.geom.*;
+	import flash.filters.*;
 	//mxml
 	import mx.core.*;
 	import mx.containers.*;
@@ -262,6 +263,129 @@ package{
 		}
 
 
+		//#ゲームの枠
+
+		static public const GAME_FRAME_W:int = 16;
+		static public const GAME_FRAME_H:int = 16;
+
+		[Embed(source='Frame.png')]
+		 private static var Bitmap_Frame: Class;
+
+		static public function CreateGameFrameImage(i_W:int, i_H:int):Image{
+			var bmp_data:BitmapData = new BitmapData(i_W + 2*GAME_FRAME_W, i_H + 2*GAME_FRAME_H, true, 0x00000000);
+			{
+				var SrcBitmap:Bitmap = new Bitmap_Frame();
+
+				var ct : ColorTransform = new ColorTransform();
+
+				var mtx : Matrix = new Matrix(1,0,0,1, 0,0);
+
+				var rect : Rectangle = new Rectangle(
+					0,
+					0,
+					GAME_FRAME_W,
+					GAME_FRAME_H
+				);
+
+				//UL
+				{
+					mtx.tx = 0;
+					mtx.ty = 0;
+					rect.x = 0;
+					rect.y = 0;
+					bmp_data.draw(SrcBitmap, mtx, ct, BlendMode.NORMAL, rect);
+				}
+				//UR
+				{
+					mtx.tx = -GAME_FRAME_W*2 + i_W;
+					mtx.ty = 0;
+					rect.x = GAME_FRAME_W + i_W;
+					rect.y = 0;
+					bmp_data.draw(SrcBitmap, mtx, ct, BlendMode.NORMAL, rect);
+				}
+				//DL
+				{
+					mtx.tx = 0;
+					mtx.ty = -GAME_FRAME_H*2 + i_H;
+					rect.x = 0;
+					rect.y = GAME_FRAME_H + i_H;
+					bmp_data.draw(SrcBitmap, mtx, ct, BlendMode.NORMAL, rect);
+				}
+				//DR
+				{
+					mtx.tx = -GAME_FRAME_W*2 + i_W;
+					mtx.ty = -GAME_FRAME_H*2 + i_H;
+					rect.x = GAME_FRAME_W + i_W;
+					rect.y = GAME_FRAME_H + i_H;
+					bmp_data.draw(SrcBitmap, mtx, ct, BlendMode.NORMAL, rect);
+				}
+
+				//U
+				{
+					mtx.a = i_W / (2*GAME_FRAME_W);
+					mtx.d = 1;
+					mtx.tx = -GAME_FRAME_W * mtx.a + GAME_FRAME_W;
+					mtx.ty = 0;
+					rect.x = GAME_FRAME_W;
+					rect.y = 0;
+					rect.width  = i_W;
+					rect.height = GAME_FRAME_H;
+					bmp_data.draw(SrcBitmap, mtx, ct, BlendMode.NORMAL, rect);
+				}
+				//D
+				{
+					mtx.a = i_W / (2*GAME_FRAME_W);
+					mtx.d = 1;
+					mtx.tx = -GAME_FRAME_W * mtx.a + GAME_FRAME_W;
+					mtx.ty = -GAME_FRAME_H*2 + i_H;
+					rect.x = GAME_FRAME_W;
+					rect.y = GAME_FRAME_H + i_H;
+					rect.width  = i_W;
+					rect.height = GAME_FRAME_H;
+					bmp_data.draw(SrcBitmap, mtx, ct, BlendMode.NORMAL, rect);
+				}
+				//L
+				{
+					mtx.a = 1;
+					mtx.d = i_H / (2*GAME_FRAME_H);
+					mtx.tx = 0;
+					mtx.ty = -GAME_FRAME_H * mtx.d + GAME_FRAME_H;
+					rect.x = 0;
+					rect.y = GAME_FRAME_H;
+					rect.width  = GAME_FRAME_W;
+					rect.height = i_H;
+					bmp_data.draw(SrcBitmap, mtx, ct, BlendMode.NORMAL, rect);
+				}
+				//R
+				{
+					mtx.a = 1;
+					mtx.d = i_H / (2*GAME_FRAME_H);
+					mtx.tx = -GAME_FRAME_W*2 + i_W;
+					mtx.ty = -GAME_FRAME_H * mtx.d + GAME_FRAME_H;
+					rect.x = GAME_FRAME_W + i_W;
+					rect.y = GAME_FRAME_H;
+					rect.width  = GAME_FRAME_W;
+					rect.height = i_H;
+					bmp_data.draw(SrcBitmap, mtx, ct, BlendMode.NORMAL, rect);
+				}
+			}
+
+			var img:Image;
+			{
+				img = new Image();
+
+				var bmp:Bitmap = new Bitmap(bmp_data);
+
+				img.addChild(bmp);
+
+				img.width  = i_W + GAME_FRAME_W*2;
+				img.height = i_H + GAME_FRAME_H*2;
+			}
+
+			return img;
+		}
+
+
 		//#Cursor（白い枠）
 
 		static public function CreateCursorImage():Image{
@@ -291,9 +415,8 @@ package{
 
 		//ウィンドウ本体
 		static public function CreateTabWindow(i_W:int, i_H:int):Image{
-			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0xFF888888);
+			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0xFF444444);
 			var tab_w:int = TAB_W;
-			bmp_data.fillRect(new Rectangle(tab_w, 0, i_W - tab_w, i_H), 0xFFFFFFFF);
 
 			var bmp:Bitmap = new Bitmap(bmp_data);
 
@@ -311,6 +434,7 @@ package{
 			//Draw Frame & BackColor
 			{
 				var frame_color:uint = Convert2FrameColor(i_BaseColor);
+				var frame_highlightt_color:uint = Convert2FrameColor_Light(i_BaseColor);
 				var back_color:uint  = Convert2BackColor(i_BaseColor);
 
 				var sprite:Sprite = new Sprite();
@@ -318,7 +442,8 @@ package{
 					var g:Graphics = sprite.graphics;
 
 					g.lineStyle(TAB_FRAME_W, frame_color, 1.0);
-					g.beginFill(back_color, 1.0);
+					BeginGradatioForTabBackColor(g, i_BaseColor);
+//					g.beginFill(back_color, 1.0);
 
 					g.moveTo(TAB_W*1, TAB_FRAME_W/2);
 					g.lineTo(TAB_FRAME_W/2, TAB_W*1);
@@ -328,6 +453,16 @@ package{
 					g.lineTo(TAB_W*2, TAB_FRAME_W);
 
 					g.endFill();
+
+
+					//さらに枠にハイライトの線を入れてみる
+					g.lineStyle(1, frame_highlightt_color, 1.0);
+					g.lineTo(TAB_W*1-TAB_FRAME_W/2, -99);
+					g.moveTo(TAB_W*1-TAB_FRAME_W/2, TAB_FRAME_W/2);
+					g.lineTo(TAB_FRAME_W/2, TAB_W*1);
+					g.lineTo(TAB_FRAME_W/2, TAB_W*4);
+					g.lineTo(TAB_W*1-TAB_FRAME_W/2, TAB_W*5-TAB_FRAME_W/2);
+					g.lineTo(TAB_W*1-TAB_FRAME_W/2, TAB_W*5+99);
 				}
 
 				bmp_data.draw(sprite);
@@ -338,6 +473,8 @@ package{
 				const char_size:int = TAB_W - TAB_FRAME_W*2 - 2;
 				const ori_size:int = 32;//このサイズで描画して、上のサイズに縮小する
 
+				var text_frame_color:uint = Convert2TextFrameColor(i_BaseColor);
+
 				var matrix : Matrix = new Matrix(1.0*char_size/ori_size,0,0,1.0*char_size/ori_size,0,0);
 				matrix.ty += TAB_W;
 				if(i_TabName.length == 2){matrix.ty += TAB_W/2;}
@@ -345,6 +482,15 @@ package{
 				var tf:TextField = new TextField();
 				tf.selectable = false;
 				tf.autoSize = TextFieldAutoSize.LEFT;
+				tf.filters = [
+					new GlowFilter(
+						text_frame_color,
+						1,//alpha
+						3,3,//x, y
+						2,//Strength
+						1//Quality
+					),
+				];
 
 				for(var i:int = 0; i < i_TabName.length; i += 1){
 /*
@@ -380,18 +526,29 @@ package{
 			//生成と同時に背景色も描画してしまう
 			var bmp_data:BitmapData = new BitmapData(TAB_CONTAINER_W, TAB_CONTAINER_H, false, Convert2BackColor(i_BaseColor));
 
-			//Draw Frame & BackColor
+			//Draw Frame & Back Color
 			{
 				var frame_color:uint = Convert2FrameColor(i_BaseColor);
+				var frame_highlightt_color:uint = Convert2FrameColor_Light(i_BaseColor);
 
 				var sprite:Sprite = new Sprite();
-				{
+				{//グラデーションをかけてみる
 					var g:Graphics = sprite.graphics;
 
 					g.lineStyle(TAB_FRAME_W, frame_color, 1.0);
+					BeginGradatioForTabBackColor(g, i_BaseColor);
 
-					g.moveTo(TAB_FRAME_W/2, 0);
-					g.lineTo(TAB_FRAME_W/2, TAB_CONTAINER_H);
+					g.moveTo(TAB_FRAME_W/2, -99);
+					g.lineTo(TAB_FRAME_W/2, TAB_CONTAINER_H+99);
+					g.lineTo(TAB_CONTAINER_W+99, TAB_CONTAINER_H+99);
+					g.lineTo(TAB_CONTAINER_W+99, -99);
+
+					g.endFill();
+
+					//さらに枠にハイライトの線を入れてみる
+					g.lineStyle(1, frame_highlightt_color, 1.0);
+					g.moveTo(TAB_FRAME_W/2, -99);
+					g.lineTo(TAB_FRAME_W/2, TAB_CONTAINER_H+99);
 				}
 
 				bmp_data.draw(sprite);
@@ -415,11 +572,27 @@ package{
 
 			{//独自部分
 				//彩度を落として暗めの色にする
-				var ratio:Number = 0.7;
+				var ratio:Number = 0.5;
 
 				r = MyMath.Lerp(r, 0x00, ratio);
 				g = MyMath.Lerp(g, 0x00, ratio);
 				b = MyMath.Lerp(b, 0x00, ratio);
+			}
+
+			return (r << 16) | (g << 8) | (b << 0);
+		}
+		static public function Convert2FrameColor_Light(i_BaseColor:uint):uint{//ハイライト
+			var r:uint = (i_BaseColor >> 16) & 0xFF;
+			var g:uint = (i_BaseColor >>  8) & 0xFF;
+			var b:uint = (i_BaseColor >>  0) & 0xFF;
+
+			{//独自部分
+				//彩度を落として暗めの色にする
+				var ratio:Number = 0.5;
+
+				r = MyMath.Lerp(r, 0x80, ratio);
+				g = MyMath.Lerp(g, 0x80, ratio);
+				b = MyMath.Lerp(b, 0x80, ratio);
 			}
 
 			return (r << 16) | (g << 8) | (b << 0);
@@ -432,7 +605,7 @@ package{
 
 			{//独自部分
 				//薄いパステルカラーにする
-				var ratio:Number = 0.9;
+				var ratio:Number = 0.85;
 
 				r = MyMath.Lerp(r, 0xFF, ratio);
 				g = MyMath.Lerp(g, 0xFF, ratio);
@@ -440,6 +613,55 @@ package{
 			}
 
 			return (r << 16) | (g << 8) | (b << 0);
+		}
+		static public function Convert2BackColor_Dst(i_BaseColor:uint):uint{
+			var r:uint = (i_BaseColor >> 16) & 0xFF;
+			var g:uint = (i_BaseColor >>  8) & 0xFF;
+			var b:uint = (i_BaseColor >>  0) & 0xFF;
+
+			{//独自部分
+				//薄いパステルカラーにする
+				var ratio:Number = 0.5;
+
+				r = MyMath.Lerp(r, 0x88, ratio);
+				g = MyMath.Lerp(g, 0x88, ratio);
+				b = MyMath.Lerp(b, 0x88, ratio);
+			}
+
+			return (r << 16) | (g << 8) | (b << 0);
+		}
+		//・文字の枠の色
+		static public function Convert2TextFrameColor(i_BaseColor:uint):uint{
+			var r:uint = (i_BaseColor >> 16) & 0xFF;
+			var g:uint = (i_BaseColor >>  8) & 0xFF;
+			var b:uint = (i_BaseColor >>  0) & 0xFF;
+
+			{//独自部分
+				//彩度を落として暗めの色にする
+				var ratio:Number = 0.95;
+
+				r = MyMath.Lerp(r, 0xFF, ratio);
+				g = MyMath.Lerp(g, 0xFF, ratio);
+				b = MyMath.Lerp(b, 0xFF, ratio);
+			}
+
+			return (r << 16) | (g << 8) | (b << 0);
+		}
+
+		//グラデーションセッティング
+		static public const mtx_for_gradation_of_tab:Matrix = new Matrix(0,1,1,0,0,0);
+		static public function BeginGradatioForTabBackColor(g:Graphics, i_BaseColor:uint):void{
+			var SrcColor:uint = Convert2BackColor(i_BaseColor);
+			var DstColor:uint = Convert2BackColor_Dst(i_BaseColor);
+
+			g.beginGradientFill(
+				GradientType.LINEAR,//type
+				[SrcColor, DstColor],//color
+				[1.0, 1.0],//alpha
+				[128, 255],//Ratio
+				mtx_for_gradation_of_tab//mtx
+			);
+			//グラフィックス.beginGradientFill ( "種類" , [カラー] , [透明度] , [配分] , 行列 , "スプレッド" , "補完" , 焦点 );
 		}
 
 		//#Tab : Hint
@@ -521,14 +743,23 @@ package{
 		//#Tab : Setting
 
 		//ベース画像
-		static public const SETTING_BASE_W:int = 32 * 5;
-		static public const SETTING_BASE_H:int = 32 * 3;
-		static public function CreateSettingImage_Base():Image{
-			var bmp_data:BitmapData = new BitmapData(SETTING_BASE_W, SETTING_BASE_H, true, 0xFF444488);
+		[Embed(source='SizeButtonX_Base.png')]
+		 private static var Bitmap_SizeButtonX_Base: Class;
+		[Embed(source='SizeButtonY_Base.png')]
+		 private static var Bitmap_SizeButtonY_Base: Class;
 
+		static public var Bitmap_SizeButton_Base:Array = [
+			new Bitmap_SizeButtonX_Base(),
+			new Bitmap_SizeButtonY_Base(),
+		];
+
+		static public function CreateSettingImage_Base(i_Index:int):Image{
 			//Imageに入れて返す
 			{
-				var bmp:Bitmap = new Bitmap(bmp_data);
+				var bmp:Bitmap = new Bitmap(Bitmap_SizeButton_Base[i_Index].bitmapData.clone());
+
+				bmp.x = -bmp.width/2;
+				bmp.y = -bmp.height/2;
 
 				var img:Image = new Image();
 				img.addChild(bmp);
@@ -552,37 +783,29 @@ package{
 		}
 
 		//値を増加させるボタン
-		static public const BUTTON_SETTING_UP_W:int = 32 * 3;
-		static public const BUTTON_SETTING_UP_H:int = 32;
-		static public function CreateSettingImage_Button_Up():Image{
-			var bmp_data:BitmapData = new BitmapData(BUTTON_SETTING_UP_W, BUTTON_SETTING_UP_H, true, 0xFFFFFFFF);
-			{
-				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
-				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
-				var rect : Rectangle = new Rectangle(0,0,bmp_data.width,bmp_data.height);
+		[Embed(source='SizeButtonX_Plus.png')]
+		 private static var Bitmap_SizeButtonX_Plus: Class;
+		[Embed(source='SizeButtonY_Plus.png')]
+		 private static var Bitmap_SizeButtonY_Plus: Class;
 
-				var text_field:TextField = new TextField();
-				{
-					text_field.border = false;
-					text_field.x = 0;
-					text_field.y = 0;
-					text_field.width = 999;
-					text_field.height = 999;
-				}
+		static public var Bitmap_SizeButton_Plus:Array = [
+			new Bitmap_SizeButtonX_Plus(),
+			new Bitmap_SizeButtonY_Plus(),
+		];
 
-				//キー
-				{
-					text_field.text = "↑";
-
-					matrix.tx = 0;
-
-					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
-				}
-			}
-
+		static public function CreateSettingImage_Button_Up(i_Index:int):Image{
 			//Imageに入れて返す
 			{
-				var bmp:Bitmap = new Bitmap(bmp_data);
+				var bmp:Bitmap = new Bitmap(Bitmap_SizeButton_Plus[i_Index].bitmapData.clone());
+
+				switch(i_Index){
+				case 0://X
+					bmp.y = -bmp.height/2;
+					break;
+				case 1://Y
+					bmp.x = -bmp.width/2;
+					break;
+				}
 
 				var img:Image = new Image();
 				img.addChild(bmp);
@@ -592,37 +815,31 @@ package{
 		}
 
 		//値を減少させるボタン
-		static public const BUTTON_SETTING_DOWN_W:int = 32 * 3;
-		static public const BUTTON_SETTING_DOWN_H:int = 32;
-		static public function CreateSettingImage_Button_Down():Image{
-			var bmp_data:BitmapData = new BitmapData(BUTTON_SETTING_DOWN_W, BUTTON_SETTING_DOWN_H, true, 0xFFFFFFFF);
-			{
-				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
-				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
-				var rect : Rectangle = new Rectangle(0,0,bmp_data.width,bmp_data.height);
+		[Embed(source='SizeButtonX_Minus.png')]
+		 private static var Bitmap_SizeButtonX_Minus: Class;
+		[Embed(source='SizeButtonY_Minus.png')]
+		 private static var Bitmap_SizeButtonY_Minus: Class;
 
-				var text_field:TextField = new TextField();
-				{
-					text_field.border = false;
-					text_field.x = 0;
-					text_field.y = 0;
-					text_field.width = 999;
-					text_field.height = 999;
-				}
+		static public var Bitmap_SizeButton_Minus:Array = [
+			new Bitmap_SizeButtonX_Minus(),
+			new Bitmap_SizeButtonY_Minus(),
+		];
 
-				//キー
-				{
-					text_field.text = "↓";
-
-					matrix.tx = 0;
-
-					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
-				}
-			}
-
+		static public function CreateSettingImage_Button_Down(i_Index:int):Image{
 			//Imageに入れて返す
 			{
-				var bmp:Bitmap = new Bitmap(bmp_data);
+				var bmp:Bitmap = new Bitmap(Bitmap_SizeButton_Minus[i_Index].bitmapData.clone());
+
+				switch(i_Index){
+				case 0://X
+					bmp.x = -bmp.width;
+					bmp.y = -bmp.height/2;
+					break;
+				case 1://Y
+					bmp.x = -bmp.width/2;
+					bmp.y = -bmp.height;
+					break;
+				}
 
 				var img:Image = new Image();
 				img.addChild(bmp);
@@ -642,7 +859,7 @@ package{
 			//Draw
 			{
 				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
-				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
+				var color : ColorTransform = new ColorTransform(1,1,1,1,255,255,255,255);
 				var rect : Rectangle = bmp_data.rect;
 
 				var text_field:TextField = new TextField();

@@ -56,12 +56,15 @@ package{
 
 		//Init
 		public function Tab_Setting(){
-			var i:int;
-
 			//Tab
 			{
 				super("設定", 0x000000);
 			}
+		}
+
+		//位置の計算が特殊なので、登録後にContentの中身を作る
+		override public function OnRegister():void{
+			var i:int;
 
 			//Content
 			{
@@ -143,15 +146,34 @@ package{
 					},
 				];
 
+
+				var frame:Image = Game.Instance().m_GameFrameImage;
+				var FrameW:int = frame.width;
+				var FrameH:int = frame.height;
+				const POS_BASE:Array = [
+					m_Content.globalToLocal(frame.localToGlobal(new Point(FrameW-ImageManager.GAME_FRAME_W/2, FrameH/2))),//ゲームの枠の右中央にセットするための相対位置
+					m_Content.globalToLocal(frame.localToGlobal(new Point(FrameW/2, FrameH-ImageManager.GAME_FRAME_H/2))),//ゲームの枠の下中央にセットするための相対位置
+				];
+
+				const POS_PLUS:Array = [
+					new Point(48/2, 0),
+					new Point(0, 48/2),
+				];
+				const POS_MINUS:Array = [
+					new Point(-48/2, 0),
+					new Point(0, -48/2),
+				];
+
+
 				//Create Pael Image
 				for(i = 0; i < Num; i += 1)
 				{
 					//Base
 					var img_base:Image;
 					{
-						img_base = ImageManager.CreateSettingImage_Base();
-						img_base.x = 0;
-						img_base.y = i * (32 * 3);
+						img_base = ImageManager.CreateSettingImage_Base(i);
+						img_base.x = POS_BASE[i].x;
+						img_base.y = POS_BASE[i].y;
 					}
 
 					//Base : Child
@@ -161,8 +183,8 @@ package{
 							var img_val:Image = new Image();
 							m_Bitmap_4Val[i] = ImageManager.CreateSettingBitmap_Val();
 							img_val.addChild(m_Bitmap_4Val[i]);
-							img_val.x = 32;
-							img_val.y = 32;
+							m_Bitmap_4Val[i].x = -m_Bitmap_4Val[i].width/2;
+							m_Bitmap_4Val[i].y = -m_Bitmap_4Val[i].height/2;
 
 							img_base.addChild(img_val);
 						}
@@ -170,9 +192,9 @@ package{
 						//Upボタン
 						{
 							var img_button_up:Image;
-							img_button_up = ImageManager.CreateSettingImage_Button_Up();
-							img_button_up.x = 32;
-							img_button_up.y = 0;
+							img_button_up = ImageManager.CreateSettingImage_Button_Up(i);
+							img_button_up.x = POS_PLUS[i].x;
+							img_button_up.y = POS_PLUS[i].y;
 
 							//Click
 							img_button_up.addEventListener(//クリック時の挙動を追加
@@ -189,9 +211,9 @@ package{
 						//Downボタン
 						{
 							var img_button_down:Image;
-							img_button_down = ImageManager.CreateSettingImage_Button_Down();
-							img_button_down.x = 32;
-							img_button_down.y = 32 * 2;
+							img_button_down = ImageManager.CreateSettingImage_Button_Down(i);
+							img_button_down.x = POS_MINUS[i].x;
+							img_button_down.y = POS_MINUS[i].y;
 
 							//Click
 							img_button_down.addEventListener(//クリック時の挙動を追加

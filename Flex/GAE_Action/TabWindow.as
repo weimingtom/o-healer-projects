@@ -95,6 +95,11 @@ package{
 			{
 				Show(m_SelectedIndex);//面倒なのでこれで
 			}
+
+			//タブの登録が終わったので、事後処理があれば呼ぶ
+			{
+				i_Tab.OnRegister();
+			}
 		}
 
 		//Select
