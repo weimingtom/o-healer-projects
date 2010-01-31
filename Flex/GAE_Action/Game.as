@@ -22,7 +22,7 @@ package{
 		//==Const==
 
 		//＃表示画面の大きさ
-		static public const CAMERA_W:Number = 32 * 12;//ImageManager.PANEL_LEN * 12;//400;
+		static public const CAMERA_W:Number = 32 * 12 + 16;//ImageManager.PANEL_LEN * 12;//400;
 		static public const CAMERA_H:Number = 32 * 10;//ImageManager.PANEL_LEN * 10;//300;
 
 		//＃マップの要素
@@ -160,6 +160,13 @@ package{
 				m_Input = new CInput_Keyboard(stage);
 			}
 
+			//レイヤーはトップ付近だけは保持したままにするのでここで作成
+			{
+				//Root
+				m_Root = new Image();
+				addChild(m_Root);
+			}
+
 			//残りはResetで
 			{
 				Reset();
@@ -174,13 +181,11 @@ package{
 			//＃画面に相当する部分の初期化
 			{
 				//Reset
-				while(numChildren > 0){
-					removeChildAt(0);
+				while(m_Root.numChildren > 0){
+					m_Root.removeChildAt(0);
 				}
 
-				//Root
-				m_Root = new Image();
-				addChild(m_Root);
+				//Root：RootはInitで作成したまま
 				{
 					//Game
 					m_Root_Game = new Image();
@@ -722,6 +727,70 @@ package{
 				Init();
 			}
 
+			//Initのみの処理
+			{
+				//レイヤー構築
+				{
+					//m_EditRoot
+					m_EditRoot = new Image();
+					addChild(m_EditRoot);
+					{
+						//m_GameLayer
+						m_GameLayer = new Image();
+						m_EditRoot.addChild(m_GameLayer);
+						{
+							//m_Game_Root (= m_Root)
+							removeChild(m_Root);//m_Rootの接続先を変更
+							m_GameLayer.addChild(m_Root);
+							m_Root.x = ImageManager.GAME_FRAME_W;
+							m_Root.y = ImageManager.GAME_FRAME_H;
+							{
+								//（さらにゲームの方にくっつける）
+								//m_Game_Cursor
+								m_Game_Cursor = new Image();
+//								m_Root_Game.addChild(m_Game_Cursor);
+							}
+
+							//m_Game_Frame
+							m_Game_Frame = new Image();
+							m_GameLayer.addChild(m_Game_Frame);
+						}
+
+						//m_TabWindowLayer
+						m_TabWindowLayer = new Image();
+						m_EditRoot.addChild(m_TabWindowLayer);
+					}
+				}
+
+				//ゲームの枠
+				{
+					m_GameFrameImage = ImageManager.CreateGameFrameImage(CAMERA_W, CAMERA_H);
+					m_Game_Frame.addChild(m_GameFrameImage);
+				}
+
+				//カーソル
+				{
+					m_CursorImage = ImageManager.CreateCursorImage();
+					m_Game_Cursor.addChild(m_CursorImage);
+				}
+
+				//右側のタブウィンドウ
+				{
+					var TabWindowX:int = CAMERA_W + 2*ImageManager.GAME_FRAME_W + 50;
+					var TabWindowY:int = 0;
+					var TabWindowW:int = TAB_WINDOW_W;
+					var TabWindowH:int = TAB_WINDOW_H;
+
+					m_TabWindow = new TabWindow(TabWindowX, TabWindowY, TabWindowW, TabWindowH);
+					m_TabWindow.AddTab(new Tab_Hint());
+					m_TabWindow.AddTab(new Tab_Setting());
+					m_TabWindow.AddTab(new Tab_Save());
+				//	m_TabWindow.AddTab(new Tab_Upload());
+
+					m_TabWindowLayer.addChild(m_TabWindow);
+				}
+			}
+
 			//Resetと共通処理
 			{
 				Reset_ForEditor();
@@ -729,65 +798,10 @@ package{
 		}
 
 		public function Reset_ForEditor():void{
-			//レイヤー構築
+			//レイヤー：Resetの度に構築するもの
 			{
-				//m_EditRoot
-				m_EditRoot = new Image();
-				addChild(m_EditRoot);
-				{
-					//m_GameLayer
-					m_GameLayer = new Image();
-					m_EditRoot.addChild(m_GameLayer);
-					{
-						//m_Game_Root (= m_Root)
-						removeChild(m_Root);
-						m_GameLayer.addChild(m_Root);
-						m_Root.x = ImageManager.GAME_FRAME_W;
-						m_Root.y = ImageManager.GAME_FRAME_H;
-						{
-							//（さらにゲームの方にくっつける）
-							//m_Game_Cursor
-							m_Game_Cursor = new Image();
-							m_Root_Game.addChild(m_Game_Cursor);
-						}
-
-						//m_Game_Frame
-						m_Game_Frame = new Image();
-						m_GameLayer.addChild(m_Game_Frame);
-					}
-
-					//m_TabWindowLayer
-					m_TabWindowLayer = new Image();
-					m_EditRoot.addChild(m_TabWindowLayer);
-				}
-			}
-
-			//ゲームの枠
-			{
-				m_GameFrameImage = ImageManager.CreateGameFrameImage(CAMERA_W, CAMERA_H);
-				m_Game_Frame.addChild(m_GameFrameImage);
-			}
-
-			//カーソル
-			{
-				m_CursorImage = ImageManager.CreateCursorImage();
-				m_Game_Cursor.addChild(m_CursorImage);
-			}
-
-			//右側のタブウィンドウ
-			{
-				var TabWindowX:int = CAMERA_W + 2*ImageManager.GAME_FRAME_W + 50;
-				var TabWindowY:int = 0;
-				var TabWindowW:int = TAB_WINDOW_W;
-				var TabWindowH:int = TAB_WINDOW_H;
-
-				m_TabWindow = new TabWindow(TabWindowX, TabWindowY, TabWindowW, TabWindowH);
-				m_TabWindow.AddTab(new Tab_Hint());
-				m_TabWindow.AddTab(new Tab_Setting());
-				m_TabWindow.AddTab(new Tab_Save());
-			//	m_TabWindow.AddTab(new Tab_Upload());
-
-				m_TabWindowLayer.addChild(m_TabWindow);
+				//m_Root_Gameが再構築されるので、再登録
+				m_Root_Game.addChild(m_Game_Cursor);
 			}
 
 			//一度Updateをまわす（位置などの設定のため）
@@ -1308,7 +1322,7 @@ package{
 			}
 
 			//反映
-			so.data.flush();
+			so.flush();
 		}
 
 		//#Load

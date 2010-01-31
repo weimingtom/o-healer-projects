@@ -415,13 +415,16 @@ package{
 
 		//ウィンドウ本体
 		static public function CreateTabWindow(i_W:int, i_H:int):Image{
-			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0xFF444444);
+			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0x00000000);
 			var tab_w:int = TAB_W;
 
 			var bmp:Bitmap = new Bitmap(bmp_data);
 
 			var img:Image = new Image();
 			img.addChild(bmp);
+
+			img.width  = i_W;
+			img.height = i_H;
 
 			return img;
 		}
@@ -885,38 +888,16 @@ package{
 
 		//#Tab : Save
 
-		//セーブデータひとかたまり用のベース画像
-		static public const SAVE_BASE_W:int = 32 * 5;
-		static public const SAVE_BASE_H:int = 32 * 3;
+		//サムネイルの枠
 		static public function CreateThumbnailImage_Base():Image{
-			var bmp_data:BitmapData = new BitmapData(SAVE_BASE_W, SAVE_BASE_H, true, 0xFF444444);
-
-			//Imageに入れて返す
-			{
-				var bmp:Bitmap = new Bitmap(bmp_data);
-
-				var img:Image = new Image();
-				img.addChild(bmp);
-
-				return img;
-			}
+			return CreateGameFrameImage(SAVE_THUMBNAIL_W, SAVE_THUMBNAIL_H);
 		}
 
 		//ステージのサムネイル画像
-		static public const SAVE_THUMBNAIL_W:int = 32 * 3;
-		static public const SAVE_THUMBNAIL_H:int = 32 * 3;
-		static public const SAVE_THUMBNAIL_FRAME_W:int = 1;
+		static public const SAVE_THUMBNAIL_W:int = 200;//32 * 3;
+		static public const SAVE_THUMBNAIL_H:int = 200;//32 * 3;
 		static public function CreateThumbnailImage_Thumbnail(i_Map:Array):Image{
-			var bmp_data:BitmapData = new BitmapData(SAVE_THUMBNAIL_W, SAVE_THUMBNAIL_H, true, 0xFF444444);
-			//枠の描画
-			{
-				//実際には枠の色は上の生成時の色。ここでは透明色で抜くだけ
-				bmp_data.setPixel(0,					0,					0x00000000);
-				bmp_data.setPixel(SAVE_THUMBNAIL_W-1,	0,					0x00000000);
-				bmp_data.setPixel(0,					SAVE_THUMBNAIL_H-1,	0x00000000);
-				bmp_data.setPixel(SAVE_THUMBNAIL_W-1,	SAVE_THUMBNAIL_H-1,	0x00000000);
-			}
-
+			var bmp_data:BitmapData = new BitmapData(SAVE_THUMBNAIL_W, SAVE_THUMBNAIL_H, true, 0xFFFFFFFF);
 			//マップの描画
 			{
 				var NumX:int = i_Map[0].length;
@@ -948,13 +929,17 @@ package{
 					}
 				}
 
+				//縦横それぞれのフィット率を求める
+				var RatioX:Number;
+				var RatioY:Number;
+				{
+					RatioX = SAVE_THUMBNAIL_W / NumX;
+					RatioY = SAVE_THUMBNAIL_H / NumY;
+				}
+
 				//それをサムネイルにフィットさせるための比率を求める
 				var Ratio:Number;
 				{
-					//縦横それぞれのフィット率を求める
-					var RatioX:Number = (SAVE_THUMBNAIL_W - SAVE_THUMBNAIL_FRAME_W*2) / NumX;
-					var RatioY:Number = (SAVE_THUMBNAIL_H - SAVE_THUMBNAIL_FRAME_W*2) / NumY;
-
 					//低い方に合わせる
 					Ratio = MyMath.Min(RatioX, RatioY);
 				}
@@ -963,7 +948,11 @@ package{
 				{
 					bmp_data.draw(
 						bmp_data_ori,
-						new Matrix(Ratio, 0, 0, Ratio, SAVE_THUMBNAIL_FRAME_W, SAVE_THUMBNAIL_FRAME_W)
+						new Matrix(
+							Ratio, 0, 0, Ratio,
+							NumX/2 * (RatioX - Ratio),
+							NumY/2 * (RatioY - Ratio)
+						)
 					);
 				}
 			}
@@ -972,6 +961,10 @@ package{
 			{
 				var bmp:Bitmap = new Bitmap(bmp_data);
 
+				//枠に収まるように調整
+				bmp.x = GAME_FRAME_W;
+				bmp.y = GAME_FRAME_H;
+
 				var img:Image = new Image();
 				img.addChild(bmp);
 
@@ -979,42 +972,23 @@ package{
 			}
 		}
 
+
 		//セーブボタン用の画像
-		static public const BUTTON_SAVE_W:int = 32 * 2;
-		static public const BUTTON_SAVE_H:int = 32;
+
+		[Embed(source='SaveButton.png')]
+		 private static var Bitmap_SaveButton: Class;
+		[Embed(source='SaveButton.png')]
+		 private static var Bitmap_SaveButton_New: Class;
+
 		static public function CreateThumbnailImage_Button_Save(i_IsOverWrite:Boolean):Image{
-			var bmp_data:BitmapData = new BitmapData(BUTTON_SAVE_W, BUTTON_SAVE_H, true, 0xFFFFFFFF);
-			{
-				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
-				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
-				var rect : Rectangle = new Rectangle(0,0,bmp_data.width,bmp_data.height);
-
-				var text_field:TextField = new TextField();
-				{
-					text_field.border = false;
-					text_field.x = 0;
-					text_field.y = 0;
-					text_field.width = 999;
-					text_field.height = 999;
-				}
-
-				//キー
-				{
-					if(! i_IsOverWrite){
-						text_field.text = "=> 新規保存";//新規
-					}else{
-						text_field.text = "=> 上書き";//上書き
-					}
-
-					matrix.tx = 0;
-
-					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
-				}
-			}
-
 			//Imageに入れて返す
 			{
-				var bmp:Bitmap = new Bitmap(bmp_data);
+				var bmp:Bitmap;
+				if(i_IsOverWrite){
+					bmp = new Bitmap_SaveButton();
+				}else{
+					bmp = new Bitmap_SaveButton_New();
+				}
 
 				var img:Image = new Image();
 				img.addChild(bmp);
@@ -1025,41 +999,21 @@ package{
 
 
 		//ロードボタン用の画像
-		static public const BUTTON_LOAD_W:int = 32 * 2;
-		static public const BUTTON_LOAD_H:int = 32;
+
+		[Embed(source='LoadButton.png')]
+		 private static var Bitmap_LoadButton: Class;
+		[Embed(source='LoadButton.png')]
+		 private static var Bitmap_LoadButton_Clear: Class;
+
 		static public function CreateThumbnailImage_Button_Load(i_IsOverWrite:Boolean):Image{
-			var bmp_data:BitmapData = new BitmapData(BUTTON_LOAD_W, BUTTON_LOAD_H, true, 0xFFFFFFFF);
-			{
-				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
-				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
-				var rect : Rectangle = new Rectangle(0,0,bmp_data.width,bmp_data.height);
-
-				var text_field:TextField = new TextField();
-				{
-					text_field.border = false;
-					text_field.x = 0;
-					text_field.y = 0;
-					text_field.width = 999;
-					text_field.height = 999;
-				}
-
-				//キー
-				{
-					if(! i_IsOverWrite){
-						text_field.text = "<= クリア";//新規
-					}else{
-						text_field.text = "<= ロード";//上書き
-					}
-
-					matrix.tx = 0;
-
-					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
-				}
-			}
-
 			//Imageに入れて返す
 			{
-				var bmp:Bitmap = new Bitmap(bmp_data);
+				var bmp:Bitmap;
+				if(i_IsOverWrite){
+					bmp = new Bitmap_LoadButton();
+				}else{
+					bmp = new Bitmap_LoadButton_Clear();
+				}
 
 				var img:Image = new Image();
 				img.addChild(bmp);
