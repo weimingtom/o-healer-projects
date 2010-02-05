@@ -74,7 +74,7 @@ package{
 				var FuncUp:Array = [
 					//NumX
 					function(e:Event):void{
-						var NewW:int = MyMath.Clamp(Game.Instance().m_Map[0].length + 1, 1, 100);
+						var NewW:int = MyMath.Clamp(Game.Instance().m_Map[0].length + 1, Game.MAP_W_MIN, Game.MAP_W_MAX);
 						var NewH:int = Game.Instance().m_Map.length;
 
 						//Check
@@ -92,7 +92,7 @@ package{
 					//NumY
 					function(e:Event):void{
 						var NewW:int = Game.Instance().m_Map[0].length;
-						var NewH:int = MyMath.Clamp(Game.Instance().m_Map.length + 1, 1, 100);
+						var NewH:int = MyMath.Clamp(Game.Instance().m_Map.length + 1, Game.MAP_H_MIN, Game.MAP_H_MAX);
 
 						//Check
 						{
@@ -112,7 +112,7 @@ package{
 				var FuncDown:Array = [
 					//NumX
 					function(e:Event):void{
-						var NewW:int = MyMath.Clamp(Game.Instance().m_Map[0].length - 1, 1, 100);
+						var NewW:int = MyMath.Clamp(Game.Instance().m_Map[0].length - 1, Game.MAP_W_MIN, Game.MAP_W_MAX);
 						var NewH:int = Game.Instance().m_Map.length;
 
 						//Check
@@ -130,7 +130,7 @@ package{
 					//NumY
 					function(e:Event):void{
 						var NewW:int = Game.Instance().m_Map[0].length;
-						var NewH:int = MyMath.Clamp(Game.Instance().m_Map.length - 1, 1, 100);
+						var NewH:int = MyMath.Clamp(Game.Instance().m_Map.length - 1, Game.MAP_H_MIN, Game.MAP_H_MAX);
 
 						//Check
 						{
@@ -150,10 +150,41 @@ package{
 				var frame:Image = Game.Instance().m_GameFrameImage;
 				var FrameW:int = frame.width;
 				var FrameH:int = frame.height;
-				const POS_BASE:Array = [
-					m_Content.globalToLocal(frame.localToGlobal(new Point(FrameW-ImageManager.GAME_FRAME_W/2, FrameH/2))),//ゲームの枠の右中央にセットするための相対位置
-					m_Content.globalToLocal(frame.localToGlobal(new Point(FrameW/2, FrameH-ImageManager.GAME_FRAME_H/2))),//ゲームの枠の下中央にセットするための相対位置
+				var RelPointX:Point = new Point(FrameW-ImageManager.GAME_FRAME_W/2, FrameH/2);
+				var RelPointY:Point = new Point(FrameW/2, FrameH-ImageManager.GAME_FRAME_H/2);
+/*
+				var POS_BASE:Array = [//拡大してからボタンを押して開始すると、サイズボタンの位置がずれる
+					m_Content.globalToLocal(frame.localToGlobal(RelPointX)),//ゲームの枠の右中央にセットするための相対位置
+					m_Content.globalToLocal(frame.localToGlobal(RelPointY)),//ゲームの枠の下中央にセットするための相対位置
 				];
+/*/
+				//オフセットを自前で求める。「Global=Game.Instance()」と捉える
+				var offsetX:int;
+				var offsetY:int;
+				var p:DisplayObject;
+				{//相対座標→絶対座標
+					p = m_Content;
+					while(p){
+						offsetX -= p.x;
+						offsetY -= p.y;
+						p = p.parent;
+						if(p == Game.Instance()){break;}
+					}
+				}
+				{//絶対座標→相対座標
+					p = frame;
+					while(p){
+						offsetX += p.x;
+						offsetY += p.y;
+						p = p.parent;
+						if(p == Game.Instance()){break;}
+					}
+				}
+				var POS_BASE:Array = [
+					RelPointX.add(new Point(offsetX, offsetY)),
+					RelPointY.add(new Point(offsetX, offsetY)),
+				];
+//*/
 
 				const POS_PLUS:Array = [
 					new Point(48/2, 0),
@@ -198,7 +229,7 @@ package{
 
 							//Click
 							img_button_up.addEventListener(//クリック時の挙動を追加
-								MouseEvent.CLICK,//クリックされたら
+								MouseEvent.MOUSE_DOWN,//押した瞬間にしてみる
 								FuncUp[i]
 							);
 
@@ -217,7 +248,7 @@ package{
 
 							//Click
 							img_button_down.addEventListener(//クリック時の挙動を追加
-								MouseEvent.CLICK,//クリックされたら
+								MouseEvent.MOUSE_DOWN,//押した瞬間にしてみる
 								FuncDown[i]
 							);
 

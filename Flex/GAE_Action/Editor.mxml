@@ -4,13 +4,13 @@
 	xmlns:comp="*"
 	paddingTop="0" paddingLeft="0"
 	paddingRight="0" paddingBottom="0"
-	backgroundColor="#F0F0EA"
+	backgroundColor="#000033"
 	applicationComplete="init()"
 >
 	<!--Script-->
 	<mx:Script>
 		<![CDATA[
-			private const EDITOR_W:int = 800;
+			private const EDITOR_W:int = 850;
 			private const EDITOR_H:int = 400;
 
 			//最初のロード完了時の初期化

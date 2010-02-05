@@ -25,6 +25,12 @@ package{
 		static public const CAMERA_W:Number = 32 * 12 + 16;//ImageManager.PANEL_LEN * 12;//400;
 		static public const CAMERA_H:Number = 32 * 10;//ImageManager.PANEL_LEN * 10;//300;
 
+		//＃マップのマスの数の制限
+		static public const MAP_W_MIN:int = 13;
+		static public const MAP_W_MAX:int = 99;
+		static public const MAP_H_MIN:int = 10;
+		static public const MAP_H_MAX:int = 99;
+
 		//＃マップの要素
 		static public const O:int = 0;//空白
 		static public const W:int = 1;//地形
@@ -933,6 +939,12 @@ package{
 		private var m_AnimTimer:Number = 0.0;
 		static private const CURSOR_ANIM_TIME:Number = 1.0;
 		private function UpdateCursor(i_DeltaTime:Number):void{
+			//Check : Range
+			{
+				if(m_CursorIndexX >= m_Map[0].length){m_CursorIndexX = m_Map[0].length-1;}
+				if(m_CursorIndexY >= m_Map.length){m_CursorIndexY = m_Map.length-1;}
+			}
+
 			//Pos
 			{
 				m_CursorImage.x = m_CursorIndexX * ImageManager.PANEL_LEN;
@@ -1238,6 +1250,25 @@ package{
 				}
 				if(CursorDY > CameraDY){
 					m_Root_Game.y = -CursorDY + CAMERA_H;
+				}
+			}
+
+			//「設定」で動的にサイズを変更した時のために、マイナス方向への移動チェック
+			{
+				var MapRX:int = m_Map[0].length * ImageManager.PANEL_LEN;
+				if(MapRX < CameraRX){
+					m_Root_Game.x = -MapRX + CAMERA_W;
+				}
+				if(m_Root_Game.x > 0){//マップの左上が必ず左上の隅になるように補正
+					m_Root_Game.x = 0;
+				}
+
+				var MapDY:int = m_Map.length * ImageManager.PANEL_LEN;
+				if(MapDY < CameraDY){
+					m_Root_Game.y = -MapDY + CAMERA_H;
+				}
+				if(m_Root_Game.y > 0){//マップの左上が必ず左上の隅になるように補正
+					m_Root_Game.y = 0;
 				}
 			}
 		}

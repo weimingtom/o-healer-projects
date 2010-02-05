@@ -688,35 +688,25 @@ package{
 		static public function CreateHintImage(i_Index:int):Image{
 			var bmp_data:BitmapData = new BitmapData(Tab_Hint.PANEL_W, Tab_Hint.PANEL_H, true, 0x00000000);
 			{
-				var matrix : Matrix = new Matrix(1,0,0,1,0,0);
-				var color : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
-				var rect : Rectangle = new Rectangle(0,0,bmp_data.width,bmp_data.height);
+				const HINT_FRAME_COLOR:uint = 0x000000;
+				const HINT_FRAME_RAD:int = 10;
 
-				var text_field:TextField = new TextField();
+				var shape:Shape = new Shape();
+				var g:Graphics = shape.graphics;
+
+				var matrix:Matrix = new Matrix(1,0,0,1,0,0);
+				const ct:ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
+				const rect:Rectangle = new Rectangle(0,0,bmp_data.width,bmp_data.height);
+
+				//枠
 				{
-					text_field.border = false;
-					text_field.x = 0;
-					text_field.y = 0;
-					text_field.width = 999;
-					text_field.height = 999;
-				}
+					g.clear();
+					g.lineStyle(3, HINT_FRAME_COLOR, 1.0);
+					g.beginFill(HINT_FRAME_COLOR, 1.0);
+					g.drawRect(HINT_FRAME_RAD, HINT_FRAME_RAD, 32, 32);
+					g.endFill();
 
-				//キー
-				{
-					text_field.text = INDEX_TO_CHAR[i_Index];
-
-					matrix.tx = 0;
-
-					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
-				}
-
-				//「：」
-				{
-					text_field.text = ":";
-
-					matrix.tx = 32;
-
-					bmp_data.draw(text_field, matrix, color, BlendMode.NORMAL, rect, true);
+					bmp_data.draw(shape);
 				}
 
 				//画像
@@ -724,10 +714,43 @@ package{
 					var img_block:Image = LoadBlockImage(i_Index);//やっぱりブロックのIndexはゲームのを流用。ヒント用に一通りの画像を揃える
 //					img_block.x = img_block.y = PANEL_LEN/2;
 
-					matrix.tx = 55;
-					matrix.ty = ImageManager.PANEL_LEN/2;
+					matrix.tx = HINT_FRAME_RAD + 16;
+					matrix.ty = HINT_FRAME_RAD + 16;
 
-					bmp_data.draw(img_block, matrix, color, BlendMode.NORMAL, rect, true);
+					bmp_data.draw(img_block, matrix, ct, BlendMode.NORMAL, rect, true);
+				}
+
+				//枠：円
+				{
+					g.clear();
+					g.beginFill(HINT_FRAME_COLOR, 1.0);
+					g.drawCircle(HINT_FRAME_RAD, HINT_FRAME_RAD, HINT_FRAME_RAD);
+					g.endFill();
+
+					bmp_data.draw(shape);
+				}
+
+				//文字
+				{
+					var text_field:TextField = new TextField();
+					{
+						text_field.border = false;
+						text_field.x = 0;
+						text_field.y = 0;
+						text_field.width = 999;
+						text_field.height = 999;
+						text_field.textColor = 0xFFFFFF;
+					}
+
+					//キー
+					{
+						text_field.text = INDEX_TO_CHAR[i_Index];
+
+						matrix.tx = HINT_FRAME_RAD - text_field.textWidth/2  - 2;
+						matrix.ty = HINT_FRAME_RAD - text_field.textHeight/2 - 2;
+
+						bmp_data.draw(text_field, matrix, ct, BlendMode.NORMAL, rect, true);
+					}
 				}
 			}
 
@@ -772,8 +795,8 @@ package{
 		}
 
 		//値の表示（ここでは空のBMPを返すだけ）
-		static public const SETTING_VAL_W:int = 32 * 3;
-		static public const SETTING_VAL_H:int = 32 * 1;
+		static public const SETTING_VAL_W:int = 32 * 2;
+		static public const SETTING_VAL_H:int = 32 * 2;
 		static public function CreateSettingBitmap_Val():Bitmap{
 			var bmp_data:BitmapData = new BitmapData(SETTING_VAL_W, SETTING_VAL_H, true, 0x00000000);
 
@@ -851,6 +874,75 @@ package{
 			}
 		}
 
+//*
+		[Embed(source='Val_0.png')]
+		 private static var Bitmap_Val_0: Class;
+		[Embed(source='Val_1.png')]
+		 private static var Bitmap_Val_1: Class;
+		[Embed(source='Val_2.png')]
+		 private static var Bitmap_Val_2: Class;
+		[Embed(source='Val_3.png')]
+		 private static var Bitmap_Val_3: Class;
+		[Embed(source='Val_4.png')]
+		 private static var Bitmap_Val_4: Class;
+		[Embed(source='Val_5.png')]
+		 private static var Bitmap_Val_5: Class;
+		[Embed(source='Val_6.png')]
+		 private static var Bitmap_Val_6: Class;
+		[Embed(source='Val_7.png')]
+		 private static var Bitmap_Val_7: Class;
+		[Embed(source='Val_8.png')]
+		 private static var Bitmap_Val_8: Class;
+		[Embed(source='Val_9.png')]
+		 private static var Bitmap_Val_9: Class;
+
+		static public var Bitmap_Val_List:Array = [
+			new Bitmap_Val_0(),
+			new Bitmap_Val_1(),
+			new Bitmap_Val_2(),
+			new Bitmap_Val_3(),
+			new Bitmap_Val_4(),
+			new Bitmap_Val_5(),
+			new Bitmap_Val_6(),
+			new Bitmap_Val_7(),
+			new Bitmap_Val_8(),
+			new Bitmap_Val_9(),
+		];
+
+		static public function RedrawSettingBitmap_Val(i_Bitmap:Bitmap, i_Val:int):void{
+			var bmp_data:BitmapData = i_Bitmap.bitmapData;
+
+			//Clear
+			{
+				bmp_data.fillRect(bmp_data.rect, 0x00000000);
+			}
+
+			//Draw
+			{
+				var index:int;
+
+				var matrix : Matrix = new Matrix(1,0,0,1, 0,16);
+
+				//１０の位
+				{
+					matrix.tx += 16;
+
+					index = (i_Val / 10) % 10;
+
+					bmp_data.draw(Bitmap_Val_List[index], matrix);
+				}
+
+				//１の位
+				{
+					matrix.tx += 16;
+
+					index = (i_Val / 1) % 10;
+
+					bmp_data.draw(Bitmap_Val_List[index], matrix);
+				}
+			}
+		}
+/*/
 		static public function RedrawSettingBitmap_Val(i_Bitmap:Bitmap, i_Val:int):void{
 			var bmp_data:BitmapData = i_Bitmap.bitmapData;
 
@@ -884,6 +976,8 @@ package{
 				}
 			}
 		}
+//*/
+
 
 
 		//#Tab : Save
@@ -894,8 +988,8 @@ package{
 		}
 
 		//ステージのサムネイル画像
-		static public const SAVE_THUMBNAIL_W:int = 200;//32 * 3;
-		static public const SAVE_THUMBNAIL_H:int = 200;//32 * 3;
+		static public const SAVE_THUMBNAIL_W:int = 234;//32 * 12 * 0.6;//200
+		static public const SAVE_THUMBNAIL_H:int = 196;//32 * 10 * 0.6;//200
 		static public function CreateThumbnailImage_Thumbnail(i_Map:Array):Image{
 			var bmp_data:BitmapData = new BitmapData(SAVE_THUMBNAIL_W, SAVE_THUMBNAIL_H, true, 0xFFFFFFFF);
 			//マップの描画

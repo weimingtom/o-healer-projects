@@ -16,8 +16,8 @@ package{
 	{
 		//==Const==
 
-		static public const PANEL_W:int = 32 * 3;
-		static public const PANEL_H:int = 32 + 4;
+		static public const PANEL_W:int = 32 * 2;
+		static public const PANEL_H:int = 32 * 2;
 
 		public const HINT_MESSAGE:Array = [
 			"Oを押すとそこにあるものを削除します",//O:空白
@@ -48,6 +48,18 @@ package{
 
 			//Content
 			{
+/*
+				const CONTENT_NORMAL:Array = [
+					Game.O,
+					Game.W,
+					Game.P,
+					Game.G,
+					Game.Q,
+					Game.S,
+					Game.R,
+					Game.B,
+				];
+/*/
 				//
 				const TYPE_L:int = 0;
 				const TYPE_R:int = 1;
@@ -118,6 +130,7 @@ package{
 						}
 					}
 				}
+//*/
 			}
 		}
 	}

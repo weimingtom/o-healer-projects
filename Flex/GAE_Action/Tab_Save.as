@@ -46,7 +46,7 @@ package{
 		static public const THUMBNAIL_OFFSET_INIT_X:int = 32;
 		static public const THUMBNAIL_OFFSET_INIT_Y:int = 32;
 		static public const THUMBNAIL_OFFSET_X:int = (200 + 16*2) + (32*5);
-		static public const THUMBNAIL_OFFSET_Y:int = (200 + 16*2) + (32*2);
+		static public const THUMBNAIL_OFFSET_Y:int = (200 + 16*2) + (32*5);
 
 		//#Data
 
