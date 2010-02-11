@@ -155,6 +155,8 @@ package{
 		 private static var Bitmap_Block_Base: Class;
 		[Embed(source='Block_Move.png')]
 		 private static var Bitmap_Block_Move: Class;
+		[Embed(source='Block_Bounce.png')]
+		 private static var Bitmap_Block_Trampoline: Class;
 		[Embed(source='Goal.png')]
 		 private static var Bitmap_Goal: Class;
 
@@ -164,6 +166,7 @@ package{
 			new Bitmap_Block_Move(),//P:プレイヤー位置（生成後は空白として扱われる）
 			new Bitmap_Goal(),//G:ゴール位置（基本的には空白として扱われる）
 			new Bitmap_Block_Move(),//Q:動かせるブロック（生成後は空白として扱われる）
+			new Bitmap_Block_Trampoline(),//T:トランポリンブロック
 			new Bitmap_Block_Move(),//S:赤青ブロック用の切り替えスイッチ
 			new Bitmap_Block_Move(),//R:赤ブロック
 			new Bitmap_Block_Move(),//B:青ブロック
@@ -678,6 +681,7 @@ package{
 			"Ｐ",//P:プレイヤー位置（生成後は空白として扱われる）
 			"Ｇ",//G:ゴール位置（基本的には空白として扱われる）
 			"Ｑ",//Q:動かせるブロック（生成後は空白として扱われる）
+			"Ｔ",//T:トランポリンブロック
 			"Ｓ",//S:赤青ブロック用の切り替えスイッチ
 			"Ｒ",//R:赤ブロック
 			"Ｂ",//B:青ブロック

@@ -148,6 +148,25 @@ package{
 		}
 
 
+		//Vel
+		//VX
+		public function SetVX(i_VX:Number):void{
+			if(m_Body){
+				var PhysVel:b2Vec2 = m_Body.GetLinearVelocity();
+				PhysVel.x = i_VX / PhysManager.PHYS_SCALE;
+				m_Body.SetLinearVelocity(PhysVel);
+			}
+		}
+		//VY
+		public function SetVY(i_VY:Number):void{
+			if(m_Body){
+				var PhysVel:b2Vec2 = m_Body.GetLinearVelocity();
+				PhysVel.y = i_VY / PhysManager.PHYS_SCALE;
+				m_Body.SetLinearVelocity(PhysVel);
+			}
+		}
+
+
 		//==Collision==
 
 		//Collision Category

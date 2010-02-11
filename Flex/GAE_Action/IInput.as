@@ -11,19 +11,20 @@ package{
 		//System
 		static public const BUTTON_RESET:int = 4;
 		//Editor
-		static public const BUTTON_CURSOR_L:int = 5;
-		static public const BUTTON_CURSOR_R:int = 6;
-		static public const BUTTON_CURSOR_U:int = 7;
-		static public const BUTTON_CURSOR_D:int = 8;
-		static public const BUTTON_GO_TO_PLAY:int = 9;
-		static public const BUTTON_GO_TO_EDIT:int = 10;
-		static public const BUTTON_BLOCK_O:int = 11;
-		static public const BUTTON_BLOCK_W:int = 12;
-		static public const BUTTON_BLOCK_Q:int = 13;
-		static public const BUTTON_PLAYER_POS:int = 14;
-		static public const BUTTON_GOAL_POS:int = 15;
+		static public const BUTTON_CURSOR_L:int		= 5;
+		static public const BUTTON_CURSOR_R:int		= 6;
+		static public const BUTTON_CURSOR_U:int		= 7;
+		static public const BUTTON_CURSOR_D:int		= 8;
+		static public const BUTTON_GO_TO_PLAY:int	= 9;
+		static public const BUTTON_GO_TO_EDIT:int	= 10;
+		static public const BUTTON_BLOCK_O:int		= 11;
+		static public const BUTTON_BLOCK_W:int		= 12;
+		static public const BUTTON_BLOCK_Q:int		= 13;
+		static public const BUTTON_BLOCK_T:int		= 14;
+		static public const BUTTON_PLAYER_POS:int	= 15;
+		static public const BUTTON_GOAL_POS:int		= 16;
 		//Num
-		static public const BUTTON_NUM:int  = 16;
+		static public const BUTTON_NUM:int  = 17;
 
 
 		//i_Buttonが現在押されているか

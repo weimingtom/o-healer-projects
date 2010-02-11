@@ -103,6 +103,7 @@ package{
 			case Keyboard.SPACE:	m_Input[BUTTON_BLOCK_O] = true;	break;
 			case KEY_W:				m_Input[BUTTON_BLOCK_W] = true;	break;
 			case KEY_Q:				m_Input[BUTTON_BLOCK_Q] = true;	break;
+			case KEY_T:				m_Input[BUTTON_BLOCK_T] = true;	break;
 
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = true;	break;
 			case KEY_G:				m_Input[BUTTON_GOAL_POS] = true;	break;
@@ -137,6 +138,7 @@ package{
 			case Keyboard.SPACE:	m_Input[BUTTON_BLOCK_O] = false;	break;
 			case KEY_W:				m_Input[BUTTON_BLOCK_W] = false;	break;
 			case KEY_Q:				m_Input[BUTTON_BLOCK_Q] = false;	break;
+			case KEY_T:				m_Input[BUTTON_BLOCK_T] = false;	break;
 
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = false;	break;
 			case KEY_G:				m_Input[BUTTON_GOAL_POS] = false;	break;

@@ -37,14 +37,15 @@ package{
 		static public const P:int = 2;//プレイヤー位置（生成後は空白として扱われる）
 		static public const G:int = 3;//ゴール位置（基本的には空白として扱われる）
 		static public const Q:int = 4;//動かせるブロック（生成後は空白として扱われる）
-		static public const S:int = 5;//赤青ブロック用の切り替えスイッチ
-		static public const R:int = 6;//赤ブロック
-		static public const B:int = 7;//青ブロック
+		static public const T:int = 5;//トランポリンブロック
+		static public const S:int = 6;//赤青ブロック用の切り替えスイッチ
+		static public const R:int = 7;//赤ブロック
+		static public const B:int = 8;//青ブロック
 		//system
-		static public const C:int			= 8;
-		static public const V:int			= 9;
-		static public const SET_RANGE:int	= 10;
-		static public const SET_DIR:int		= 11;
+		static public const C:int			= 9;
+		static public const V:int			= 10;
+		static public const SET_RANGE:int	= 11;
+		static public const SET_DIR:int		= 12;
 
 		//＃マップの要素を文字列化したときの値
 		static public const MapIndex2Char:Array = [
@@ -53,6 +54,7 @@ package{
 			"P",
 			"G",
 			"Q",
+			"T",
 			"S",
 			"R",
 			"B",
@@ -96,7 +98,7 @@ package{
 			[W, O, O, O, Q, O, O, O, O, O, W, O, O, O, O, O, O, O, O, W, W],
 			[W, O, O, W, W, W, O, O, O, O, W, O, O, O, Q, O, O, O, O, W, W],
 			[W, O, O, O, O, O, O, O, O, O, W, W, W, W, W, W, O, W, W, W, W],
-			[W, P, O, O, O, O, O, O, Q, O, W, W, W, W, W, W, O, W, W, W, W],
+			[W, P, O, O, O, O, O, O, O, T, W, W, W, W, W, W, O, W, W, W, W],
 			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
 		];
 		//Objectへの参照版
@@ -308,6 +310,18 @@ package{
 									GameObjectManager.Register(block_m);
 
 									m_ObjMap[y][x] = block_m;
+								}
+								break;
+							case T:
+								//トランポリンブロックを生成
+								{
+									var block_t:Block_Trampoline = new Block_Trampoline();
+									block_t.Reset(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(block_t);
+									GameObjectManager.Register(block_t);
+
+									m_ObjMap[y][x] = block_t;
 								}
 								break;
 							}
@@ -854,6 +868,9 @@ package{
 						case Q://動かせるブロック（生成後は空白として扱われる）
 							m_ObjMap[y][x].Reset(pos_x, pos_y);
 							break;
+						case T://トランポリンブロック
+							m_ObjMap[y][x].Reset(pos_x, pos_y);
+							break;
 						}
 					}
 				}
@@ -932,6 +949,9 @@ package{
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_Q)){
 						SetBlock(Q, m_CursorIndexX, m_CursorIndexY);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_T)){
+						SetBlock(T, m_CursorIndexX, m_CursorIndexY);
 					}
 				}
 
@@ -1120,6 +1140,18 @@ package{
 								m_ObjMap[y][x] = block_m;
 							}
 							break;
+						case T:
+							//トランポリンブロックを生成
+							{
+								var block_t:Block_Trampoline = new Block_Trampoline();
+								block_t.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(block_t);
+								GameObjectManager.Register(block_t);
+
+								m_ObjMap[y][x] = block_t;
+							}
+							break;
 						}
 					}
 				}
@@ -1144,12 +1176,8 @@ package{
 				}
 			}
 
-			switch(m_Map[i_Y][i_X]){//この分岐は要らないかも
-			case Q://移動ブロック
-				m_ObjMap[i_Y][i_X].Kill();//ここにあったObjは削除する
-				m_ObjMap[i_Y][i_X] = null;
-				break;
-			}
+			m_ObjMap[i_Y][i_X].Kill();//ここにあったObjは削除する
+			m_ObjMap[i_Y][i_X] = null;
 		}
 
 		public function ResizeMap(i_W:int, i_H:int):void{
@@ -1328,6 +1356,7 @@ package{
 				case 'P': NewMap[y].push(P); break;
 				case 'G': NewMap[y].push(G); break;
 				case 'Q': NewMap[y].push(Q); break;
+				case 'T': NewMap[y].push(T); break;
 				case 'S': NewMap[y].push(S); break;
 				case 'R': NewMap[y].push(R); break;
 				case 'B': NewMap[y].push(B); break;

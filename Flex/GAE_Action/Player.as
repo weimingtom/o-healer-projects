@@ -159,10 +159,10 @@ package{
 
 					m_AX = 0.0;
 					if(m_Input.IsPress(IInput.BUTTON_R)){
-						m_AX =  PowX
+						m_AX =  PowX;
 					}
 					if(m_Input.IsPress(IInput.BUTTON_L)){
-						m_AX = -PowX
+						m_AX = -PowX;
 					}
 				}
 
