@@ -127,7 +127,7 @@ package{
 		static public var InitFlag:Boolean = false;//どうもウィンドウとかの切り替えで再度Initが呼ばれてるような気がするので、必ず一度だけになるようにしておく
 
 		//!stageなどの初期化が終了した後に呼んでもらう
-		public function Init():void{
+		public function Init(in_MapStr:String = null):void{
 			//Check
 			{
 				if(InitFlag){
@@ -171,6 +171,13 @@ package{
 				//Root
 				m_Root = new Image();
 				addChild(m_Root);
+			}
+
+			//
+			{
+				if(in_MapStr){
+					m_Map = String2Map(in_MapStr);
+				}
 			}
 
 			//残りはResetで
@@ -791,7 +798,7 @@ package{
 					m_TabWindow.AddTab(new Tab_Hint());
 					m_TabWindow.AddTab(new Tab_Setting());
 					m_TabWindow.AddTab(new Tab_Save());
-				//	m_TabWindow.AddTab(new Tab_Upload());
+					m_TabWindow.AddTab(new Tab_Upload());
 
 					m_TabWindowLayer.addChild(m_TabWindow);
 				}
@@ -923,8 +930,18 @@ package{
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_W)){
 						SetBlock(W, m_CursorIndexX, m_CursorIndexY);
 					}
-					if(m_Input.IsPress(IInput.BUTTON_BLOCK_B)){
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_Q)){
 						SetBlock(Q, m_CursorIndexX, m_CursorIndexY);
+					}
+				}
+
+				//位置の変更
+				{//ブロックと同じ処理なので同じ関数を使う
+					if(m_Input.IsPress(IInput.BUTTON_PLAYER_POS)){
+						SetBlock(P, m_CursorIndexX, m_CursorIndexY);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_GOAL_POS)){
+						SetBlock(G, m_CursorIndexX, m_CursorIndexY);
 					}
 				}
 			}else{
@@ -1111,6 +1128,11 @@ package{
 			//ReDraw BG
 			{
 				ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(i_X, i_Y, LocalNumX, LocalNumY));
+			}
+
+			//Killしたものをすぐに表示しないようにするため、経過時間０秒でUpdateを回す
+			{
+				GameObjectManager.Update(0.0);
 			}
 		}
 

@@ -22,7 +22,14 @@
 			private function start():void{
 				MyViewStack.selectedChild = main_game;
 
-				main_game.Init();
+				var map_str:String;
+				{
+					var flashVars:Object = this.loaderInfo.parameters;
+					if(flashVars.hasOwnProperty("map_str")){
+						map_str = flashVars.map_str;
+					}
+				}
+				main_game.Init(map_str);
 			}
 		]]>
 	</mx:Script>

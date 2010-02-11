@@ -19,9 +19,11 @@ package{
 		static public const BUTTON_GO_TO_EDIT:int = 10;
 		static public const BUTTON_BLOCK_O:int = 11;
 		static public const BUTTON_BLOCK_W:int = 12;
-		static public const BUTTON_BLOCK_B:int = 13;
+		static public const BUTTON_BLOCK_Q:int = 13;
+		static public const BUTTON_PLAYER_POS:int = 14;
+		static public const BUTTON_GOAL_POS:int = 15;
 		//Num
-		static public const BUTTON_NUM:int  = 14;
+		static public const BUTTON_NUM:int  = 16;
 
 
 		//i_Buttonが現在押されているか

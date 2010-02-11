@@ -151,14 +151,16 @@ package{
 
 		//＃Block
 
+		[Embed(source='Block_Base.png')]
+		 private static var Bitmap_Block_Base: Class;
 		[Embed(source='Block_Move.png')]
-		 private static var Bitmap_Block_Move: Class;//BLOCK_INDEX_MOVE
+		 private static var Bitmap_Block_Move: Class;
 		[Embed(source='Goal.png')]
-		 private static var Bitmap_Goal: Class;//BLOCK_INDEX_GOAL
+		 private static var Bitmap_Goal: Class;
 
 		private static var m_BlockList:Array = [
 			new Bitmap_Block_Move(),//O:空白
-			new Bitmap_Block_Move(),//W:地形
+			new Bitmap_Block_Base(),//W:地形
 			new Bitmap_Block_Move(),//P:プレイヤー位置（生成後は空白として扱われる）
 			new Bitmap_Goal(),//G:ゴール位置（基本的には空白として扱われる）
 			new Bitmap_Block_Move(),//Q:動かせるブロック（生成後は空白として扱われる）
@@ -1084,6 +1086,28 @@ package{
 					bmp = new Bitmap_SaveButton_New();
 				}
 
+				//文字はこちらで書くことにする
+				{
+					var tf:TextField = new TextField();
+					tf.selectable = false;
+					tf.autoSize = TextFieldAutoSize.LEFT;
+					tf.embedFonts = true;
+
+					var ct : ColorTransform = new ColorTransform(1,1,1,1, 0,0,32,0);//強制的に色チェンジ
+
+					var matrix : Matrix = new Matrix(1,0,0,1, 2,6);
+
+					tf.htmlText = "<font face='ume' size='14'>" + "ここに" + "</font>";
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+
+					matrix.ty += 16;
+
+					tf.htmlText = "<font face='ume' size='14'>" + "上書き" + "</font>";
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+				}
+
 				var img:Image = new Image();
 				img.addChild(bmp);
 
@@ -1115,6 +1139,52 @@ package{
 				return img;
 			}
 		}
+
+
+
+		//#Tab : Upload
+
+		//投稿ボタン
+		static public function CreateThumbnailImage_Button_Upload(i_IsOverWrite:Boolean):Image{
+			//Imageに入れて返す
+			{
+				var bmp:Bitmap;
+				if(i_IsOverWrite){
+					bmp = new Bitmap_SaveButton();//ひとまずセーブボタンと同じ
+				}else{
+					bmp = new Bitmap_SaveButton_New();
+				}
+
+				//文字はこちらで書くことにする
+				{
+					var tf:TextField = new TextField();
+					tf.selectable = false;
+					tf.autoSize = TextFieldAutoSize.LEFT;
+					tf.embedFonts = true;
+
+					var ct : ColorTransform = new ColorTransform(1,1,1,1, 0,0,32,0);//強制的に色チェンジ
+
+					var matrix : Matrix = new Matrix(1,0,0,1, 2,6);
+
+					tf.htmlText = "<font face='ume' size='14'>" + "これを" + "</font>";
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+
+					matrix.ty += 16;
+
+					tf.htmlText = "<font face='ume' size='14'>" + "投稿" + "</font>";
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+				}
+
+				var img:Image = new Image();
+				img.addChild(bmp);
+
+				return img;
+			}
+		}
+
+
 	}
 }
 
