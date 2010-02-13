@@ -45,7 +45,7 @@ package{
 				var ColParam:Object = GetDefaultCollisionParam();
 				{//デフォルトのパラメータ
 					ColParam.density = 0.0;
-					ColParam.friction = 0.5;//0.05;
+					ColParam.friction = 0.00001;//0.5;//0.05;
 					ColParam.allow_sleep = true;
 
 //					ColParam.fix_rotation = true;//回転しないようにする（細い通路に落とすときにひっかからないように）
