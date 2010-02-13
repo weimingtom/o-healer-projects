@@ -162,12 +162,26 @@ package{
 				m_Body.SetLinearVelocity(PhysVel);
 			}
 		}
+		public function GetVX():Number{
+			if(m_Body){
+				return m_Body.GetLinearVelocity().x * PhysManager.PHYS_SCALE;
+			}else{
+				return m_VX;
+			}
+		}
 		//VY
 		public function SetVY(i_VY:Number):void{
 			if(m_Body){
 				var PhysVel:b2Vec2 = m_Body.GetLinearVelocity();
 				PhysVel.y = i_VY / PhysManager.PHYS_SCALE;
 				m_Body.SetLinearVelocity(PhysVel);
+			}
+		}
+		public function GetVY():Number{
+			if(m_Body){
+				return m_Body.GetLinearVelocity().y * PhysManager.PHYS_SCALE;
+			}else{
+				return m_VY;
 			}
 		}
 
@@ -180,6 +194,7 @@ package{
 		public static const CATEGORY_TERRAIN:uint 			= 0x0004;//通常の地形コリジョン
 		public static const CATEGORY_TERRAIN_VS_PLAYER:uint	= 0x0008;//プレイヤー衝突専用の地形コリジョン
 		public static const CATEGORY_BLOCK:uint				= 0x0010;//ブロックコリジョン
+		public static const CATEGORY_ENEMY:uint				= 0x0020;//エネミーコリジョン
 
 		//Collision Body
 		protected var m_BodyDef:b2BodyDef;
@@ -408,6 +423,7 @@ package{
 		//圧死時の処理：オーバーライドして使う
 		public function OnPressDead(in_Nrm:Vector3D):void{
 		}
+
 /*
 		//Sync:Obj=>Physics
 		//こっちは使わないので封印
@@ -451,6 +467,36 @@ package{
 			{
 				this.rotation = m_Body.GetAngle() * 360/(2*MyMath.PI);
 			}
+		}
+
+
+		//==Damage==
+
+		public var m_HP:int = 1;
+
+		public function AddDamage(in_Damage:int):void{
+			//Check
+			{
+				if(m_HP <= 0){//すでに死んでるorアンデッドなら処理を行わない
+					return;
+				}
+			}
+
+			//Exec
+			{
+				m_HP -= in_Damage;
+			}
+
+			//Check
+			{
+				if(m_HP <= 0){
+					OnDamageDead();
+				}
+			}
+		}
+
+		//ダメージ死亡時の処理：オーバーライドして使う
+		public function OnDamageDead():void{
 		}
 
 

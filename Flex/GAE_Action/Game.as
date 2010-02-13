@@ -41,11 +41,12 @@ package{
 		static public const S:int = 6;//赤青ブロック用の切り替えスイッチ
 		static public const R:int = 7;//赤ブロック
 		static public const B:int = 8;//青ブロック
+		static public const E:int = 9;//エネミー
 		//system
-		static public const C:int			= 9;
-		static public const V:int			= 10;
-		static public const SET_RANGE:int	= 11;
-		static public const SET_DIR:int		= 12;
+		static public const C:int			= 10;
+		static public const V:int			= 11;
+		static public const SET_RANGE:int	= 12;
+		static public const SET_DIR:int		= 13;
 
 		//＃マップの要素を文字列化したときの値
 		static public const MapIndex2Char:Array = [
@@ -58,6 +59,7 @@ package{
 			"S",
 			"R",
 			"B",
+			"E",
 		];
 
 		//＃セットできるマップの数の上限
@@ -322,6 +324,18 @@ package{
 									GameObjectManager.Register(block_t);
 
 									m_ObjMap[y][x] = block_t;
+								}
+								break;
+							case E:
+								//エネミーを生成
+								{
+									var enemy:Enemy_Rolling = new Enemy_Rolling();
+									enemy.Reset(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(enemy);
+									GameObjectManager.Register(enemy);
+
+									m_ObjMap[y][x] = enemy;
 								}
 								break;
 							}
@@ -878,6 +892,9 @@ package{
 						case T://トランポリンブロック
 							m_ObjMap[y][x].Reset(pos_x, pos_y);
 							break;
+						case E://エネミー
+							m_ObjMap[y][x].Reset(pos_x, pos_y);
+							break;
 						}
 					}
 				}
@@ -966,6 +983,9 @@ package{
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_T)){
 						SetBlock(T, m_CursorIndexX, m_CursorIndexY);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_E)){
+						SetBlock(E, m_CursorIndexX, m_CursorIndexY);
 					}
 				}
 
@@ -1164,6 +1184,18 @@ package{
 								GameObjectManager.Register(block_t);
 
 								m_ObjMap[y][x] = block_t;
+							}
+							break;
+						case E:
+							//エネミーを生成
+							{
+								var enemy:Enemy_Rolling = new Enemy_Rolling();
+								enemy.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(enemy);
+								GameObjectManager.Register(enemy);
+
+								m_ObjMap[y][x] = enemy;
 							}
 							break;
 						}
@@ -1374,6 +1406,7 @@ package{
 				case 'S': NewMap[y].push(S); break;
 				case 'R': NewMap[y].push(R); break;
 				case 'B': NewMap[y].push(B); break;
+				case 'E': NewMap[y].push(E); break;
 				case '_': NewMap.push([]); y += 1; break;
 				}
 			}

@@ -56,7 +56,7 @@ package{
 				{//通常用コリジョン
 /*
 					SetOwnCategory(ColParam, CATEGORY_BLOCK);
-					SetHitCategory(ColParam, CATEGORY_PLAYER | CATEGORY_TERRAIN | CATEGORY_BLOCK);
+					SetHitCategory(ColParam, CATEGORY_PLAYER | CATEGORY_TERRAIN | CATEGORY_BLOCK | CATEGORY_ENEMY);
 
 					const w:int = ImageManager.PANEL_LEN;//-2;
 					CreateCollision_Box(w, w, ColParam);
@@ -70,7 +70,7 @@ package{
 					//Add Shape
 					{
 						SetOwnCategory(ColParam, CATEGORY_BLOCK);
-						SetHitCategory(ColParam, CATEGORY_PLAYER | CATEGORY_TERRAIN | CATEGORY_BLOCK);
+						SetHitCategory(ColParam, CATEGORY_PLAYER | CATEGORY_TERRAIN | CATEGORY_BLOCK | CATEGORY_ENEMY);
 
 						var shapeDef:b2PolygonDef = new b2PolygonDef();
 						{//八角形

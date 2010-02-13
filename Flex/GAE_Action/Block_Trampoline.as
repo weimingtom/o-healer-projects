@@ -55,7 +55,7 @@ package{
 				if(! m_Body)//まだ生成してなかったら（位置とかは上のSetPosでセットされるはず）
 				{//通常用コリジョン
 					SetOwnCategory(ColParam, CATEGORY_BLOCK);
-					SetHitCategory(ColParam, CATEGORY_PLAYER | CATEGORY_TERRAIN | CATEGORY_BLOCK);
+					SetHitCategory(ColParam, CATEGORY_PLAYER | CATEGORY_TERRAIN | CATEGORY_BLOCK | CATEGORY_ENEMY);
 
 					const w:int = ImageManager.PANEL_LEN;//-2;
 					CreateCollision_Box(w, w, ColParam);

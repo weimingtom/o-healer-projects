@@ -157,6 +157,8 @@ package{
 		 private static var Bitmap_Block_Move: Class;
 		[Embed(source='Block_Bounce.png')]
 		 private static var Bitmap_Block_Trampoline: Class;
+		[Embed(source='EnemyRolling.png')]
+		 private static var Bitmap_Enemy: Class;
 		[Embed(source='Goal.png')]
 		 private static var Bitmap_Goal: Class;
 
@@ -170,6 +172,7 @@ package{
 			new Bitmap_Block_Move(),//S:赤青ブロック用の切り替えスイッチ
 			new Bitmap_Block_Move(),//R:赤ブロック
 			new Bitmap_Block_Move(),//B:青ブロック
+			new Bitmap_Enemy(),//E:エネミー
 			//system
 			new Bitmap_Block_Move(),//C:
 			new Bitmap_Block_Move(),//V:
@@ -261,6 +264,34 @@ package{
 							packed_image[y][x].addChild(bmp_obj);
 						}
 					}
+				}
+			}
+
+			return packed_image;
+		}
+
+
+		//＃エネミー
+
+		[Embed(source='EnemyRolling.png')]
+		 private static var Bitmap_Enemy_Rolling: Class;
+
+		static public function LoadEnemyImage(i_Name:String):Array{
+			var img:Image;
+			var bmp:Bitmap;
+
+			var packed_image:Array = [];
+
+			if(i_Name == "Enemy_Rolling"){
+				{
+					bmp = new Bitmap_Enemy_Rolling();
+					bmp.x = -bmp.width/2;
+					bmp.y = -bmp.height/2;
+
+					img = new Image();
+					img.addChild(bmp);
+
+					packed_image.push(img);
 				}
 			}
 
@@ -732,6 +763,7 @@ package{
 			"Ｓ",//S:赤青ブロック用の切り替えスイッチ
 			"Ｒ",//R:赤ブロック
 			"Ｂ",//B:青ブロック
+			"Ｅ",//E:エネミー
 			//system
 			"Ｃ",//C:
 			"Ｖ",//V:
@@ -1064,9 +1096,11 @@ package{
 								case Game.P: color = 0xFF8800; break;
 								case Game.G: color = 0xDDDD00; break;
 								case Game.Q: color = 0x888888; break;
+								case Game.T: color = 0x88FF88; break;
 								case Game.S: color = 0xFF00FF; break;
 								case Game.R: color = 0xFF0000; break;
 								case Game.B: color = 0x0000FF; break;
+								case Game.E: color = 0xFFAA88; break;
 								}
 							}
 

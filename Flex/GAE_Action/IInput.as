@@ -21,8 +21,9 @@ package{
 		static public const BUTTON_BLOCK_W:int		= 12;
 		static public const BUTTON_BLOCK_Q:int		= 13;
 		static public const BUTTON_BLOCK_T:int		= 14;
-		static public const BUTTON_PLAYER_POS:int	= 15;
-		static public const BUTTON_GOAL_POS:int		= 16;
+		static public const BUTTON_BLOCK_E:int		= 15;
+		static public const BUTTON_PLAYER_POS:int	= 16;
+		static public const BUTTON_GOAL_POS:int		= 17;
 		//Num
 		static public const BUTTON_NUM:int  = 17;
 

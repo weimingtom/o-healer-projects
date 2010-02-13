@@ -52,6 +52,7 @@ package{
 		//#Pos
 		public var m_AX:Number = 0.0;
 //		public var m_AY:Number = GRAVITY;
+		public var m_BaseVX:Number = 0.0;
 
 		//#Input
 		public var m_Input:IInput;
@@ -92,12 +93,13 @@ package{
 				{//デフォルトのパラメータ
 					ColParam.density = 9.0;//大きめにしてみるテスト
 					ColParam.friction = 0.0;//1.0;//摩擦は独自計算
+					ColParam.fix_rotation = true;//回転しないようにする（細い通路に落とすときにひっかからないように）
 				}
 
 				//Normal
 				{//通常用コリジョン
 					SetOwnCategory(ColParam, CATEGORY_PLAYER);
-					SetHitCategory(ColParam, CATEGORY_BLOCK);
+					SetHitCategory(ColParam, CATEGORY_BLOCK | CATEGORY_ENEMY);
 
 					CreateCollision_Circle(ImageManager.CHARA_GRAPHIC_LEN_X/2-1, ColParam);
 				}
@@ -156,7 +158,7 @@ package{
 			//PhysVel => GameVel
 			var PhysVel:b2Vec2 = m_Body.GetLinearVelocity();
 			{
-				m_VX = PhysVel.x * PhysManager.PHYS_SCALE;
+				m_VX = PhysVel.x * PhysManager.PHYS_SCALE - m_BaseVX;
 				m_VY = PhysVel.y * PhysManager.PHYS_SCALE;
 			}
 
@@ -220,7 +222,7 @@ package{
 
 			//GameVel => PhysVel
 			{
-				PhysVel.x = m_VX / PhysManager.PHYS_SCALE;
+				PhysVel.x = (m_BaseVX + m_VX) / PhysManager.PHYS_SCALE;
 				PhysVel.y = m_VY / PhysManager.PHYS_SCALE;
 
 				m_Body.SetLinearVelocity(PhysVel);
@@ -252,6 +254,19 @@ package{
 			}
 
 			Game.Instance().OnGameOver(Game.GAME_OVER_PRESS);
+		}
+
+		//Contact:接触したときに呼ばれる
+		override public function OnContact(in_Obj:IGameObject, in_Nrm:Vector3D):void{
+			//地面の速度の影響を受けてみる
+			if(in_Nrm.y >  0.7){
+				m_BaseVX = in_Obj.GetVX();
+			}
+		}
+
+		//ダメージ死亡時の処理：オーバーライドして使う
+		override public function OnDamageDead():void{
+			Game.Instance().OnGameOver(Game.GAME_OVER_DAMAGE);
 		}
 	}
 }

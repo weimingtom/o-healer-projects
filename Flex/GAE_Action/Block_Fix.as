@@ -54,7 +54,7 @@ package{
 				//Normal
 				{//通常用コリジョン
 					SetOwnCategory(ColParam, CATEGORY_TERRAIN);
-					SetHitCategory(ColParam, CATEGORY_BLOCK);
+					SetHitCategory(ColParam, CATEGORY_BLOCK | CATEGORY_ENEMY);
 
 					CreateCollision_Box(w, h, ColParam);
 				}
@@ -63,6 +63,7 @@ package{
 				{//プレイヤー衝突用
 					SetOwnCategory(ColParam, CATEGORY_TERRAIN_VS_PLAYER);
 					SetHitCategory(ColParam, CATEGORY_PLAYER_VS_TERRAIN);
+					ColParam.friction = 0.0;//プレイヤー側で独自計算
 
 					var Offset4PlayerX:int;
 					var Offset4PlayerY:int;
