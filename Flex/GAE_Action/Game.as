@@ -354,31 +354,10 @@ package{
 				GameObjectManager.Register(m_Goal);
 			}
 
-			//#Goal Text
-			{
-				m_GoalText = new TextField();
-				{
-					m_GoalText.border = false;
-					m_GoalText.width = CAMERA_W;
-					m_GoalText.autoSize = "center";
-					m_GoalText.htmlText = <font size="30" color="#ffffff">GOAL</font>.toXMLString();
-					m_GoalText.filters = [
-						new GlowFilter(0x000000, 1, 4, 4, 16, 1),
-						new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 16)
-					];
-
-					m_GoalText.x = CAMERA_W/2;
-					m_GoalText.y = CAMERA_H/2;
-				}
-				m_Root.addChild(m_GoalText);//最前面に表示
-
-				//最初は非表示
-				m_GoalText.visible = false;
-			}
-
 			//#Goal Flag
 			{
-				m_GameEndType = -1;
+				m_GameOverType = -1;
+				m_GameOverImage = null;
 			}
 
 			//＃BG
@@ -606,7 +585,15 @@ package{
 
 			//ゲーム終了時はここの処理まで
 			{
-				if(m_GameEndType >= 0){
+				if(m_GameOverType >= 0){
+					//GameOver表示のアニメーショhんをしてみる
+					{
+						if(m_GameOverImage){
+							const src:Number = 0.1;
+							const dst:Number = 0.8;
+							m_GameOverImage.alpha = src + (dst - src)/dst * m_GameOverImage.alpha;
+						}
+					}
 					return;
 				}
 			}
@@ -690,26 +677,46 @@ package{
 		}
 
 
-		//==Goal==
+		//==GameOver==
 
-		static public const GAME_END_GOAL:int	= 0;
-		static public const GAME_END_DEAD:int	= 1;
+		static public const GAME_OVER_GOAL:int		= 0;
+		static public const GAME_OVER_DAMAGE:int	= 1;
+		static public const GAME_OVER_FALL:int		= 2;
+		static public const GAME_OVER_PRESS:int		= 3;
 
-		public var m_GameEndType:int = -1;//終了してなければマイナスの値にしておく
+		public var m_GameOverType:int = -1;//終了してなければマイナスの値にしておく
 
 		//＃ゴール用テキスト
-		public var m_GoalText:TextField;
+//		public var m_GoalText:TextField;
+		public var m_GameOverImage:Image;
 
 		//ゴールOBJに触れたら呼ばれ、ゴール処理を開始する
 		public function OnGoal():void{
-			//ゴールしたので停止フラグをそれっぽくセット
+			OnGameOver(GAME_OVER_GOAL);
+		}
+
+		//死亡時、クリア時、ミッション失敗時などに、これを呼ぶ
+		public function OnGameOver(in_GameOverType:int):void{
+			//フラグ相当を立てる
 			{
-				m_GameEndType = GAME_END_GOAL;
+				m_GameOverType = in_GameOverType;
 			}
 
-			//ゴール時の表示物を表示
+			//画面の表示
 			{
-				m_GoalText.visible = true;
+				m_GameOverImage = ImageManager.CreateGameOverImage(in_GameOverType);
+				{
+					m_GameOverImage.filters = [
+						new GlowFilter(0x000000, 1, 4, 4, 16, 1),
+						new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 16)
+					];
+
+					m_GameOverImage.x = CAMERA_W/2;
+					m_GameOverImage.y = CAMERA_H/2;
+				}
+				m_Root.addChild(m_GameOverImage);//最前面に表示
+
+				m_GameOverImage.alpha = 0.0;
 			}
 		}
 
@@ -873,6 +880,13 @@ package{
 							break;
 						}
 					}
+				}
+			}
+
+			//GameOver表示のリセット
+			{
+				if(m_GameOverImage){
+					m_GameOverImage.parent.removeChild(m_GameOverImage);
 				}
 			}
 		}

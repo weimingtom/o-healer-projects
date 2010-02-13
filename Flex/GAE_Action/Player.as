@@ -66,6 +66,17 @@ package{
 				SetPos(i_X, i_Y);
 			}
 
+			//Flag
+			{
+				m_CheckPressFlag = true;
+			}
+
+			//Scale
+			{
+				scaleX = 1.0;
+				scaleY = 1.0;
+			}
+
 			//Graphic Anim
 			{
 				if(! m_AnimGraphicList){//まだ生成していなければ
@@ -125,6 +136,11 @@ package{
 			//Pos
 			{
 				UpdatePosition(i_DeltaTime);
+			}
+
+			//Check : Dead
+			{
+				CheckDead();
 			}
 		}
 
@@ -214,6 +230,28 @@ package{
 			{
 				m_GroundFlag = false;
 			}
+		}
+
+		//#Check : Dead
+		public function CheckDead():void{
+			//落下死
+			if(this.y > Game.Instance().GetStageH() + ImageManager.PANEL_LEN/2){
+				Game.Instance().OnGameOver(Game.GAME_OVER_FALL);
+			}
+		}
+
+		//圧死時の処理：オーバーライドして使う
+		override public function OnPressDead(in_Nrm:Vector3D):void{
+			//画象を圧縮してみる
+			{
+				scaleX = 0.5 + 0.5 * MyMath.Abs(in_Nrm.y);
+				scaleY = 0.5 + 0.5 * MyMath.Abs(in_Nrm.x);
+
+				//圧縮した分下に移動させてみる（Reset時に座標もリセットされると仮定）
+				m_AnimGraphicImage.y += 0.5*ImageManager.PANEL_LEN * (1 - scaleY);
+			}
+
+			Game.Instance().OnGameOver(Game.GAME_OVER_PRESS);
 		}
 	}
 }

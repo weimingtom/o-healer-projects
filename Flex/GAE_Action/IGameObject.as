@@ -38,6 +38,11 @@ package{
 		public function Reset(i_X:int, i_Y:int):void{
 		}
 
+		//Update:共通処理
+		public function Update_Common(i_DeltaTime:Number):void{
+			CheckPressDead(i_DeltaTime);
+		}
+
 		//Update:オーバライドして使う
 		public function Update(i_DeltaTime:Number):void{
 		}
@@ -291,10 +296,10 @@ package{
 		public function OnContact_Common(in_Obj:IGameObject, in_Nrm:Vector3D):void{
 			//コリジョンに接触したら必ず呼ばれる
 
+			var Vel:b2Vec2 = m_Body.GetLinearVelocity();
+
 			//コリジョンの接地判定
 			{//将来的に「横方向にぶつかってる」などの判定が必要になるかもしれないので、Ground以外にも用意しておく
-				var Vel:b2Vec2 = m_Body.GetLinearVelocity();
-
 				//L
 				{
 					if(in_Nrm.x < -0.7){
@@ -330,6 +335,16 @@ package{
 					}
 				}
 			}
+
+			//圧死判定
+			{
+				//
+				var Vel3D:Vector3D = new Vector3D(Vel.x, Vel.y);
+
+				if(Vel3D.dotProduct(in_Nrm) <= 0.01){//自ら隙間にはまったときは圧死しないよう、速度チェックをする
+					AddPressPowList(in_Nrm);
+				}
+			}
 		}
 
 		//Contact:
@@ -338,6 +353,61 @@ package{
 		}
 
 
+		//==圧死判定==
+
+		//圧死判定を行うか
+		public var m_CheckPressFlag:Boolean = false;
+
+		//接触方向のリスト
+		public var m_PressPowList:Array = [];
+
+		//圧力方向を一つ加える
+		public function AddPressPowList(in_Nrm:Vector3D):void{
+			//新しく加えられた力と、今までに加えられた力が反対方向であれば、挟み込まれていると判断する
+
+			//Check
+			{
+				if(! m_CheckPressFlag){//圧死判定は行わない
+					return;
+				}
+			}
+
+			//圧死チェック
+			{
+				var size:int = m_PressPowList.length;
+				for(var i:int = 0; i < size; i += 1){
+					if(m_PressPowList[i].dotProduct(in_Nrm) < -0.99){//ほぼ反対側の力なら（どちらも長さは１と仮定）
+						OnPressDead(in_Nrm);
+						return;
+					}
+				}
+			}
+
+			//次回判定用に追加
+			m_PressPowList.push(in_Nrm);
+		}
+
+
+		//圧死判定
+		public function CheckPressDead(in_DeltaTime:Number):void{
+			//Check
+			{
+				if(! m_CheckPressFlag){//圧死判定は行わない
+					return;
+				}
+			}
+
+			//Reset
+			{
+				m_PressPowList = [];//clear
+
+//				m_PressedFlag = false;
+			}
+		}
+
+		//圧死時の処理：オーバーライドして使う
+		public function OnPressDead(in_Nrm:Vector3D):void{
+		}
 /*
 		//Sync:Obj=>Physics
 		//こっちは使わないので封印

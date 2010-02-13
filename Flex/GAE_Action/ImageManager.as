@@ -268,6 +268,53 @@ package{
 		}
 
 
+		//＃GameOver関連
+
+		[Embed(source='TextGoal.png')]
+		 private static var Bitmap_GameOver_Goal: Class;
+		[Embed(source='TextGameOver.png')]
+		 private static var Bitmap_GameOver_Damage: Class;
+		[Embed(source='TextGameOver.png')]
+		 private static var Bitmap_GameOver_Fall: Class;
+		[Embed(source='TextGameOver.png')]
+		 private static var Bitmap_GameOver_Press: Class;
+
+		static public function CreateGameOverImage(in_GameOverType:int):Image{
+			var bmp:Bitmap;
+			{
+				switch(in_GameOverType){
+				case Game.GAME_OVER_GOAL:
+					bmp = new Bitmap_GameOver_Goal();
+					break;
+				case Game.GAME_OVER_DAMAGE:
+					bmp = new Bitmap_GameOver_Damage();
+					break;
+				case Game.GAME_OVER_FALL:
+					bmp = new Bitmap_GameOver_Fall();
+					break;
+				case Game.GAME_OVER_PRESS:
+					bmp = new Bitmap_GameOver_Press();
+					break;
+				}
+			}
+
+			//centering
+			{
+				bmp.x = -bmp.width/2;
+				bmp.y = -bmp.height/2;
+			}
+
+			var img:Image;
+			{
+				img = new Image();
+
+				img.addChild(bmp);
+			}
+
+			return img;
+		}
+
+
 		//#ゲームの枠
 
 		static public const GAME_FRAME_W:int = 16;

@@ -54,6 +54,8 @@ package{
 			//各GameObjectのUpdate
 			obj = m_ObjectList;
 			while(obj){
+				obj.Update_Common(i_DeltaTime);
+
 				obj.Update(i_DeltaTime);
 
 				obj = obj.m_NextObj;
