@@ -109,6 +109,8 @@ package{
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = true;	break;
 			case KEY_G:				m_Input[BUTTON_GOAL_POS] = true;	break;
 			}
+
+			if(event.shiftKey){		m_Input[BUTTON_RANGE] = true;}
 		}
 		private function OnKeyUp(event:KeyboardEvent):void{
 			switch(event.keyCode){
@@ -145,6 +147,8 @@ package{
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = false;	break;
 			case KEY_G:				m_Input[BUTTON_GOAL_POS] = false;	break;
 			}
+
+			if(! event.shiftKey){		m_Input[BUTTON_RANGE] = false;}
 		}
 
 		//i_Buttonが現在押されているか

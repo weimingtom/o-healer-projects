@@ -21,7 +21,7 @@
 
 				button_to_start.label = "現在開発中です。\nローカルにのみ保存できます";
 
-				main_game.Init_ForEditor();
+				main_game.Init_ForEditor(EDITOR_W, EDITOR_H);
 			}
 
 			//ボタンが押されて開始する時の処理

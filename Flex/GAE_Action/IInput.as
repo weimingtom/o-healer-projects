@@ -24,8 +24,10 @@ package{
 		static public const BUTTON_BLOCK_E:int		= 15;
 		static public const BUTTON_PLAYER_POS:int	= 16;
 		static public const BUTTON_GOAL_POS:int		= 17;
+		//System
+		static public const BUTTON_RANGE:int		= 18;
 		//Num
-		static public const BUTTON_NUM:int  = 17;
+		static public const BUTTON_NUM:int  = 19;
 
 
 		//i_Buttonが現在押されているか

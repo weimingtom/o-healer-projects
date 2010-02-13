@@ -27,6 +27,15 @@ package{
 
 		//==Function==
 
+		//＃Common
+
+		//画面全体を覆うBitmapの作成
+		static public function CreateHugeBitmap():Bitmap{
+			var bmp_data:BitmapData = new BitmapData(Game.Instance().width, Game.Instance().height, true, 0x00000000);
+			return new Bitmap(bmp_data);
+		}
+
+
 		//＃BG
 
 		[Embed(source='Dangeon.png')]
@@ -151,28 +160,32 @@ package{
 
 		//＃Block
 
-		[Embed(source='Block_Base.png')]
+		[Embed(source='Hint_O.png')]
+		 private static var Bitmap_Block_BG: Class;
+		[Embed(source='Hint_W.png')]
 		 private static var Bitmap_Block_Base: Class;
 		[Embed(source='Block_Move.png')]
 		 private static var Bitmap_Block_Move: Class;
 		[Embed(source='Block_Bounce.png')]
 		 private static var Bitmap_Block_Trampoline: Class;
+		[Embed(source='Hint_P.png')]
+		 private static var Bitmap_Hint_Player: Class;
 		[Embed(source='EnemyRolling.png')]
-		 private static var Bitmap_Enemy: Class;
+		 private static var Bitmap_Hint_Enemy: Class;
 		[Embed(source='Goal.png')]
 		 private static var Bitmap_Goal: Class;
 
 		private static var m_BlockList:Array = [
-			new Bitmap_Block_Move(),//O:空白
+			new Bitmap_Block_BG(),//O:空白
 			new Bitmap_Block_Base(),//W:地形
-			new Bitmap_Block_Move(),//P:プレイヤー位置（生成後は空白として扱われる）
+			new Bitmap_Hint_Player(),//P:プレイヤー位置（生成後は空白として扱われる）
 			new Bitmap_Goal(),//G:ゴール位置（基本的には空白として扱われる）
 			new Bitmap_Block_Move(),//Q:動かせるブロック（生成後は空白として扱われる）
 			new Bitmap_Block_Trampoline(),//T:トランポリンブロック
 			new Bitmap_Block_Move(),//S:赤青ブロック用の切り替えスイッチ
 			new Bitmap_Block_Move(),//R:赤ブロック
 			new Bitmap_Block_Move(),//B:青ブロック
-			new Bitmap_Enemy(),//E:エネミー
+			new Bitmap_Hint_Enemy(),//E:エネミー
 			//system
 			new Bitmap_Block_Move(),//C:
 			new Bitmap_Block_Move(),//V:
@@ -471,23 +484,53 @@ package{
 
 		//#Cursor（白い枠）
 
-		static public function CreateCursorImage():Image{
-			var shape:Shape = new Shape();
-			var graphic:Graphics = shape.graphics;
+		static public function DrawCursor(
+			io_Shape:Shape,
+			i_SrcX:int,
+			i_DstX:int,
+			i_SrcY:int,
+			i_DstY:int,
+			i_Ratio:Number
+		):void{
+			var g:Graphics = io_Shape.graphics;
 
-			var W:int = 5;
-			var Color:uint = 0xFFFFFF;
-			graphic.lineStyle(W, Color, 1.0);
-//			graphic.beginFill(COLOR_WHITE);
+			//reset
+			{
+				g.clear();
+			}
+
+			var lx:int;
+			var uy:int;
+			var w:int;
+			var h:int;
+			{
+				if(i_SrcX < i_DstX){
+					lx = (i_SrcX * PANEL_LEN);
+					w  = (i_DstX - i_SrcX + 1) * PANEL_LEN;
+				}else{
+					lx = (i_DstX * PANEL_LEN);
+					w  = (i_SrcX - i_DstX + 1) * PANEL_LEN;
+				}
+
+				if(i_SrcY < i_DstY){
+					uy = (i_SrcY * PANEL_LEN);
+					h  = (i_DstY - i_SrcY + 1) * PANEL_LEN;
+				}else{
+					uy = (i_DstY * PANEL_LEN);
+					h  = (i_SrcY - i_DstY + 1) * PANEL_LEN;
+				}
+			}
 
 			//Draw
-			var len:int = PANEL_LEN;
-			graphic.drawRect(0, 0, len, len);
+			{
+				const LineW:int = 5;
+				const LineColor:uint = 0xFFFFFF;
+				var   LineAlpha:Number = 0.8 + 0.2*MyMath.Cos(2.0*MyMath.PI * i_Ratio);//1 => 0.6 => 1 => 0.6 => ...
 
-			//Result
-			var Result:Image = new Image();
-			Result.addChild(shape);
-			return Result;
+				g.lineStyle(LineW, LineColor, LineAlpha);
+
+				g.drawRect(lx, uy, w, h);
+			}
 		}
 
 
@@ -1100,7 +1143,7 @@ package{
 								case Game.S: color = 0xFF00FF; break;
 								case Game.R: color = 0xFF0000; break;
 								case Game.B: color = 0x0000FF; break;
-								case Game.E: color = 0xFFAA88; break;
+								case Game.E: color = 0x880000; break;
 								}
 							}
 
@@ -1267,6 +1310,32 @@ package{
 
 				return img;
 			}
+		}
+
+		//投稿完了表示
+		static public function CreateUploadComopleteImage():Image{
+			var bmp:Bitmap = CreateHugeBitmap();//画面全体を多うBitmapを作成
+
+			//!!test
+			bmp.bitmapData.fillRect(bmp.bitmapData.rect, 0x80FFFFFF);
+
+			var img:Image = new Image();
+			img.addChild(bmp);
+
+			return img;
+		}
+
+		//投稿失敗表示
+		static public function CreateUploadFailImage():Image{
+			var bmp:Bitmap = CreateHugeBitmap();//画面全体を多うBitmapを作成
+
+			//!!test
+			bmp.bitmapData.fillRect(bmp.bitmapData.rect, 0x80000000);
+
+			var img:Image = new Image();
+			img.addChild(bmp);
+
+			return img;
 		}
 
 

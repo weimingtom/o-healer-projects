@@ -753,9 +753,11 @@ package{
 		public var m_GameFrameImage:Image;
 
 		//カーソル
-		private var m_CursorImage:Image;
-		private var m_CursorIndexX:int = 0;
-		private var m_CursorIndexY:int = 0;
+		private var m_CursorShape:Shape;
+		private var m_CursorIndexSrcX:int = 0;
+		private var m_CursorIndexDstX:int = 0;
+		private var m_CursorIndexSrcY:int = 0;
+		private var m_CursorIndexDstY:int = 0;
 
 		//タブウィンドウ
 		public var m_TabWindow:TabWindow;
@@ -764,7 +766,7 @@ package{
 		static public const TAB_WINDOW_W:uint = 400;
 		static public const TAB_WINDOW_H:uint = 400;
 
-		public function Init_ForEditor():void{
+		public function Init_ForEditor(i_W:int, i_H:int):void{
 			//Flag
 			{
 				m_ForEditor = true;
@@ -773,6 +775,12 @@ package{
 			//通常時と同じ処理
 			{
 				Init();
+			}
+
+			//サイズ設定
+			{
+				this.width  = i_W;
+				this.height = i_H;
 			}
 
 			//Initのみの処理
@@ -818,8 +826,8 @@ package{
 
 				//カーソル
 				{
-					m_CursorImage = ImageManager.CreateCursorImage();
-					m_Game_Cursor.addChild(m_CursorImage);
+					m_CursorShape = new Shape();
+					m_Game_Cursor.addChild(m_CursorShape);
 				}
 
 				//右側のタブウィンドウ
@@ -952,50 +960,86 @@ package{
 
 				//カーソル移動
 				{
+					var MoveFlag:Boolean = false;
+
+					//Dstを普通に更新
 					if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_L)){
-						m_CursorIndexX -= 1;
-						if(m_CursorIndexX < 0){m_CursorIndexX = m_Map[0].length-1;}
+						m_CursorIndexDstX -= 1;
+						if(m_CursorIndexDstX < 0){m_CursorIndexDstX = m_Map[0].length-1;}
+						MoveFlag = true;
 					}
 					if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_R)){
-						m_CursorIndexX += 1;
-						if(m_CursorIndexX >= m_Map[0].length){m_CursorIndexX = 0;}
+						m_CursorIndexDstX += 1;
+						if(m_CursorIndexDstX >= m_Map[0].length){m_CursorIndexDstX = 0;}
+						MoveFlag = true;
 					}
 					if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_U)){
-						m_CursorIndexY -= 1;
-						if(m_CursorIndexY < 0){m_CursorIndexY = m_Map.length-1;}
+						m_CursorIndexDstY -= 1;
+						if(m_CursorIndexDstY < 0){m_CursorIndexDstY = m_Map.length-1;}
+						MoveFlag = true;
 					}
 					if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_D)){
-						m_CursorIndexY += 1;
-						if(m_CursorIndexY >= m_Map.length){m_CursorIndexY = 0;}
+						m_CursorIndexDstY += 1;
+						if(m_CursorIndexDstY >= m_Map.length){m_CursorIndexDstY = 0;}
+						MoveFlag = true;
+					}
+
+					//範囲選択でなければSrcにも反映
+					if(MoveFlag && ! m_Input.IsPress(IInput.BUTTON_RANGE)){
+						m_CursorIndexSrcX = m_CursorIndexDstX;
+						m_CursorIndexSrcY = m_CursorIndexDstY;
+					}
+				}
+
+				var lx:int;
+				var rx:int;
+				var uy:int;
+				var dy:int;
+				{
+					if(m_CursorIndexSrcX < m_CursorIndexDstX){
+						lx = m_CursorIndexSrcX;
+						rx = m_CursorIndexDstX;
+					}else{
+						lx = m_CursorIndexDstX;
+						rx = m_CursorIndexSrcX;
+					}
+
+					if(m_CursorIndexSrcY < m_CursorIndexDstY){
+						uy = m_CursorIndexSrcY;
+						dy = m_CursorIndexDstY;
+					}else{
+						uy = m_CursorIndexDstY;
+						dy = m_CursorIndexSrcY;
 					}
 				}
 
 				//ブロックのセット
 				{
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_O)){
-						SetBlock(O, m_CursorIndexX, m_CursorIndexY);
+						SetBlock(O, lx, rx, uy, dy);
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_W)){
-						SetBlock(W, m_CursorIndexX, m_CursorIndexY);
+						SetBlock(W, lx, rx, uy, dy);
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_Q)){
-						SetBlock(Q, m_CursorIndexX, m_CursorIndexY);
+						SetBlock(Q, lx, rx, uy, dy);
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_T)){
-						SetBlock(T, m_CursorIndexX, m_CursorIndexY);
+						SetBlock(T, lx, rx, uy, dy);
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_E)){
-						SetBlock(E, m_CursorIndexX, m_CursorIndexY);
+						SetBlock(E, lx, rx, uy, dy);
 					}
 				}
 
 				//位置の変更
 				{//ブロックと同じ処理なので同じ関数を使う
+					//ただし、範囲セットはできないのでDstの位置にセットする
 					if(m_Input.IsPress(IInput.BUTTON_PLAYER_POS)){
-						SetBlock(P, m_CursorIndexX, m_CursorIndexY);
+						SetBlock(P, m_CursorIndexDstX, m_CursorIndexDstX, m_CursorIndexDstY, m_CursorIndexDstY);
 					}
 					if(m_Input.IsPress(IInput.BUTTON_GOAL_POS)){
-						SetBlock(G, m_CursorIndexX, m_CursorIndexY);
+						SetBlock(G, m_CursorIndexDstX, m_CursorIndexDstX, m_CursorIndexDstY, m_CursorIndexDstY);
 					}
 				}
 			}else{
@@ -1012,14 +1056,15 @@ package{
 		private function UpdateCursor(i_DeltaTime:Number):void{
 			//Check : Range
 			{
-				if(m_CursorIndexX >= m_Map[0].length){m_CursorIndexX = m_Map[0].length-1;}
-				if(m_CursorIndexY >= m_Map.length){m_CursorIndexY = m_Map.length-1;}
+				if(m_CursorIndexSrcX >= m_Map[0].length){m_CursorIndexSrcX = m_Map[0].length-1;}
+				if(m_CursorIndexDstX >= m_Map[0].length){m_CursorIndexDstX = m_Map[0].length-1;}
+				if(m_CursorIndexSrcY >= m_Map.length){m_CursorIndexSrcY = m_Map.length-1;}
+				if(m_CursorIndexDstY >= m_Map.length){m_CursorIndexDstY = m_Map.length-1;}
 			}
 
-			//Pos
+			//Draw
 			{
-				m_CursorImage.x = m_CursorIndexX * ImageManager.PANEL_LEN;
-				m_CursorImage.y = m_CursorIndexY * ImageManager.PANEL_LEN;
+				ImageManager.DrawCursor(m_CursorShape, m_CursorIndexSrcX, m_CursorIndexDstX, m_CursorIndexSrcY, m_CursorIndexDstY, m_AnimTimer/CURSOR_ANIM_TIME);
 			}
 
 			//Anim
@@ -1030,18 +1075,6 @@ package{
 					if(m_AnimTimer >= CURSOR_ANIM_TIME){
 						m_AnimTimer -= CURSOR_ANIM_TIME;
 					}
-				}
-
-				//Alpha Anim
-				{
-					//0=>1, 0=>1, 0=>1, ...という流れ
-					var Ratio:Number = m_AnimTimer/CURSOR_ANIM_TIME;
-
-					//1=>0.6=>1=>0.6=>1=>...という流れ
-					Ratio = 0.8 + 0.2*MyMath.Cos(2.0*MyMath.PI * Ratio);
-
-					//アルファを使って明滅させる
-					m_CursorImage.alpha = Ratio;
 				}
 			}
 		}
@@ -1058,6 +1091,11 @@ package{
 			//Reset
 			{
 				Reset();//!!要る？
+			}
+
+			//表示切替
+			{
+				m_TabWindowLayer.visible = false;
 			}
 
 			m_EditFlag = false;
@@ -1077,12 +1115,30 @@ package{
 				Reset_ForEditor();
 			}
 
+			//表示切替
+			{
+				m_TabWindowLayer.visible = true;
+			}
+
 			m_EditFlag = true;
 		}
 
 		//Block
-		public function SetBlock(i_BlockIndex:int, i_X:int, i_Y:int):void{
-			SetBlocks([[i_BlockIndex]], i_X, i_Y);
+		public function SetBlock(i_BlockIndex:int, i_LX:int, i_RX:int, i_UY:int, i_DY:int):void{
+			var NumX:int = i_RX - i_LX + 1;
+			var NumY:int = i_DY - i_UY + 1;
+
+			var BlockIndexList:Array;
+			{
+				BlockIndexList = new Array(NumY);
+				for(var y:int = 0; y < NumY; y += 1){
+					BlockIndexList[y] = new Array(NumX);
+					for(var x:int = 0; x < NumX; x += 1){
+						BlockIndexList[y][x] = i_BlockIndex;
+					}
+				}
+			}
+			SetBlocks(BlockIndexList, i_LX, i_UY);
 		}
 		public function SetBlocks(i_BlockIndexList:Array, i_X:int, i_Y:int):void{		
 			var x:int;
@@ -1208,9 +1264,9 @@ package{
 				ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(i_X, i_Y, LocalNumX, LocalNumY));
 			}
 
-			//Killしたものをすぐに表示しないようにするため、経過時間０秒でUpdateを回す
+			//Killしたやつの表示をすぐに消す
 			{
-				GameObjectManager.Update(0.0);
+				GameObjectManager.Update_KillCheck();
 			}
 		}
 
@@ -1315,10 +1371,10 @@ package{
 			var CursorUY:int;
 			var CursorDY:int;
 			{
-				CursorLX = (m_CursorIndexX + 0) * ImageManager.PANEL_LEN;
-				CursorRX = (m_CursorIndexX + 1) * ImageManager.PANEL_LEN;
-				CursorUY = (m_CursorIndexY + 0) * ImageManager.PANEL_LEN;
-				CursorDY = (m_CursorIndexY + 1) * ImageManager.PANEL_LEN;
+				CursorLX = (m_CursorIndexDstX + 0) * ImageManager.PANEL_LEN;
+				CursorRX = (m_CursorIndexDstX + 1) * ImageManager.PANEL_LEN;
+				CursorUY = (m_CursorIndexDstY + 0) * ImageManager.PANEL_LEN;
+				CursorDY = (m_CursorIndexDstY + 1) * ImageManager.PANEL_LEN;
 			}
 
 			//現在のカメラ位置
@@ -1452,6 +1508,9 @@ package{
 
 			//反映
 			so.flush();
+
+			//セーブが完了したので、セーブ後に呼ぶべき処理を呼ぶ
+			CallChangeSaveLisetener();
 		}
 
 		//#Load
@@ -1502,6 +1561,24 @@ package{
 			return so;
 		}
 
+		//セーブデータ変更後に行う処理まわり
+
+		//リスナのリスト
+		private var m_ChangeSaveListener:Array = [];
+
+		//リスナの追加
+		public function AddChangeSaveListener(in_Func:Function):void{
+			m_ChangeSaveListener.push(in_Func);
+		}
+
+		//リスナの呼び出し
+		public function CallChangeSaveLisetener():void{
+			var Size:int = m_ChangeSaveListener.length;
+
+			for(var i:int = 0; i < Size; i += 1){
+				m_ChangeSaveListener[i]();
+			}
+		}
 
 		//=GAE用投稿まわり=
 

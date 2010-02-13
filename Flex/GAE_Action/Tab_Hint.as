@@ -25,9 +25,11 @@ package{
 			"Pを押したところがプレイヤーの初期位置になります",//P:プレイヤー位置（生成後は空白として扱われる）
 			"Gを押したところがゴールの位置になります",//G:ゴール位置（基本的には空白として扱われる）
 			"Qを押すと動かせるブロックをセットします",//Q:動かせるブロック（生成後は空白として扱われる）
+			"Tを押すとトランポリンをセットします",//T:トランポリンブロック
 			"Sを押すと切り替えスイッチをセットします",//S:赤青ブロック用の切り替えスイッチ
 			"Rを押すと赤ブロックをセットします",//R:赤ブロック
 			"Bを押すと青ブロックをセットします",//B:青ブロック
+			"Eを押すとエネミーをセットします",//E:エネミー
 			"TEST",
 			"TEST",
 			"TEST",
@@ -48,89 +50,72 @@ package{
 
 			//Content
 			{
-/*
-				const CONTENT_NORMAL:Array = [
-					Game.O,
-					Game.W,
-					Game.P,
-					Game.G,
-					Game.Q,
-					Game.S,
-					Game.R,
-					Game.B,
-				];
-/*/
-				//
-				const TYPE_L:int = 0;
-				const TYPE_R:int = 1;
-				const TYPE_C:int = 2;
+				//#Base
 
-				const CONTENT_PARAM:Array = [
-					[Game.O, TYPE_L], [Game.P, TYPE_R],
-					[Game.W, TYPE_L], [Game.G, TYPE_R],
-					[Game.Q, TYPE_L], [Game.S, TYPE_R],
-					[Game.R, TYPE_L], [Game.B, TYPE_R],
-					[Game.C, TYPE_L], [Game.V, TYPE_R],
-					[Game.SET_RANGE, TYPE_C],
-					[Game.SET_DIR, TYPE_C],
+				const BASE_NUM_X:int = 6;
+				const BASE_NUM_Y:int = 3;
+
+				const BASE_OFFSET_X:int = PANEL_W;
+				const BASE_OFFSET_Y:int = PANEL_H;
+
+				const BASE_CONTENT:Array = [
+					Game.O,//空白
+					Game.W,//地形
+					Game.P,//プレイヤー位置（生成後は空白として扱われる）
+					Game.G,//ゴール位置（基本的には空白として扱われる）
+					Game.Q,//動かせるブロック（生成後は空白として扱われる）
+					Game.T,//トランポリンブロック
+//					Game.S,//赤青ブロック用の切り替えスイッチ
+//					Game.R,//赤ブロック
+//					Game.B,//青ブロック
+					Game.E,//エネミー
 				];
 
-				var x:int = 0;
-				var y:int = 0;
-				var w:int = PANEL_W;//32 * 3;
-				var h:int = PANEL_H;//32 + 4;
-				for(var i:int = 0; i < CONTENT_PARAM.length; i += 1){
-					var map:int  = CONTENT_PARAM[i][0];
-					var type:int = CONTENT_PARAM[i][1];
+				var x:int;
+				var y:int;
 
-					//Pre
-					{
-						switch(type){
-						case TYPE_L:
-							x = 0;
-							break;
-						case TYPE_R:
-							x = w;
-							break;
-						case TYPE_C:
-							x = 0;
-							break;
-						}
-					}
+				var img:Image;
 
-					//Create
-					var img:Image;
-					{
-						img = ImageManager.CreateHintImage(map);
-						img.x = x;
-						img.y = y;
-					}
+				var index:int;
+				var block_type:int;
 
-					//Set Message Listener
-					{
-						img.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE[map]));
-					}
+				index = 0;
+				for(y = 0; y < BASE_NUM_Y; y += 1){
+					for(x = 0; x < BASE_NUM_X; x += 1){
+						if(index < BASE_CONTENT.length){
+							block_type = BASE_CONTENT[index];
 
-					//Regist
-					{
-						m_Content.addChild(img);
-					}
+							//Create
+							//var img:Image;
+							{
+								img = ImageManager.CreateHintImage(block_type);
+								img.x = x * BASE_OFFSET_X;
+								img.y = y * BASE_OFFSET_Y;
+							}
 
-					//Post
-					{
-						switch(type){
-						case TYPE_L:
-							break;
-						case TYPE_R:
-							y += h;
-							break;
-						case TYPE_C:
-							y += h;
-							break;
+							//Set Message Listener
+							{
+								img.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE[block_type]));
+							}
+
+							//Regist
+							{
+								m_Content.addChild(img);
+							}
+
+							index += 1;
 						}
 					}
 				}
-//*/
+
+				//#System
+
+				const SYSTEM_CONTENT:Array = [
+					Game.C,
+					Game.V,
+					Game.SET_RANGE,
+					Game.SET_DIR,
+				];
 			}
 		}
 	}

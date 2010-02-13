@@ -49,6 +49,15 @@ package{
 
 		//#Update
 		static public function Update(i_DeltaTime:Number):void{
+			//各OBJの更新
+			Update_EachObj(i_DeltaTime);
+
+			//Killが呼ばれたものは削除する
+			Update_KillCheck();
+		}
+
+		//Update : EachObj
+		static public function Update_EachObj(i_DeltaTime:Number):void{
 			var obj:IGameObject;
 
 			//各GameObjectのUpdate
@@ -60,8 +69,12 @@ package{
 
 				obj = obj.m_NextObj;
 			}
+		}
 
-			//Killが呼ばれたものは削除する
+		//Update : KillCheck
+		static public function Update_KillCheck():void{
+			var obj:IGameObject;
+
 			obj = m_ObjectList;
 			while(obj){
 				if(obj.m_KillFlag){

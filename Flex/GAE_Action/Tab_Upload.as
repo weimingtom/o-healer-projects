@@ -107,6 +107,15 @@ package{
 
 				InitThumbnails();
 			}
+
+			//Add Listener
+			{
+				Game.Instance().AddChangeSaveListener(
+					function():void{
+						InitThumbnails();
+					}
+				);
+			}
 		}
 
 		//#
@@ -230,24 +239,30 @@ package{
 		//#
 		//セーブデータの一覧をリストとして表示する処理
 		public function InitThumbnails():void{
+			//Reset代わりに呼んでも大丈夫なようにしておく
+
 			//ズームアップした時用のマスクのためのImage作成
 			{
-				m_MaskImage = new Image();
-				m_Content.addChild(m_MaskImage);
+				if(! m_MaskImage){
+					m_MaskImage = new Image();
+					m_Content.addChild(m_MaskImage);
 
-				//mask
-				var mask_shape:Shape = new Shape();
-				var g:Graphics = mask_shape.graphics;
-				g.beginFill(0x000000, 1.0);
-				g.drawRect(0, 0, Game.TAB_WINDOW_W - ImageManager.TAB_W, Game.TAB_WINDOW_H);
-				m_MaskImage.mask = mask_shape;
-				m_MaskImage.addChild(mask_shape);
+					//mask
+					var mask_shape:Shape = new Shape();
+					var g:Graphics = mask_shape.graphics;
+					g.beginFill(0x000000, 1.0);
+					g.drawRect(0, 0, Game.TAB_WINDOW_W - ImageManager.TAB_W, Game.TAB_WINDOW_H);
+					m_MaskImage.mask = mask_shape;
+					m_MaskImage.addChild(mask_shape);
+				}
 			}
 
 			//ズームイン、アウトのための土台Image作成
 			{
-				m_ZoomImage = new Image();
-				m_MaskImage.addChild(m_ZoomImage);
+				if(! m_ZoomImage){
+					m_ZoomImage = new Image();
+					m_MaskImage.addChild(m_ZoomImage);
+				}
 
 				UpdateZoom();//初期段階のスケールを計算しておく
 			}
@@ -261,6 +276,8 @@ package{
 				{
 					save_num = so.data.count;
 				}
+
+				ClearThumbnails();
 
 				//セーブデータからサムネイルを作成
 				m_ThumbnailCount = 0;
@@ -400,6 +417,21 @@ package{
 
 			//Count++
 			m_ThumbnailCount += 1;
+		}
+
+		//Clear
+		public function ClearThumbnails():void{
+			//remove
+			{
+				while(m_ZoomImage.numChildren > 0){
+					m_ZoomImage.removeChildAt(0);
+				}
+			}
+
+			//reset count
+			{
+				m_ThumbnailCount = 0;
+			}
 		}
 
 
@@ -555,9 +587,11 @@ package{
 				m_Responder_Upload = new Responder(
 					//OnComplete
 					function(i_Key:String):void{
+						OnUploadComplete();
 					},
 					//OnFail
 					function(results:*):void{
+						OnUploadFail();
 					}
 				);
 			}
@@ -576,6 +610,40 @@ package{
 
 			//Upload
 			m_NetConnection.call("save", m_Responder_Upload, data);//save(data)     
+		}
+
+		//Upload : OnComplete
+		public function OnUploadComplete():void{
+			//完了した旨を全体表示で伝える
+			var img:Image = ImageManager.CreateUploadComopleteImage();
+
+			//クリックで消えるようにしておく
+			img.addEventListener(
+				MouseEvent.CLICK,//クリックされたら
+				function(e:Event):void{//消える
+					Game.Instance().m_EditRoot.removeChild(img);
+				}
+			);
+
+			//表示開始
+			Game.Instance().m_EditRoot.addChild(img);
+		}
+
+		//Upload : OnFail
+		public function OnUploadFail():void{
+			//失敗した旨を全体表示で伝える
+			var img:Image = ImageManager.CreateUploadFailImage();
+
+			//クリックで消えるようにしておく
+			img.addEventListener(
+				MouseEvent.CLICK,//クリックされたら
+				function(e:Event):void{//消える
+					Game.Instance().m_EditRoot.removeChild(img);
+				}
+			);
+
+			//表示開始
+			Game.Instance().m_EditRoot.addChild(img);
 		}
 	}
 }
