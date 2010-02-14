@@ -28,6 +28,11 @@ package{
 
 		//Reset
 		override public function Reset(i_X:int, i_Y:int):void{
+			//Type
+			{
+				SetBlockType(Game.T);
+			}
+
 			//Pos
 			{
 				SetPos(i_X, i_Y);
@@ -67,20 +72,27 @@ package{
 //		override public function Update(i_DeltaTime:Number):void{
 //		}
 
-		public var m_Val:int = 5;
-
 		//Contact:接触したときに呼ばれる
 		override public function OnContact(in_Obj:IGameObject, in_Nrm:Vector3D):void{
 			const W:int = ImageManager.PANEL_LEN;
 
+			var Val:int;
+			{
+				if(m_Val > 0){
+					Val = m_Val;
+				}else{
+					Val = 5;
+				}
+			}
+
 			//#Y
 
-			var VY:Number = MyMath.Sqrt(2 * PhysManager.GRAVITY * (m_Val * W*PhysManager.PHYS_SCALE + W/4*PhysManager.PHYS_SCALE))
+			var VY:Number = MyMath.Sqrt(2 * PhysManager.GRAVITY * (Val * W*PhysManager.PHYS_SCALE + W/4*PhysManager.PHYS_SCALE))
 
 			//上に乗られた
 			{
 				if(in_Nrm.y < -0.7){
-					//m_Valの数のブロック分、上に移動させる
+					//Valの数のブロック分、上に移動させる
 					//H = 0.5*VY^2/G
 					//VY = Sqrt(2 * G * Height)
 					in_Obj.SetVY(-VY);
@@ -101,8 +113,8 @@ package{
 			//#X
 
 /*
-			//地上のプレイヤーをm_Valマス移動させる
-			var VX:Number = 60 + m_Val*200;
+			//地上のプレイヤーをValマス移動させる
+			var VX:Number = 60 + Val*200;
 /*/
 			//空中で当たったときにやはりおかしいので、VYと共通の値にする
 			var VX:Number = VY;

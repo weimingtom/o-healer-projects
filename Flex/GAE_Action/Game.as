@@ -32,21 +32,27 @@ package{
 		static public const MAP_H_MAX:int = 99;
 
 		//＃マップの要素
-		static public const O:int = 0;//空白
-		static public const W:int = 1;//地形
-		static public const P:int = 2;//プレイヤー位置（生成後は空白として扱われる）
-		static public const G:int = 3;//ゴール位置（基本的には空白として扱われる）
-		static public const Q:int = 4;//動かせるブロック（生成後は空白として扱われる）
-		static public const T:int = 5;//トランポリンブロック
-		static public const S:int = 6;//赤青ブロック用の切り替えスイッチ
-		static public const R:int = 7;//赤ブロック
-		static public const B:int = 8;//青ブロック
-		static public const E:int = 9;//エネミー
+		static public var BLOCK_INDEX_COUNTER:int = 0;
+		static public const O:int = BLOCK_INDEX_COUNTER++;//空白
+		static public const W:int = BLOCK_INDEX_COUNTER++;//地形
+		static public const P:int = BLOCK_INDEX_COUNTER++;//プレイヤー位置（生成後は空白として扱われる）
+		static public const G:int = BLOCK_INDEX_COUNTER++;//ゴール位置（基本的には空白として扱われる）
+		static public const Q:int = BLOCK_INDEX_COUNTER++;//動かせるブロック（生成後は空白として扱われる）
+		static public const M:int = BLOCK_INDEX_COUNTER++;//往復ブロック
+		static public const T:int = BLOCK_INDEX_COUNTER++;//トランポリンブロック
+		static public const S:int = BLOCK_INDEX_COUNTER++;//赤青ブロック用の切り替えスイッチ
+		static public const R:int = BLOCK_INDEX_COUNTER++;//赤ブロック
+		static public const B:int = BLOCK_INDEX_COUNTER++;//青ブロック
+		static public const E:int = BLOCK_INDEX_COUNTER++;//エネミー
 		//system
-		static public const C:int			= 10;
-		static public const V:int			= 11;
-		static public const SET_RANGE:int	= 12;
-		static public const SET_DIR:int		= 13;
+		static public const C:int			= BLOCK_INDEX_COUNTER++;
+		static public const V:int			= BLOCK_INDEX_COUNTER++;
+		static public const SET_RANGE:int	= BLOCK_INDEX_COUNTER++;
+		static public const SET_DIR:int		= BLOCK_INDEX_COUNTER++;
+		//Val
+		static public const VAL_OFFSET:int	= 100;//これで割った数の１桁目が指定された数字になる
+		//Dir
+		static public const DIR_OFFSET:int	= 1000;//
 
 		//＃マップの要素を文字列化したときの値
 		static public const MapIndex2Char:Array = [
@@ -55,6 +61,7 @@ package{
 			"P",
 			"G",
 			"Q",
+			"M",
 			"T",
 			"S",
 			"R",
@@ -281,7 +288,7 @@ package{
 						for(x = 0; x < NumX; x += 1){
 							var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
 
-							switch(m_Map[y][x]){
+							switch(m_Map[y][x] % VAL_OFFSET){
 							case O:
 								//空白なので何もしない
 								break;
@@ -305,7 +312,20 @@ package{
 							case Q:
 								//動かせるブロックを生成
 								{
-									var block_m:Block_Movable = new Block_Movable();
+									var block_q:Block_Movable = new Block_Movable();
+									block_q.Reset(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(block_q);
+									GameObjectManager.Register(block_q);
+
+									m_ObjMap[y][x] = block_q;
+								}
+								break;
+							case M:
+								//往復ブロックを生成
+								{
+									var block_m:Block_Move = new Block_Move();
+									block_m.SetVal((m_Map[y][x] / VAL_OFFSET) % 10);
 									block_m.Reset(pos_x, pos_y);
 
 									m_Root_Gimmick.addChild(block_m);
@@ -318,6 +338,7 @@ package{
 								//トランポリンブロックを生成
 								{
 									var block_t:Block_Trampoline = new Block_Trampoline();
+									block_t.SetVal((m_Map[y][x] / VAL_OFFSET) % 10);
 									block_t.Reset(pos_x, pos_y);
 
 									m_Root_Gimmick.addChild(block_t);
@@ -884,7 +905,7 @@ package{
 					for(var x:int = 0; x < NumX; x += 1){
 						var pos_x:int = (x + 0.5) * ImageManager.PANEL_LEN;
 
-						switch(m_Map[y][x]){
+						switch(m_Map[y][x] % VAL_OFFSET){
 						case O://空白
 							break;
 						case W://地形
@@ -895,6 +916,9 @@ package{
 						case G://ゴール位置（基本的には空白として扱われる）
 							break;
 						case Q://動かせるブロック（生成後は空白として扱われる）
+							m_ObjMap[y][x].Reset(pos_x, pos_y);
+							break;
+						case M://往復ブロック（生成後は空白として扱われる）
 							m_ObjMap[y][x].Reset(pos_x, pos_y);
 							break;
 						case T://トランポリンブロック
@@ -952,6 +976,8 @@ package{
 
 		//Input
 		protected function CheckInput_ForEditor():void{
+			var i:int;
+
 			if(m_EditFlag){
 				//Edit => Play
 				if(m_Input.IsPress_Edge(IInput.BUTTON_GO_TO_PLAY)){
@@ -1013,6 +1039,28 @@ package{
 					}
 				}
 
+				//値の指定
+				{
+					const ValButtonList:Array = [
+						IInput.BUTTON_0,
+						IInput.BUTTON_1,
+						IInput.BUTTON_2,
+						IInput.BUTTON_3,
+						IInput.BUTTON_4,
+						IInput.BUTTON_5,
+						IInput.BUTTON_6,
+						IInput.BUTTON_7,
+						IInput.BUTTON_8,
+						IInput.BUTTON_9,
+					];
+
+					for(i = 0; i < 10; i += 1){
+						if(m_Input.IsPress_Edge(ValButtonList[i])){
+							ChangeVal(i, lx, rx, uy, dy);
+						}
+					}
+				}
+
 				//ブロックのセット
 				{
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_O)){
@@ -1023,6 +1071,9 @@ package{
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_Q)){
 						SetBlock(Q, lx, rx, uy, dy);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_M)){
+//						SetBlock(M, lx, rx, uy, dy);//未完成なのでまだセットできない
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_T)){
 						SetBlock(T, lx, rx, uy, dy);
@@ -1210,7 +1261,7 @@ package{
 
 					//Post : Create New OBJ
 					{
-						switch(index){
+						switch(index % VAL_OFFSET){
 						case P:
 							m_Player.Reset(pos_x, pos_y);
 							break;
@@ -1221,7 +1272,20 @@ package{
 						case Q:
 							//動かせるブロックを生成
 							{
-								var block_m:Block_Movable = new Block_Movable();
+								var block_q:Block_Movable = new Block_Movable();
+								block_q.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(block_q);
+								GameObjectManager.Register(block_q);
+
+								m_ObjMap[y][x] = block_q;
+							}
+							break;
+						case M:
+							//往復ブロックを生成
+							{
+								var block_m:Block_Move = new Block_Move();
+								block_m.SetVal((index / VAL_OFFSET) % 10);
 								block_m.Reset(pos_x, pos_y);
 
 								m_Root_Gimmick.addChild(block_m);
@@ -1234,6 +1298,7 @@ package{
 							//トランポリンブロックを生成
 							{
 								var block_t:Block_Trampoline = new Block_Trampoline();
+								block_t.SetVal((index / VAL_OFFSET) % 10);
 								block_t.Reset(pos_x, pos_y);
 
 								m_Root_Gimmick.addChild(block_t);
@@ -1269,6 +1334,24 @@ package{
 				GameObjectManager.Update_KillCheck();
 			}
 		}
+
+		//指定範囲のセットの「指定値」をin_Valに変更する
+		public function ChangeVal(in_Val:int, i_LX:int, i_RX:int, i_UY:int, i_DY:int):void{
+			for(var y:int = i_UY; y <= i_DY; y += 1){
+				for(var x:int = i_LX; x <= i_RX; x += 1){
+					var block_index:int = m_Map[y][x] % VAL_OFFSET;
+
+					switch(block_index){
+					case M:
+					case T:
+						m_Map[y][x] = int(m_Map[y][x] % VAL_OFFSET) + (in_Val * VAL_OFFSET) + (int(m_Map[y][x] % DIR_OFFSET) * DIR_OFFSET);
+						m_ObjMap[y][x].SetVal(in_Val);
+						break;
+					}
+				}
+			}
+		}
+
 
 		public function DeleteObjMap(i_X:int, i_Y:int):void{
 			//Check
@@ -1432,9 +1515,27 @@ package{
 		static public function Map2String(i_Map:Array):String{
 			var result:String = "";
 
+			const Number2Char:Array = [
+				"0",
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+			];
+
 			for(var y:int = 0; y < i_Map.length; y += 1){
 				for(var x:int = 0; x < i_Map[y].length; x += 1){
-					result = result + MapIndex2Char[i_Map[y][x]];
+					result = result + MapIndex2Char[i_Map[y][x] % VAL_OFFSET];
+
+					var val:int = i_Map[y][x] / VAL_OFFSET; val %= 10;
+					if(val > 0){
+						result = result + Number2Char[val];
+					}
 				}
 
 				if(y < i_Map.length-1){
@@ -1458,11 +1559,22 @@ package{
 				case 'P': NewMap[y].push(P); break;
 				case 'G': NewMap[y].push(G); break;
 				case 'Q': NewMap[y].push(Q); break;
+				case 'M': NewMap[y].push(M); break;
 				case 'T': NewMap[y].push(T); break;
 				case 'S': NewMap[y].push(S); break;
 				case 'R': NewMap[y].push(R); break;
 				case 'B': NewMap[y].push(B); break;
 				case 'E': NewMap[y].push(E); break;
+				case '0': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*0; break;
+				case '1': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*1; break;
+				case '2': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*2; break;
+				case '3': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*3; break;
+				case '4': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*4; break;
+				case '5': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*5; break;
+				case '6': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*6; break;
+				case '7': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*7; break;
+				case '8': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*8; break;
+				case '9': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*9; break;
 				case '_': NewMap.push([]); y += 1; break;
 				}
 			}

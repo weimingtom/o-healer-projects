@@ -31,9 +31,19 @@ package{
 
 		//Reset
 		override public function Reset(i_X:int, i_Y:int):void{
+			//Type
+			{
+				SetBlockType(Game.E);
+			}
+
 			//Pos
 			{
 				SetPos(i_X, i_Y);
+			}
+
+			//Flag
+			{
+				m_CheckPressFlag = true;
 			}
 
 			//Graphic Anim
@@ -80,6 +90,14 @@ package{
 				}
 			}else{
 			}
+		}
+
+		//圧死時の処理：オーバーライドして使う
+		override public function OnPressDead(in_Nrm:Vector3D):void{
+			//!!死亡エフェクト
+
+			//死亡
+			Kill();
 		}
 
 		//Contact:接触したときに呼ばれる

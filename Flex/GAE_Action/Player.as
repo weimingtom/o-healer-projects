@@ -62,6 +62,11 @@ package{
 
 		//Reset
 		override public function Reset(i_X:int, i_Y:int):void{
+			//Type
+			{
+				SetBlockType(Game.P);
+			}
+
 			//Pos
 			{
 				SetPos(i_X, i_Y);
@@ -260,7 +265,13 @@ package{
 		override public function OnContact(in_Obj:IGameObject, in_Nrm:Vector3D):void{
 			//地面の速度の影響を受けてみる
 			if(in_Nrm.y >  0.7){
-				m_BaseVX = in_Obj.GetVX();
+				if(in_Obj.m_BlockType != Game.M){
+					//通常
+					m_BaseVX = in_Obj.GetVX();
+				}else{
+					//往復ブロック時は専用のものを参照
+					m_BaseVX = in_Obj.m_VX;
+				}
 			}
 		}
 

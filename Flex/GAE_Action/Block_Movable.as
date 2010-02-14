@@ -28,6 +28,11 @@ package{
 
 		//Reset
 		override public function Reset(i_X:int, i_Y:int):void{
+			//Type
+			{
+				SetBlockType(Game.Q);
+			}
+
 			//Pos
 			{
 				SetPos(i_X, i_Y);

@@ -165,6 +165,8 @@ package{
 		[Embed(source='Hint_W.png')]
 		 private static var Bitmap_Block_Base: Class;
 		[Embed(source='Block_Move.png')]
+		 private static var Bitmap_Block_Movable: Class;
+		[Embed(source='Block_Move.png')]
 		 private static var Bitmap_Block_Move: Class;
 		[Embed(source='Block_Bounce.png')]
 		 private static var Bitmap_Block_Trampoline: Class;
@@ -180,7 +182,8 @@ package{
 			new Bitmap_Block_Base(),//W:地形
 			new Bitmap_Hint_Player(),//P:プレイヤー位置（生成後は空白として扱われる）
 			new Bitmap_Goal(),//G:ゴール位置（基本的には空白として扱われる）
-			new Bitmap_Block_Move(),//Q:動かせるブロック（生成後は空白として扱われる）
+			new Bitmap_Block_Movable(),//Q:動かせるブロック（生成後は空白として扱われる）
+			new Bitmap_Block_Move(),//M:往復ブロック（生成後は空白として扱われる）
 			new Bitmap_Block_Trampoline(),//T:トランポリンブロック
 			new Bitmap_Block_Move(),//S:赤青ブロック用の切り替えスイッチ
 			new Bitmap_Block_Move(),//R:赤ブロック
@@ -802,6 +805,7 @@ package{
 			"Ｐ",//P:プレイヤー位置（生成後は空白として扱われる）
 			"Ｇ",//G:ゴール位置（基本的には空白として扱われる）
 			"Ｑ",//Q:動かせるブロック（生成後は空白として扱われる）
+			"Ｍ",//M:往復ブロック（生成後は空白として扱われる）
 			"Ｔ",//T:トランポリンブロック
 			"Ｓ",//S:赤青ブロック用の切り替えスイッチ
 			"Ｒ",//R:赤ブロック
@@ -1139,6 +1143,7 @@ package{
 								case Game.P: color = 0xFF8800; break;
 								case Game.G: color = 0xDDDD00; break;
 								case Game.Q: color = 0x888888; break;
+								case Game.M: color = 0x444444; break;
 								case Game.T: color = 0x88FF88; break;
 								case Game.S: color = 0xFF00FF; break;
 								case Game.R: color = 0xFF0000; break;

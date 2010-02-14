@@ -65,6 +65,35 @@ package{
 		}
 
 
+		//==Set==
+
+		//セットに対応するIndex
+		public var m_BlockType:int = -1;
+
+		public function SetBlockType(in_BlockType:int):void{//Game.Oとかを指定する
+			m_BlockType = in_BlockType;
+		}
+
+		//セット時に指定される値
+		public var m_Val:int = -1;
+
+		public function SetVal(in_Val:int):void{
+			m_Val = in_Val;
+		}
+
+		//セット時に指定される方向
+		static public const DIR_L:int = 0;
+		static public const DIR_R:int = 1;
+		static public const DIR_U:int = 2;
+		static public const DIR_D:int = 3;
+
+		public var m_Dir:int = DIR_U;
+
+		public function SetDir(in_Dir:int):void{
+			m_Dir = in_Dir;
+		}
+
+
 		//==Graphic==
 
 		static public const GRAPHIC_DIR_U:int = 0;
@@ -197,8 +226,8 @@ package{
 		public static const CATEGORY_ENEMY:uint				= 0x0020;//エネミーコリジョン
 
 		//Collision Body
-		protected var m_BodyDef:b2BodyDef;
-		protected var m_Body:b2Body;
+		public var m_BodyDef:b2BodyDef;
+		public var m_Body:b2Body;
 
 		//Create : Base
 		public function CreateBody(i_Param:Object):void{

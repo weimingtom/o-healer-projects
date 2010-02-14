@@ -3,31 +3,43 @@ package{
 	public class IInput{
 
 		//i_Buttonとして指定するもの(enum欲しい)
+		static public var INPUT_COUNTER:int = 0;//enum代わり
 		//Player
-		static public const BUTTON_L:int = 0;
-		static public const BUTTON_R:int = 1;
-		static public const BUTTON_U:int = 2;
-		static public const BUTTON_D:int = 3;
+		static public const BUTTON_L:int = INPUT_COUNTER++;
+		static public const BUTTON_R:int = INPUT_COUNTER++;
+		static public const BUTTON_U:int = INPUT_COUNTER++;
+		static public const BUTTON_D:int = INPUT_COUNTER++;
 		//System
-		static public const BUTTON_RESET:int = 4;
+		static public const BUTTON_RESET:int = INPUT_COUNTER++;
 		//Editor
-		static public const BUTTON_CURSOR_L:int		= 5;
-		static public const BUTTON_CURSOR_R:int		= 6;
-		static public const BUTTON_CURSOR_U:int		= 7;
-		static public const BUTTON_CURSOR_D:int		= 8;
-		static public const BUTTON_GO_TO_PLAY:int	= 9;
-		static public const BUTTON_GO_TO_EDIT:int	= 10;
-		static public const BUTTON_BLOCK_O:int		= 11;
-		static public const BUTTON_BLOCK_W:int		= 12;
-		static public const BUTTON_BLOCK_Q:int		= 13;
-		static public const BUTTON_BLOCK_T:int		= 14;
-		static public const BUTTON_BLOCK_E:int		= 15;
-		static public const BUTTON_PLAYER_POS:int	= 16;
-		static public const BUTTON_GOAL_POS:int		= 17;
+		static public const BUTTON_CURSOR_L:int		= INPUT_COUNTER++;
+		static public const BUTTON_CURSOR_R:int		= INPUT_COUNTER++;
+		static public const BUTTON_CURSOR_U:int		= INPUT_COUNTER++;
+		static public const BUTTON_CURSOR_D:int		= INPUT_COUNTER++;
+		static public const BUTTON_GO_TO_PLAY:int	= INPUT_COUNTER++;
+		static public const BUTTON_GO_TO_EDIT:int	= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_O:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_W:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_Q:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_M:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_T:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_E:int		= INPUT_COUNTER++;
+		static public const BUTTON_PLAYER_POS:int	= INPUT_COUNTER++;
+		static public const BUTTON_GOAL_POS:int		= INPUT_COUNTER++;
 		//System
-		static public const BUTTON_RANGE:int		= 18;
+		static public const BUTTON_RANGE:int		= INPUT_COUNTER++;
+		static public const BUTTON_0:int			= INPUT_COUNTER++;
+		static public const BUTTON_1:int			= INPUT_COUNTER++;
+		static public const BUTTON_2:int			= INPUT_COUNTER++;
+		static public const BUTTON_3:int			= INPUT_COUNTER++;
+		static public const BUTTON_4:int			= INPUT_COUNTER++;
+		static public const BUTTON_5:int			= INPUT_COUNTER++;
+		static public const BUTTON_6:int			= INPUT_COUNTER++;
+		static public const BUTTON_7:int			= INPUT_COUNTER++;
+		static public const BUTTON_8:int			= INPUT_COUNTER++;
+		static public const BUTTON_9:int			= INPUT_COUNTER++;
 		//Num
-		static public const BUTTON_NUM:int  = 19;
+		static public const BUTTON_NUM:int  = INPUT_COUNTER++;
 
 
 		//i_Buttonが現在押されているか

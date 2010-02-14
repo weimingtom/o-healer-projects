@@ -103,11 +103,23 @@ package{
 			case Keyboard.SPACE:	m_Input[BUTTON_BLOCK_O] = true;	break;
 			case KEY_W:				m_Input[BUTTON_BLOCK_W] = true;	break;
 			case KEY_Q:				m_Input[BUTTON_BLOCK_Q] = true;	break;
+			case KEY_M:				m_Input[BUTTON_BLOCK_M] = true;	break;
 			case KEY_T:				m_Input[BUTTON_BLOCK_T] = true;	break;
 			case KEY_E:				m_Input[BUTTON_BLOCK_E] = true;	break;
 
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = true;	break;
 			case KEY_G:				m_Input[BUTTON_GOAL_POS] = true;	break;
+
+			case KEY_0:	m_Input[BUTTON_0] = true; break;
+			case KEY_1:	m_Input[BUTTON_1] = true; break;
+			case KEY_2:	m_Input[BUTTON_2] = true; break;
+			case KEY_3:	m_Input[BUTTON_3] = true; break;
+			case KEY_4:	m_Input[BUTTON_4] = true; break;
+			case KEY_5:	m_Input[BUTTON_5] = true; break;
+			case KEY_6:	m_Input[BUTTON_6] = true; break;
+			case KEY_7:	m_Input[BUTTON_7] = true; break;
+			case KEY_8:	m_Input[BUTTON_8] = true; break;
+			case KEY_9:	m_Input[BUTTON_9] = true; break;
 			}
 
 			if(event.shiftKey){		m_Input[BUTTON_RANGE] = true;}
@@ -141,11 +153,23 @@ package{
 			case Keyboard.SPACE:	m_Input[BUTTON_BLOCK_O] = false;	break;
 			case KEY_W:				m_Input[BUTTON_BLOCK_W] = false;	break;
 			case KEY_Q:				m_Input[BUTTON_BLOCK_Q] = false;	break;
+			case KEY_M:				m_Input[BUTTON_BLOCK_M] = false;	break;
 			case KEY_T:				m_Input[BUTTON_BLOCK_T] = false;	break;
 			case KEY_E:				m_Input[BUTTON_BLOCK_E] = false;	break;
 
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = false;	break;
 			case KEY_G:				m_Input[BUTTON_GOAL_POS] = false;	break;
+
+			case KEY_0:	m_Input[BUTTON_0] = false; break;
+			case KEY_1:	m_Input[BUTTON_1] = false; break;
+			case KEY_2:	m_Input[BUTTON_2] = false; break;
+			case KEY_3:	m_Input[BUTTON_3] = false; break;
+			case KEY_4:	m_Input[BUTTON_4] = false; break;
+			case KEY_5:	m_Input[BUTTON_5] = false; break;
+			case KEY_6:	m_Input[BUTTON_6] = false; break;
+			case KEY_7:	m_Input[BUTTON_7] = false; break;
+			case KEY_8:	m_Input[BUTTON_8] = false; break;
+			case KEY_9:	m_Input[BUTTON_9] = false; break;
 			}
 
 			if(! event.shiftKey){		m_Input[BUTTON_RANGE] = false;}

@@ -21,6 +21,11 @@ package{
 		//==Common==
 
 		public function Init(i_LX:int, i_RX:int, i_UY:int, i_DY:int):void{
+			//Type
+			{
+				SetBlockType(Game.W);
+			}
+
 			var center_x:int;
 			var center_y:int;
 			var w:int;

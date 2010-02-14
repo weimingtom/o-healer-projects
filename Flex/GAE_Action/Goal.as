@@ -21,6 +21,11 @@ package{
 		//==Common==
 
 		override public function Reset(i_X:int, i_Y:int):void{
+			//Type
+			{
+				SetBlockType(Game.G);
+			}
+
 			//Pos
 			{
 				SetPos(i_X, i_Y);
