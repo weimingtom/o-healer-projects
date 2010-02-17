@@ -21,6 +21,9 @@ package{
 		static public const BUTTON_BLOCK_O:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_W:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_Q:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_S:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_D:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_R:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_M:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_T:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_E:int		= INPUT_COUNTER++;

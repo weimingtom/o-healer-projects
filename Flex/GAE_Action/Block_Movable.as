@@ -40,9 +40,11 @@ package{
 
 			//Graphic Anim
 			{
-				if(numChildren <= 0){//まだ生成してなかったら
-					addChild(ImageManager.LoadBlockImage(Game.Q));
+				while(numChildren > 0){//以前の画象は削除
+					removeChildAt(0);
 				}
+
+				addChild(ImageManager.LoadBlockImage(Game.Q, m_Val));
 			}
 
 			//Collision

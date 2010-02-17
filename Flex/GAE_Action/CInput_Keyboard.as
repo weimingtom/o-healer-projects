@@ -94,7 +94,9 @@ package{
 				break;
 
 			case KEY_R:				m_Input[BUTTON_RESET] = true;	break;
+			}
 
+			switch(event.keyCode){
 			case Keyboard.ENTER:
 				m_Input[BUTTON_GO_TO_PLAY] = true;
 				m_Input[BUTTON_GO_TO_EDIT] = true;
@@ -103,6 +105,9 @@ package{
 			case Keyboard.SPACE:	m_Input[BUTTON_BLOCK_O] = true;	break;
 			case KEY_W:				m_Input[BUTTON_BLOCK_W] = true;	break;
 			case KEY_Q:				m_Input[BUTTON_BLOCK_Q] = true;	break;
+			case KEY_S:				m_Input[BUTTON_BLOCK_S] = true;	break;
+			case KEY_D:				m_Input[BUTTON_BLOCK_D] = true;	break;
+			case KEY_R:				m_Input[BUTTON_BLOCK_R] = true;	break;
 			case KEY_M:				m_Input[BUTTON_BLOCK_M] = true;	break;
 			case KEY_T:				m_Input[BUTTON_BLOCK_T] = true;	break;
 			case KEY_E:				m_Input[BUTTON_BLOCK_E] = true;	break;
@@ -144,7 +149,9 @@ package{
 				break;
 
 			case KEY_R:				m_Input[BUTTON_RESET] = false;	break;
+			}
 
+			switch(event.keyCode){
 			case Keyboard.ENTER:
 				m_Input[BUTTON_GO_TO_PLAY] = false;
 				m_Input[BUTTON_GO_TO_EDIT] = false;
@@ -153,6 +160,9 @@ package{
 			case Keyboard.SPACE:	m_Input[BUTTON_BLOCK_O] = false;	break;
 			case KEY_W:				m_Input[BUTTON_BLOCK_W] = false;	break;
 			case KEY_Q:				m_Input[BUTTON_BLOCK_Q] = false;	break;
+			case KEY_S:				m_Input[BUTTON_BLOCK_S] = false;	break;
+			case KEY_D:				m_Input[BUTTON_BLOCK_D] = false;	break;
+			case KEY_R:				m_Input[BUTTON_BLOCK_R] = false;	break;
 			case KEY_M:				m_Input[BUTTON_BLOCK_M] = false;	break;
 			case KEY_T:				m_Input[BUTTON_BLOCK_T] = false;	break;
 			case KEY_E:				m_Input[BUTTON_BLOCK_E] = false;	break;

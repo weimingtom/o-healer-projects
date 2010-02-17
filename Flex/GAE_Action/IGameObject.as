@@ -75,7 +75,7 @@ package{
 		}
 
 		//セット時に指定される値
-		public var m_Val:int = -1;
+		public var m_Val:int = 0;
 
 		public function SetVal(in_Val:int):void{
 			m_Val = in_Val;
@@ -382,11 +382,35 @@ package{
 
 			//圧死判定
 			{
-				//
-				var Vel3D:Vector3D = new Vector3D(Vel.x, Vel.y);
+				var PressFlag:Boolean = true;
+				{
+					//!!in_Objがドア（逆ドア）で、非表示の場合は考慮しないようにしたい（αチェックで擬似的にオンオフの判断はできるが）
+					switch(in_Obj.m_BlockType){
+					case Game.P:
+					case Game.E:
+						//キャラクターによる圧力では圧死しない
+						PressFlag = false;
+						break;
+					case Game.D:
+					case Game.R:
+						//オンオフする壁なら、オンの時しか圧死しない
+						{
+							var block_door:Block_Door = in_Obj as Block_Door;
+							if(! block_door.m_IsOn){
+								PressFlag = false;
+							}
+						}
+						break;
+					}
+				}
 
-				if(Vel3D.dotProduct(in_Nrm) <= 0.01){//自ら隙間にはまったときは圧死しないよう、速度チェックをする
-					AddPressPowList(in_Nrm);
+				if(PressFlag){
+					//
+					var Vel3D:Vector3D = new Vector3D(Vel.x, Vel.y);
+
+					if(Vel3D.dotProduct(in_Nrm) <= 0.01){//自ら隙間にはまったときは圧死しないよう、速度チェックをする
+						AddPressPowList(in_Nrm);
+					}
 				}
 			}
 		}

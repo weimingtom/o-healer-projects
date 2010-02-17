@@ -58,7 +58,7 @@ package{
 			{
 				var ColParam:Object = GetDefaultCollisionParam();
 				{//デフォルトのパラメータ
-					ColParam.density = 10.0;
+					ColParam.density = 30.0;
 					ColParam.friction = 0.5;
 					ColParam.allow_sleep = true;
 				}
@@ -105,6 +105,28 @@ package{
 			if(in_Obj is Player){
 				in_Obj.AddDamage(1);
 			}
+		}
+
+
+		//コリジョンに応じて回転する部分とそうでない部分をわけるためにoverride
+		override public function Phys2Obj():void{
+			//Ori
+			{
+				super.Phys2Obj();
+			}
+/*
+			//物理的な回転量
+			var rot:Number;
+			{
+				rot =  this.rotation;
+				this.rotation = 0;
+			}
+
+			//回転させるグラフィックにのみ適用
+			{
+				m_RotImage.rotation = rot;
+			}
+//*/
 		}
 	}
 }

@@ -38,11 +38,11 @@ package{
 		static public const P:int = BLOCK_INDEX_COUNTER++;//プレイヤー位置（生成後は空白として扱われる）
 		static public const G:int = BLOCK_INDEX_COUNTER++;//ゴール位置（基本的には空白として扱われる）
 		static public const Q:int = BLOCK_INDEX_COUNTER++;//動かせるブロック（生成後は空白として扱われる）
+		static public const S:int = BLOCK_INDEX_COUNTER++;//乗せるスイッチ（動かせるブロックをこれに乗せる）
+		static public const D:int = BLOCK_INDEX_COUNTER++;//ドア（スイッチの上にブロックが乗っていれば通過可能）
+		static public const R:int = BLOCK_INDEX_COUNTER++;//逆ドア（通常のドアとは逆の動作）
 		static public const M:int = BLOCK_INDEX_COUNTER++;//往復ブロック
 		static public const T:int = BLOCK_INDEX_COUNTER++;//トランポリンブロック
-		static public const S:int = BLOCK_INDEX_COUNTER++;//赤青ブロック用の切り替えスイッチ
-		static public const R:int = BLOCK_INDEX_COUNTER++;//赤ブロック
-		static public const B:int = BLOCK_INDEX_COUNTER++;//青ブロック
 		static public const E:int = BLOCK_INDEX_COUNTER++;//エネミー
 		//system
 		static public const C:int			= BLOCK_INDEX_COUNTER++;
@@ -61,11 +61,11 @@ package{
 			"P",
 			"G",
 			"Q",
+			"S",
+			"D",
+			"R",
 			"M",
 			"T",
-			"S",
-			"R",
-			"B",
 			"E",
 		];
 
@@ -112,6 +112,7 @@ package{
 		];
 		//Objectへの参照版
 		public var m_ObjMap:Array;
+		public function GetMapIndex(i_Y:int, i_X:int):int{return (m_Map[i_Y][i_X] % VAL_OFFSET);}
 
 		//＃Input
 		public var m_Input:CInput_Keyboard;
@@ -261,6 +262,11 @@ package{
 				PhysManager.Reset();
 			}
 
+			//#Switch
+			{
+				SwitchCounter.Reset();
+			}
+
 			//＃Map
 			var PlayerX:int = ImageManager.PANEL_LEN * 1.5;
 			var PlayerY:int = ImageManager.PANEL_LEN * 1.5;
@@ -288,7 +294,7 @@ package{
 						for(x = 0; x < NumX; x += 1){
 							var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
 
-							switch(m_Map[y][x] % VAL_OFFSET){
+							switch(GetMapIndex(y, x)){
 							case O:
 								//空白なので何もしない
 								break;
@@ -313,12 +319,52 @@ package{
 								//動かせるブロックを生成
 								{
 									var block_q:Block_Movable = new Block_Movable();
+									block_q.SetVal((m_Map[y][x] / VAL_OFFSET) % 10);
 									block_q.Reset(pos_x, pos_y);
 
 									m_Root_Gimmick.addChild(block_q);
 									GameObjectManager.Register(block_q);
 
 									m_ObjMap[y][x] = block_q;
+								}
+								break;
+							case S:
+								//スイッチを生成
+								{
+									var block_s:Block_Switch = new Block_Switch();
+									block_s.SetVal((m_Map[y][x] / VAL_OFFSET) % 10);
+									block_s.Reset(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(block_s);
+									GameObjectManager.Register(block_s);
+
+									m_ObjMap[y][x] = block_s;
+								}
+								break;
+							case D:
+								//ドアを生成
+								{
+									var block_d:Block_Door = new Block_Door(false);
+									block_d.SetVal((m_Map[y][x] / VAL_OFFSET) % 10);
+									block_d.Reset(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(block_d);
+									GameObjectManager.Register(block_d);
+
+									m_ObjMap[y][x] = block_d;
+								}
+								break;
+							case R:
+								//逆ドアを生成
+								{
+									var block_r:Block_Door = new Block_Door(true);
+									block_r.SetVal((m_Map[y][x] / VAL_OFFSET) % 10);
+									block_r.Reset(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(block_r);
+									GameObjectManager.Register(block_r);
+
+									m_ObjMap[y][x] = block_r;
 								}
 								break;
 							case M:
@@ -881,6 +927,11 @@ package{
 				m_Root_Game.addChild(m_Game_Cursor);
 			}
 
+			//#Switch
+			{
+				SwitchCounter.Reset();
+			}
+
 			//一度Updateをまわす（位置などの設定のため）
 			{
 				//Cursor
@@ -905,28 +956,14 @@ package{
 					for(var x:int = 0; x < NumX; x += 1){
 						var pos_x:int = (x + 0.5) * ImageManager.PANEL_LEN;
 
-						switch(m_Map[y][x] % VAL_OFFSET){
-						case O://空白
-							break;
-						case W://地形
-							break;
+						switch(GetMapIndex(y, x)){
 						case P://プレイヤー位置（生成後は空白として扱われる）
 							m_Player.Reset(pos_x, pos_y);
 							break;
-						case G://ゴール位置（基本的には空白として扱われる）
-							break;
-						case Q://動かせるブロック（生成後は空白として扱われる）
+						}
+
+						if(m_ObjMap[y][x]){
 							m_ObjMap[y][x].Reset(pos_x, pos_y);
-							break;
-						case M://往復ブロック（生成後は空白として扱われる）
-							m_ObjMap[y][x].Reset(pos_x, pos_y);
-							break;
-						case T://トランポリンブロック
-							m_ObjMap[y][x].Reset(pos_x, pos_y);
-							break;
-						case E://エネミー
-							m_ObjMap[y][x].Reset(pos_x, pos_y);
-							break;
 						}
 					}
 				}
@@ -1071,6 +1108,15 @@ package{
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_Q)){
 						SetBlock(Q, lx, rx, uy, dy);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_S)){
+						SetBlock(S, lx, rx, uy, dy);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_D)){
+						SetBlock(D, lx, rx, uy, dy);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_R)){
+						SetBlock(R, lx, rx, uy, dy);
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_M)){
 //						SetBlock(M, lx, rx, uy, dy);//未完成なのでまだセットできない
@@ -1225,7 +1271,7 @@ package{
 
 					//Check
 					{
-						if(m_Map[y][x] == index){
+						if(GetMapIndex(y, x) == index){
 							continue;//今セットされてる値と同じだったらいじらない
 						}
 					}
@@ -1273,12 +1319,52 @@ package{
 							//動かせるブロックを生成
 							{
 								var block_q:Block_Movable = new Block_Movable();
+								block_q.SetVal((index / VAL_OFFSET) % 10);
 								block_q.Reset(pos_x, pos_y);
 
 								m_Root_Gimmick.addChild(block_q);
 								GameObjectManager.Register(block_q);
 
 								m_ObjMap[y][x] = block_q;
+							}
+							break;
+						case S:
+							//スイッチを生成
+							{
+								var block_s:Block_Switch = new Block_Switch();
+								block_s.SetVal((index / VAL_OFFSET) % 10);
+								block_s.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(block_s);
+								GameObjectManager.Register(block_s);
+
+								m_ObjMap[y][x] = block_s;
+							}
+							break;
+						case D:
+							//ドアを生成
+							{
+								var block_d:Block_Door = new Block_Door(false);
+								block_d.SetVal((index / VAL_OFFSET) % 10);
+								block_d.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(block_d);
+								GameObjectManager.Register(block_d);
+
+								m_ObjMap[y][x] = block_d;
+							}
+							break;
+						case R:
+							//逆ドアを生成
+							{
+								var block_r:Block_Door = new Block_Door(true);
+								block_r.SetVal((index / VAL_OFFSET) % 10);
+								block_r.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(block_r);
+								GameObjectManager.Register(block_r);
+
+								m_ObjMap[y][x] = block_r;
 							}
 							break;
 						case M:
@@ -1338,14 +1424,21 @@ package{
 		//指定範囲のセットの「指定値」をin_Valに変更する
 		public function ChangeVal(in_Val:int, i_LX:int, i_RX:int, i_UY:int, i_DY:int):void{
 			for(var y:int = i_UY; y <= i_DY; y += 1){
+				var pos_y:int = ImageManager.PANEL_LEN * (y + 0.5);
 				for(var x:int = i_LX; x <= i_RX; x += 1){
-					var block_index:int = m_Map[y][x] % VAL_OFFSET;
+					var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
+					var block_index:int = GetMapIndex(y, x);
 
 					switch(block_index){
+					case Q:
+					case S:
+					case D:
+					case R:
 					case M:
 					case T:
-						m_Map[y][x] = int(m_Map[y][x] % VAL_OFFSET) + (in_Val * VAL_OFFSET) + (int(m_Map[y][x] % DIR_OFFSET) * DIR_OFFSET);
+						m_Map[y][x] = block_index + (in_Val * VAL_OFFSET) + (int(m_Map[y][x] % DIR_OFFSET) * DIR_OFFSET);
 						m_ObjMap[y][x].SetVal(in_Val);
+						m_ObjMap[y][x].Reset(pos_x, pos_y);
 						break;
 					}
 				}
@@ -1559,11 +1652,11 @@ package{
 				case 'P': NewMap[y].push(P); break;
 				case 'G': NewMap[y].push(G); break;
 				case 'Q': NewMap[y].push(Q); break;
+				case 'S': NewMap[y].push(S); break;
+				case 'D': NewMap[y].push(D); break;
+				case 'R': NewMap[y].push(R); break;
 				case 'M': NewMap[y].push(M); break;
 				case 'T': NewMap[y].push(T); break;
-				case 'S': NewMap[y].push(S); break;
-				case 'R': NewMap[y].push(R); break;
-				case 'B': NewMap[y].push(B); break;
 				case 'E': NewMap[y].push(E); break;
 				case '0': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*0; break;
 				case '1': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*1; break;

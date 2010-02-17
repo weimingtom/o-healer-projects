@@ -164,8 +164,12 @@ package{
 		 private static var Bitmap_Block_BG: Class;
 		[Embed(source='Hint_W.png')]
 		 private static var Bitmap_Block_Base: Class;
-		[Embed(source='Block_Move.png')]
+		[Embed(source='BlockQ.png')]
 		 private static var Bitmap_Block_Movable: Class;
+		[Embed(source='BlockS.png')]
+		 private static var Bitmap_Block_Switch: Class;
+		[Embed(source='BlockD.png')]
+		 private static var Bitmap_Block_Door: Class;
 		[Embed(source='Block_Move.png')]
 		 private static var Bitmap_Block_Move: Class;
 		[Embed(source='Block_Bounce.png')]
@@ -183,11 +187,11 @@ package{
 			new Bitmap_Hint_Player(),//P:プレイヤー位置（生成後は空白として扱われる）
 			new Bitmap_Goal(),//G:ゴール位置（基本的には空白として扱われる）
 			new Bitmap_Block_Movable(),//Q:動かせるブロック（生成後は空白として扱われる）
+			new Bitmap_Block_Switch(),//S:スイッチ
+			new Bitmap_Block_Door(),//D:ドア
+			new Bitmap_Block_Door(),//R:逆ドア
 			new Bitmap_Block_Move(),//M:往復ブロック（生成後は空白として扱われる）
 			new Bitmap_Block_Trampoline(),//T:トランポリンブロック
-			new Bitmap_Block_Move(),//S:赤青ブロック用の切り替えスイッチ
-			new Bitmap_Block_Move(),//R:赤ブロック
-			new Bitmap_Block_Move(),//B:青ブロック
 			new Bitmap_Hint_Enemy(),//E:エネミー
 			//system
 			new Bitmap_Block_Move(),//C:
@@ -196,11 +200,23 @@ package{
 			new Bitmap_Block_Move(),//SET_DIR:
 		];
 
-		static public function LoadBlockImage(i_BlockIndex:int):Image{
+		static public function LoadBlockImage(i_BlockIndex:int, i_Offset:int = 0):Image{
 			var result:Image = new Image();
 
-			var src_bmp:Bitmap = m_BlockList[i_BlockIndex];
-			var dst_bmp:Bitmap = new Bitmap(src_bmp.bitmapData.clone());
+			var src_bmp:Bitmap;
+			{
+				src_bmp = m_BlockList[i_BlockIndex];
+			}
+
+			var dst_bmp:Bitmap;
+			{
+				var bmp_data:BitmapData = new BitmapData(PANEL_LEN, PANEL_LEN, true, 0x00000000);
+				var mtx : Matrix = new Matrix(1,0,0,1, -i_Offset*PANEL_LEN,0);
+
+				bmp_data.draw(src_bmp, mtx);
+
+				dst_bmp = new Bitmap(bmp_data);
+			}
 
 			//centering
 			dst_bmp.x = -dst_bmp.width/2;
@@ -805,11 +821,11 @@ package{
 			"Ｐ",//P:プレイヤー位置（生成後は空白として扱われる）
 			"Ｇ",//G:ゴール位置（基本的には空白として扱われる）
 			"Ｑ",//Q:動かせるブロック（生成後は空白として扱われる）
+			"Ｓ",//スイッチ
+			"Ｄ",//ドア
+			"Ｒ",//逆ドア
 			"Ｍ",//M:往復ブロック（生成後は空白として扱われる）
 			"Ｔ",//T:トランポリンブロック
-			"Ｓ",//S:赤青ブロック用の切り替えスイッチ
-			"Ｒ",//R:赤ブロック
-			"Ｂ",//B:青ブロック
 			"Ｅ",//E:エネミー
 			//system
 			"Ｃ",//C:
@@ -1137,17 +1153,17 @@ package{
 							//マップの種類に応じた色を設定して
 							var color:uint = 0x000000;
 							{
-								switch(i_Map[y][x]){
+								switch(i_Map[y][x] % Game.VAL_OFFSET){
 								case Game.O: color = 0xFFFFFF; break;
 								case Game.W: color = 0x000000; break;
 								case Game.P: color = 0xFF8800; break;
 								case Game.G: color = 0xDDDD00; break;
 								case Game.Q: color = 0x888888; break;
+								case Game.S: color = 0xFFFF00; break;
+								case Game.D: color = 0x000044; break;
+								case Game.R: color = 0x004400; break;
 								case Game.M: color = 0x444444; break;
 								case Game.T: color = 0x88FF88; break;
-								case Game.S: color = 0xFF00FF; break;
-								case Game.R: color = 0xFF0000; break;
-								case Game.B: color = 0x0000FF; break;
 								case Game.E: color = 0x880000; break;
 								}
 							}
