@@ -164,6 +164,9 @@ package{
 		public var m_VX:Number = 0;
 		public var m_VY:Number = 0;
 
+		public var m_VX_Old:Number = 0;
+		public var m_VY_Old:Number = 0;
+
 		//Flag
 		public var m_GroundFlag:Boolean = false;
 
@@ -406,11 +409,11 @@ package{
 
 				if(PressFlag){
 					//
-					var Vel3D:Vector3D = new Vector3D(Vel.x, Vel.y);
+					var Vel3D:Vector3D = new Vector3D(in_Obj.m_VX_Old, in_Obj.m_VY_Old);
 
-					if(Vel3D.dotProduct(in_Nrm) <= 0.01){//自ら隙間にはまったときは圧死しないよう、速度チェックをする
-						AddPressPowList(in_Nrm);
-					}
+					var PressPowFlag:Boolean = (Vel3D.dotProduct(in_Nrm) <= -0.01);//自ら隙間にはまったときは圧死しないよう、速度チェックをする
+
+					AddPressPowList(in_Nrm, PressPowFlag);
 				}
 			}
 		}
@@ -430,7 +433,7 @@ package{
 		public var m_PressPowList:Array = [];
 
 		//圧力方向を一つ加える
-		public function AddPressPowList(in_Nrm:Vector3D):void{
+		public function AddPressPowList(in_Nrm:Vector3D, i_PressPowFlag:Boolean):void{
 			//新しく加えられた力と、今までに加えられた力が反対方向であれば、挟み込まれていると判断する
 
 			//Check
@@ -444,15 +447,17 @@ package{
 			{
 				var size:int = m_PressPowList.length;
 				for(var i:int = 0; i < size; i += 1){
-					if(m_PressPowList[i].dotProduct(in_Nrm) < -0.99){//ほぼ反対側の力なら（どちらも長さは１と仮定）
-						OnPressDead(in_Nrm);
-						return;
+					if(m_PressPowList[i].nrm.dotProduct(in_Nrm) < -0.99){//ほぼ反対側の力なら（どちらも長さは１と仮定）
+						if(i_PressPowFlag || m_PressPowList[i].flg){//すでにこれまでに圧死方向の速度付きの力がかかっていたら
+							OnPressDead(in_Nrm);
+							return;
+						}
 					}
 				}
 			}
 
 			//次回判定用に追加
-			m_PressPowList.push(in_Nrm);
+			m_PressPowList.push({nrm:in_Nrm, flg:i_PressPowFlag});
 		}
 
 
@@ -519,6 +524,12 @@ package{
 			//Rot
 			{
 				this.rotation = m_Body.GetAngle() * 360/(2*MyMath.PI);
+			}
+
+			//Save Old Param
+			{
+				m_VX_Old = GetVX();
+				m_VY_Old = GetVY();
 			}
 		}
 

@@ -109,7 +109,7 @@ package{
 			//より弱めてみる
 			V *= 0.3;
 /*/
-			var V:Number = m_Val * 40.0;
+			var V:Number = Val * 40.0;
 //*/
 
 			//速度の強制セット

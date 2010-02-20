@@ -547,6 +547,7 @@ package{
 				m_WallList = [];
 			}
 
+			//m_Mapの内容をコピーして、連結したものは消せるようにしておく
 			var CopyMap:Array;
 			{
 				CopyMap = new Array(NumY);
@@ -580,7 +581,7 @@ package{
 					}
 
 					//必要な処理をしつつ、ブロックの生成が必要になったらフラグを立てて伝達
-					var CreateBlockFlag:Boolean = true;
+					var CreateBlockFlag:Boolean = true;//Wなどでなかったらクラスタリング終了とみなし、生成に移るためデフォはtrue
 					{
 						switch(map){
 						case W:
@@ -589,9 +590,8 @@ package{
 								rx = x;
 							}
 
-							//このブロックの上も元々ブロックであれば、横に長くせず、縦に長くする
-							{
-								//上がブロックじゃない時だけフラグを戻す。そうでなければ、下のブロック生成に移行する
+							//横に伸ばす状況ならまだ生成に移らないのでfalseにする
+							{//このブロックの上も元々ブロックであれば、横に長くせず、縦に長くする
 								if(y == 0){CreateBlockFlag = false;}//マップの上辺なら上がブロックなわけはない
 								else
 								if(m_Map[y-1][x] != W){CreateBlockFlag = false;}//一つ上がブロックでなければすぐには生成しない
