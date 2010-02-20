@@ -26,11 +26,13 @@ package{
 		static public const BUTTON_BLOCK_R:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_M:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_T:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_A:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_E:int		= INPUT_COUNTER++;
 		static public const BUTTON_PLAYER_POS:int	= INPUT_COUNTER++;
 		static public const BUTTON_GOAL_POS:int		= INPUT_COUNTER++;
 		//System
 		static public const BUTTON_RANGE:int		= INPUT_COUNTER++;
+		static public const BUTTON_DIR:int			= INPUT_COUNTER++;
 		static public const BUTTON_0:int			= INPUT_COUNTER++;
 		static public const BUTTON_1:int			= INPUT_COUNTER++;
 		static public const BUTTON_2:int			= INPUT_COUNTER++;

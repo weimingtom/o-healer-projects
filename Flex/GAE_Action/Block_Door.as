@@ -30,6 +30,8 @@ package{
 		public var m_filter_ori:b2FilterData;
 		public var m_filter_none:b2FilterData;
 
+		public var m_ProxyID_Ori:uint;
+
 		//==Common==
 
 		//Init
@@ -96,6 +98,8 @@ package{
 					m_filter_none = new b2FilterData();
 					m_filter_none.categoryBits = 0;
 					m_filter_none.maskBits     = 0;
+
+					m_ProxyID_Ori = m_Body.m_shapeList.m_proxyId;
 				}
 
 				if(m_IsOn){
@@ -129,27 +133,31 @@ package{
 		//On
 		public function Change_On():void{
 			//コリジョンオン
-			m_Body.m_shapeList.m_filter = m_filter_ori;
+//			m_Body.m_shapeList.m_filter = m_filter_ori;
+			//コリジョンオフでいじっているものを戻す
+			if(m_Body.m_shapeList.m_proxyId == b2Pair.b2_nullProxy){
+				m_Body.m_shapeList.CreateProxy(PhysManager.Instance.m_World.m_broadPhase, m_Body.m_xf);
+			}
+//			m_Body.m_shapeList.m_proxyId = m_ProxyID_Ori;
+
 			//表示オン
 			this.alpha = 1.0;
-
-			//接触判定の再計算のため、「今接触しているものは何か」をリセット
-//			RemoveSelfFromContactList();
 		}
 
 		//Off
 		public function Change_Off():void{
 			//コリジョンオフ
-			m_Body.m_shapeList.m_filter = m_filter_none;
-			//表示オフ
-			this.alpha = 0.3;
-
+//			m_Body.m_shapeList.m_filter = m_filter_none;
 			//接触判定の再計算のため、「今接触しているものは何か」をリセット
 			RemoveSelfFromContactList();
+
+			//表示オフ
+			this.alpha = 0.3;
 		}
 
 		//接触判定の再計算のための処理
 		public function RemoveSelfFromContactList():void{
+/*
 			//自分とぶつかってるやつ全員のContactListから自分を除去し、自分のContactListもリセットする
 			var iter_self:b2ContactEdge;
 			var iter_other:b2ContactEdge;
@@ -170,7 +178,14 @@ package{
 				iter_self.other.WakeUp();//Sleepしてる場合があるので起こす
 			}
 			m_Body.m_contactList = null;
+//*/
+			m_Body.m_shapeList.DestroyProxy(PhysManager.Instance.m_World.m_broadPhase);
+//			m_Body.m_shapeList.m_proxyId = b2Pair.b2_nullProxy;
 		}
 	}
+
+/*
+	DとRを、それぞれWのように結合させたい
+//*/
 }
 

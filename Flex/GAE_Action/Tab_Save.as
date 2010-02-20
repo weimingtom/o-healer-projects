@@ -79,6 +79,11 @@ package{
 		private var m_LoadButton:Image;
 		private var m_LoadButton_New:Image;
 
+		//#スクロールまわり
+		private var m_Scroll:ScrollSet;
+		private var m_LX:int = 0;
+		private var m_UY:int = 0;
+
 		//#選択したデータまわり
 		private var m_SelectedData:Image;//選択したもの
 		private var m_SelectedIndex:int = -1;//選択されているやつの番号（マイナスなら新規扱い）
@@ -226,6 +231,53 @@ package{
 					//Hide
 					m_LoadButton_New.visible = false;
 				}
+			}
+		}
+
+		//このタブの登録が終わったときに呼ばれる：overrideして使う
+		override public function OnRegister():void{
+			//rootとかを参照する奴はここで
+
+			//Scroll
+			{
+				//Create
+				m_Scroll = new ScrollSet();
+
+				//Mouse
+/*
+				m_Scroll.OnUp = function():void{
+					var now_row:int = int((-m_UY/ZOOM_OUT_SCALE) / THUMBNAIL_OFFSET_Y);
+					var next_row:int = (now_row > 0)? now_row-1: 0;
+					m_UY = next_row * THUMBNAIL_OFFSET_Y;
+					m_UY *= -ZOOM_OUT_SCALE;
+				}
+				m_Scroll.OnDown = function():void{
+					var now_row:int = int((-m_UY/ZOOM_OUT_SCALE) / THUMBNAIL_OFFSET_Y);
+					var num_row:int = (m_ThumbnailCount-1) / THUMBNAIL_NUM_X + 1;
+					var next_row:int = (now_row < num_row-1)? now_row+1: num_row-1;
+					m_UY = next_row * THUMBNAIL_OFFSET_Y;
+					m_UY *= -ZOOM_OUT_SCALE;
+				}
+//*/
+				m_Scroll.ByRatio = function(i_Ratio:Number):void{
+					var num_row:int = (m_ThumbnailCount-1) / THUMBNAIL_NUM_X + 1;
+					var next_row:Number = i_Ratio * (num_row-1);
+					m_UY = next_row * THUMBNAIL_OFFSET_Y;
+					m_UY *= -ZOOM_OUT_SCALE;
+				}
+
+				//Register
+				m_Content.addChild(m_Scroll);
+
+				//Init After Register
+				m_Scroll.Init(Game.TAB_WINDOW_H);
+
+				//Pos
+				m_Scroll.x = Game.TAB_WINDOW_W - ImageManager.TAB_W - m_Scroll.width;
+				m_Scroll.y = 0;
+
+				//Hide
+				m_Scroll.visible = false;
 			}
 		}
 
@@ -483,28 +535,48 @@ package{
 						trgX = -m_SelectedData.x + ZOOM_OUT_OFFSET_X;
 						trgY = -m_SelectedData.y + ZOOM_OUT_OFFSET_Y;
 					}else{
-						trgX = 0;
-						trgY = 0;
+						trgX = m_LX;
+						trgY = m_UY;
 					}
 				}
 
 				switch(m_State){
 				case STATE_LIST://位置をリセット
-					m_ZoomImage.x = 0;
-					m_ZoomImage.y = 0;
+					m_ZoomImage.x = m_LX;
+					m_ZoomImage.y = m_UY;
 					break;
 				case STATE_ZOOM_IN:
-					m_ZoomImage.x = calc_val(0, trgX, ZOOM_IN_TIME);
-					m_ZoomImage.y = calc_val(0, trgY, ZOOM_IN_TIME);
+					m_ZoomImage.x = calc_val(m_LX, trgX, ZOOM_IN_TIME);
+					m_ZoomImage.y = calc_val(m_UY, trgY, ZOOM_IN_TIME);
 					break;
 				case STATE_SELECTED://ターゲットを所定位置に
 					m_ZoomImage.x = trgX;
 					m_ZoomImage.y = trgY;
 					break;
 				case STATE_ZOOM_OUT:
-					m_ZoomImage.x = calc_val(trgX, 0, ZOOM_OUT_TIME);
-					m_ZoomImage.y = calc_val(trgY, 0, ZOOM_OUT_TIME);
+					m_ZoomImage.x = calc_val(trgX, m_LX, ZOOM_OUT_TIME);
+					m_ZoomImage.y = calc_val(trgY, m_UY, ZOOM_OUT_TIME);
 					break;
+				}
+			}
+
+			//Scroll Show&Hide
+			{
+				if(m_Scroll){
+					switch(m_State){
+					case STATE_LIST://この状況の時のみオン
+						m_Scroll.visible = true;
+						break;
+					case STATE_ZOOM_IN:
+						m_Scroll.visible = false;
+						break;
+					case STATE_SELECTED:
+						m_Scroll.visible = false;
+						break;
+					case STATE_ZOOM_OUT:
+						m_Scroll.visible = false;
+						break;
+					}
 				}
 			}
 		}

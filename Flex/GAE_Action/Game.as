@@ -43,6 +43,7 @@ package{
 		static public const R:int = BLOCK_INDEX_COUNTER++;//逆ドア（通常のドアとは逆の動作）
 		static public const M:int = BLOCK_INDEX_COUNTER++;//往復ブロック
 		static public const T:int = BLOCK_INDEX_COUNTER++;//トランポリンブロック
+		static public const A:int = BLOCK_INDEX_COUNTER++;//ダッシュブロック
 		static public const E:int = BLOCK_INDEX_COUNTER++;//エネミー
 		//system
 		static public const C:int			= BLOCK_INDEX_COUNTER++;
@@ -66,6 +67,7 @@ package{
 			"R",
 			"M",
 			"T",
+			"A",
 			"E",
 		];
 
@@ -112,7 +114,9 @@ package{
 		];
 		//Objectへの参照版
 		public var m_ObjMap:Array;
-		public function GetMapIndex(i_Y:int, i_X:int):int{return (m_Map[i_Y][i_X] % VAL_OFFSET);}
+		static public function GetMapIndex(i_Val:int):int{return (i_Val % VAL_OFFSET);}
+		static public function GetMapVal(i_Val:int):int{return (int(i_Val / VAL_OFFSET) % 10);}
+		static public function GetMapDir(i_Val:int):int{return (int(i_Val / DIR_OFFSET) % 10);}
 
 		//＃Input
 		public var m_Input:CInput_Keyboard;
@@ -294,7 +298,7 @@ package{
 						for(x = 0; x < NumX; x += 1){
 							var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
 
-							switch(GetMapIndex(y, x)){
+							switch(GetMapIndex(m_Map[y][x])){
 							case O:
 								//空白なので何もしない
 								break;
@@ -391,6 +395,20 @@ package{
 									GameObjectManager.Register(block_t);
 
 									m_ObjMap[y][x] = block_t;
+								}
+								break;
+							case A:
+								//ダッシュブロックを生成
+								{
+									var block_a:Block_Accel = new Block_Accel();
+									block_a.SetVal(GetMapVal(m_Map[y][x]));
+									block_a.SetDir(GetMapDir(m_Map[y][x]));
+									block_a.Reset(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(block_a);
+									GameObjectManager.Register(block_a);
+
+									m_ObjMap[y][x] = block_a;
 								}
 								break;
 							case E:
@@ -905,12 +923,12 @@ package{
 					var TabWindowH:int = TAB_WINDOW_H;
 
 					m_TabWindow = new TabWindow(TabWindowX, TabWindowY, TabWindowW, TabWindowH);
+					m_TabWindowLayer.addChild(m_TabWindow);
+
 					m_TabWindow.AddTab(new Tab_Hint());
 					m_TabWindow.AddTab(new Tab_Setting());
 					m_TabWindow.AddTab(new Tab_Save());
 					m_TabWindow.AddTab(new Tab_Upload());
-
-					m_TabWindowLayer.addChild(m_TabWindow);
 				}
 			}
 
@@ -956,7 +974,7 @@ package{
 					for(var x:int = 0; x < NumX; x += 1){
 						var pos_x:int = (x + 0.5) * ImageManager.PANEL_LEN;
 
-						switch(GetMapIndex(y, x)){
+						switch(GetMapIndex(m_Map[y][x])){
 						case P://プレイヤー位置（生成後は空白として扱われる）
 							m_Player.Reset(pos_x, pos_y);
 							break;
@@ -1025,32 +1043,36 @@ package{
 				{
 					var MoveFlag:Boolean = false;
 
-					//Dstを普通に更新
-					if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_L)){
-						m_CursorIndexDstX -= 1;
-						if(m_CursorIndexDstX < 0){m_CursorIndexDstX = m_Map[0].length-1;}
-						MoveFlag = true;
-					}
-					if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_R)){
-						m_CursorIndexDstX += 1;
-						if(m_CursorIndexDstX >= m_Map[0].length){m_CursorIndexDstX = 0;}
-						MoveFlag = true;
-					}
-					if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_U)){
-						m_CursorIndexDstY -= 1;
-						if(m_CursorIndexDstY < 0){m_CursorIndexDstY = m_Map.length-1;}
-						MoveFlag = true;
-					}
-					if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_D)){
-						m_CursorIndexDstY += 1;
-						if(m_CursorIndexDstY >= m_Map.length){m_CursorIndexDstY = 0;}
-						MoveFlag = true;
-					}
+					if(! m_Input.IsPress(IInput.BUTTON_DIR)){
+						//カーソル移動
 
-					//範囲選択でなければSrcにも反映
-					if(MoveFlag && ! m_Input.IsPress(IInput.BUTTON_RANGE)){
-						m_CursorIndexSrcX = m_CursorIndexDstX;
-						m_CursorIndexSrcY = m_CursorIndexDstY;
+						//Dstを普通に更新
+						if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_L)){
+							m_CursorIndexDstX -= 1;
+							if(m_CursorIndexDstX < 0){m_CursorIndexDstX = m_Map[0].length-1;}
+							MoveFlag = true;
+						}
+						if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_R)){
+							m_CursorIndexDstX += 1;
+							if(m_CursorIndexDstX >= m_Map[0].length){m_CursorIndexDstX = 0;}
+							MoveFlag = true;
+						}
+						if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_U)){
+							m_CursorIndexDstY -= 1;
+							if(m_CursorIndexDstY < 0){m_CursorIndexDstY = m_Map.length-1;}
+							MoveFlag = true;
+						}
+						if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_D)){
+							m_CursorIndexDstY += 1;
+							if(m_CursorIndexDstY >= m_Map.length){m_CursorIndexDstY = 0;}
+							MoveFlag = true;
+						}
+
+						//範囲選択でなければSrcにも反映
+						if(MoveFlag && ! m_Input.IsPress(IInput.BUTTON_RANGE)){
+							m_CursorIndexSrcX = m_CursorIndexDstX;
+							m_CursorIndexSrcY = m_CursorIndexDstY;
+						}
 					}
 				}
 
@@ -1098,6 +1120,24 @@ package{
 					}
 				}
 
+				//方向指定
+				{
+					if(m_Input.IsPress(IInput.BUTTON_DIR)){
+						if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_L)){
+							ChangeDir(IGameObject.DIR_L, lx, rx, uy, dy);
+						}
+						if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_R)){
+							ChangeDir(IGameObject.DIR_R, lx, rx, uy, dy);
+						}
+						if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_U)){
+							ChangeDir(IGameObject.DIR_U, lx, rx, uy, dy);
+						}
+						if(m_Input.IsPress_Edge(IInput.BUTTON_CURSOR_D)){
+							ChangeDir(IGameObject.DIR_D, lx, rx, uy, dy);
+						}
+					}
+				}
+
 				//ブロックのセット
 				{
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_O)){
@@ -1123,6 +1163,9 @@ package{
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_T)){
 						SetBlock(T, lx, rx, uy, dy);
+					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_A)){
+						SetBlock(A, lx, rx, uy, dy);
 					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_E)){
 						SetBlock(E, lx, rx, uy, dy);
@@ -1271,7 +1314,7 @@ package{
 
 					//Check
 					{
-						if(GetMapIndex(y, x) == index){
+						if(GetMapIndex(m_Map[y][x]) == index){
 							continue;//今セットされてる値と同じだったらいじらない
 						}
 					}
@@ -1393,6 +1436,20 @@ package{
 								m_ObjMap[y][x] = block_t;
 							}
 							break;
+						case A:
+							//ダッシュブロックを生成
+							{
+								var block_a:Block_Accel = new Block_Accel();
+								block_a.SetVal(GetMapVal(index));
+								block_a.SetDir(GetMapDir(index));
+								block_a.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(block_a);
+								GameObjectManager.Register(block_a);
+
+								m_ObjMap[y][x] = block_a;
+							}
+							break;
 						case E:
 							//エネミーを生成
 							{
@@ -1427,17 +1484,35 @@ package{
 				var pos_y:int = ImageManager.PANEL_LEN * (y + 0.5);
 				for(var x:int = i_LX; x <= i_RX; x += 1){
 					var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
-					var block_index:int = GetMapIndex(y, x);
 
-					switch(block_index){
+					switch(GetMapIndex(m_Map[y][x])){
 					case Q:
 					case S:
 					case D:
 					case R:
 					case M:
 					case T:
-						m_Map[y][x] = block_index + (in_Val * VAL_OFFSET) + (int(m_Map[y][x] % DIR_OFFSET) * DIR_OFFSET);
+					case A:
+						m_Map[y][x] = GetMapIndex(m_Map[y][x]) + (in_Val * VAL_OFFSET) + (GetMapDir(m_Map[y][x]) * DIR_OFFSET);
 						m_ObjMap[y][x].SetVal(in_Val);
+						m_ObjMap[y][x].Reset(pos_x, pos_y);
+						break;
+					}
+				}
+			}
+		}
+
+		//指定範囲のセットの「指定方向」をin_Dirに変更する
+		public function ChangeDir(in_Dir:int, i_LX:int, i_RX:int, i_UY:int, i_DY:int):void{
+			for(var y:int = i_UY; y <= i_DY; y += 1){
+				var pos_y:int = ImageManager.PANEL_LEN * (y + 0.5);
+				for(var x:int = i_LX; x <= i_RX; x += 1){
+					var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
+
+					switch(GetMapIndex(m_Map[y][x])){
+					case A:
+						m_Map[y][x] = GetMapIndex(m_Map[y][x]) + (GetMapVal(m_Map[y][x]) * VAL_OFFSET) + (in_Dir * DIR_OFFSET);
+						m_ObjMap[y][x].SetDir(in_Dir);
 						m_ObjMap[y][x].Reset(pos_x, pos_y);
 						break;
 					}
@@ -1621,13 +1696,25 @@ package{
 				"9",
 			];
 
+			const Dir2Char:Array = [
+				"u",
+				"d",
+				"l",
+				"r",
+			];
+
 			for(var y:int = 0; y < i_Map.length; y += 1){
 				for(var x:int = 0; x < i_Map[y].length; x += 1){
 					result = result + MapIndex2Char[i_Map[y][x] % VAL_OFFSET];
 
-					var val:int = i_Map[y][x] / VAL_OFFSET; val %= 10;
+					var val:int = GetMapVal(i_Map[y][x]);
 					if(val > 0){
 						result = result + Number2Char[val];
+					}
+
+					var dir:int = GetMapDir(i_Map[y][x]);
+					if(dir > 0){
+						result = result + Dir2Char[dir];
 					}
 				}
 
@@ -1657,6 +1744,7 @@ package{
 				case 'R': NewMap[y].push(R); break;
 				case 'M': NewMap[y].push(M); break;
 				case 'T': NewMap[y].push(T); break;
+				case 'A': NewMap[y].push(A); break;
 				case 'E': NewMap[y].push(E); break;
 				case '0': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*0; break;
 				case '1': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*1; break;
@@ -1668,6 +1756,10 @@ package{
 				case '7': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*7; break;
 				case '8': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*8; break;
 				case '9': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*9; break;
+				case 'l': NewMap[y][NewMap[y].length-1] += DIR_OFFSET*IGameObject.DIR_L; break;
+				case 'r': NewMap[y][NewMap[y].length-1] += DIR_OFFSET*IGameObject.DIR_R; break;
+				case 'u': NewMap[y][NewMap[y].length-1] += DIR_OFFSET*IGameObject.DIR_U; break;
+				case 'd': NewMap[y][NewMap[y].length-1] += DIR_OFFSET*IGameObject.DIR_D; break;
 				case '_': NewMap.push([]); y += 1; break;
 				}
 			}

@@ -110,6 +110,7 @@ package{
 			case KEY_R:				m_Input[BUTTON_BLOCK_R] = true;	break;
 			case KEY_M:				m_Input[BUTTON_BLOCK_M] = true;	break;
 			case KEY_T:				m_Input[BUTTON_BLOCK_T] = true;	break;
+			case KEY_A:				m_Input[BUTTON_BLOCK_A] = true;	break;
 			case KEY_E:				m_Input[BUTTON_BLOCK_E] = true;	break;
 
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = true;	break;
@@ -128,6 +129,7 @@ package{
 			}
 
 			if(event.shiftKey){		m_Input[BUTTON_RANGE] = true;}
+			if(event.ctrlKey){		m_Input[BUTTON_DIR] = true;}
 		}
 		private function OnKeyUp(event:KeyboardEvent):void{
 			switch(event.keyCode){
@@ -165,6 +167,7 @@ package{
 			case KEY_R:				m_Input[BUTTON_BLOCK_R] = false;	break;
 			case KEY_M:				m_Input[BUTTON_BLOCK_M] = false;	break;
 			case KEY_T:				m_Input[BUTTON_BLOCK_T] = false;	break;
+			case KEY_A:				m_Input[BUTTON_BLOCK_A] = false;	break;
 			case KEY_E:				m_Input[BUTTON_BLOCK_E] = false;	break;
 
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = false;	break;
@@ -183,6 +186,7 @@ package{
 			}
 
 			if(! event.shiftKey){		m_Input[BUTTON_RANGE] = false;}
+			if(! event.ctrlKey){		m_Input[BUTTON_DIR] = false;}
 		}
 
 		//i_Buttonが現在押されているか

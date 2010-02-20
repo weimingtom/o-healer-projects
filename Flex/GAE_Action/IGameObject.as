@@ -82,10 +82,10 @@ package{
 		}
 
 		//セット時に指定される方向
-		static public const DIR_L:int = 0;
-		static public const DIR_R:int = 1;
-		static public const DIR_U:int = 2;
-		static public const DIR_D:int = 3;
+		static public const DIR_U:int = 0;//default
+		static public const DIR_D:int = 1;
+		static public const DIR_L:int = 2;
+		static public const DIR_R:int = 3;
 
 		public var m_Dir:int = DIR_U;
 

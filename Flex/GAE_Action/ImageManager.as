@@ -174,6 +174,8 @@ package{
 		 private static var Bitmap_Block_Move: Class;
 		[Embed(source='Block_Bounce.png')]
 		 private static var Bitmap_Block_Trampoline: Class;
+		[Embed(source='BlockA.png')]
+		 private static var Bitmap_Block_Accel: Class;
 		[Embed(source='Hint_P.png')]
 		 private static var Bitmap_Hint_Player: Class;
 		[Embed(source='EnemyRolling.png')]
@@ -192,6 +194,7 @@ package{
 			new Bitmap_Block_Door(),//R:逆ドア
 			new Bitmap_Block_Move(),//M:往復ブロック（生成後は空白として扱われる）
 			new Bitmap_Block_Trampoline(),//T:トランポリンブロック
+			new Bitmap_Block_Accel(),//A:ダッシュブロック
 			new Bitmap_Hint_Enemy(),//E:エネミー
 			//system
 			new Bitmap_Block_Move(),//C:
@@ -810,6 +813,66 @@ package{
 				mtx_for_gradation_of_tab//mtx
 			);
 			//グラフィックス.beginGradientFill ( "種類" , [カラー] , [透明度] , [配分] , 行列 , "スプレッド" , "補完" , 焦点 );
+		}
+
+		//#Scroll
+
+		[Embed(source='ScrollButton_Up.png')]
+		 private static var Bitmap_Scroll_Up: Class;
+		[Embed(source='ScrollButton_Down.png')]
+		 private static var Bitmap_Scroll_Down: Class;
+		[Embed(source='ScrollButton_Bar.png')]
+		 private static var Bitmap_Scroll_Bar: Class;
+
+		static public function CreateScrollImage_Up():Image{
+			var bmp:Bitmap = new Bitmap_Scroll_Up();
+			var img:Image = new Image();
+			img.addChild(bmp);
+			img.width = bmp.width;
+			img.height = bmp.height;
+			return img;
+		}
+
+		static public function CreateScrollImage_Down():Image{
+			var bmp:Bitmap = new Bitmap_Scroll_Down();
+			var img:Image = new Image();
+			img.addChild(bmp);
+			img.width = bmp.width;
+			img.height = bmp.height;
+			return img;
+		}
+
+		static public function CreateScrollImage_Bar(i_H:int):Image{
+			var bmp:Bitmap = new Bitmap_Scroll_Bar();
+			if(i_H/2 < bmp.height){
+				bmp.scaleY = i_H/2 / bmp.height;
+			}
+			var img:Image = new Image();
+			img.addChild(bmp);
+			img.width = bmp.width;
+			img.height = bmp.height;
+			return img;
+		}
+
+		static public function CreateScrollImage_UnderBar(i_H:int):Image{
+			const color:uint = 0x000000;
+			const alpha:Number = 0.8;
+			const line_w:int = 8;
+
+			var shape:Shape = new Shape();
+			{
+				var g:Graphics = shape.graphics;
+
+				g.lineStyle(line_w, color, alpha);
+				g.moveTo(16, line_w);
+				g.lineTo(16, i_H - line_w);
+			}
+
+			var img:Image = new Image();
+			img.addChild(shape);
+			img.width = 32;
+			img.height = i_H;
+			return img;
 		}
 
 		//#Tab : Hint
