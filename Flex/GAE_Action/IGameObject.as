@@ -523,7 +523,9 @@ package{
 
 			//Rot
 			{
-				this.rotation = m_Body.GetAngle() * 360/(2*MyMath.PI);
+//				this.rotation = m_Body.GetAngle() * 360/(2*MyMath.PI);
+				//どうもm_Body.GetAngle()は無限に＋－方向に増減するようで、rotationの許容範囲を越えてしまうようなので補正をかける
+				this.rotation = MyMath.Atan(MyMath.Sin(m_Body.GetAngle()), MyMath.Cos(m_Body.GetAngle())) * 360/(2*MyMath.PI);
 			}
 
 			//Save Old Param

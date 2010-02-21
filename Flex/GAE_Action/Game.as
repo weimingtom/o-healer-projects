@@ -142,6 +142,10 @@ package{
 
 		static public var InitFlag:Boolean = false;//どうもウィンドウとかの切り替えで再度Initが呼ばれてるような気がするので、必ず一度だけになるようにしておく
 
+		static public var m_PauseFlag:Boolean = false;//普通のプレイでも最初の部分は表示することにしたので、普通のInitならPauseを立てて、UnPauseされるまで待機
+		public function Pause():void{m_PauseFlag = true;}
+		public function UnPause():void{m_PauseFlag = false;}
+
 		//!stageなどの初期化が終了した後に呼んでもらう
 		public function Init(in_MapStr:String = null):void{
 			//Check
@@ -151,6 +155,11 @@ package{
 				}
 
 				InitFlag = true;
+			}
+
+			//Flag
+			{
+				Pause();
 			}
 
 			//==Common Init==
@@ -675,6 +684,13 @@ package{
 		private function Update():void{
 			var deltaTime:Number = GetDeltaTime();
 
+			//Check
+			{
+				if(m_PauseFlag){
+					return;
+				}
+			}
+
 			//Input
 			{
 				UpdateInput();
@@ -832,6 +848,7 @@ package{
 //		public var   m_Game_Root:Imagge;//ゲーム画面のレイヤー（上にあるやつを使う）
 		public var    m_Game_Cursor:Image;//カーソル表示用レイヤー
 		public var   m_Game_Frame:Image;//ゲーム画面まわりの額縁用レイヤー
+		public var   m_Game_Instruction:Image;//プレイ説明画像用レイヤー
 		public var  m_TabWindowLayer:Image;
 
 		//ゲームの枠
@@ -895,6 +912,11 @@ package{
 							//m_Game_Frame
 							m_Game_Frame = new Image();
 							m_GameLayer.addChild(m_Game_Frame);
+
+							//m_Game_Instruction
+							m_Game_Instruction = new Image();
+							m_GameLayer.addChild(m_Game_Instruction);
+							m_Game_Instruction.x = CAMERA_W + 2*ImageManager.GAME_FRAME_W + 50 + ImageManager.TAB_W;
 						}
 
 						//m_TabWindowLayer
@@ -907,6 +929,12 @@ package{
 				{
 					m_GameFrameImage = ImageManager.CreateGameFrameImage(CAMERA_W, CAMERA_H);
 					m_Game_Frame.addChild(m_GameFrameImage);
+				}
+
+				//インスト（操作説明）
+				{
+					var GameInstImage:Image = ImageManager.CreatePlayStartImage(TAB_WINDOW_W-ImageManager.TAB_W, this.height);
+					m_Game_Instruction.addChild(GameInstImage);
 				}
 
 				//カーソル
@@ -1231,6 +1259,8 @@ package{
 			//Reset
 			{
 				Reset();//!!要る？
+
+				UnPause();//Initを呼ぶとPauseがかかっているので（一応毎回呼んでみる）
 			}
 
 			//表示切替

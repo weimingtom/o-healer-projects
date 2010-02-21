@@ -2,8 +2,8 @@
 差し替える場合、FSMなどの素材を「GIMPで透明レイヤー追加＆背景色を選択＆削除」で透明色に対応させるなどしてください。
 
 フォントに関しては著作権とサイズの問題があるのでアップロードしていません。
-使用しているフォントは「梅フォント」の「ume-tgc4.ttf」です。
-http://sourceforge.jp/projects/ume-font/wiki/FrontPage からダウンロードして下さい。
+使用しているフォントは「M+フォント」の「mplus-1m-medium.ttf」です。
+http://mplus-fonts.sourceforge.jp/mplus-outline-fonts/download/index.html からダウンロードして下さい。
 
 フォントを全て内部に組み込むと、サイズが大きくなり、ロード時間も長くなるため、実際に使う文字だけを組み込んでいます。
 convert.batを実行するとconvert.rbが実行され、全ての「～.as」の中の文字を「使う文字」としてMyFont.asに入れます。そのため、コメントなど実際の表示には使われない文字も採用されますが、個人的に許容できる範囲なのでそのままにしています。

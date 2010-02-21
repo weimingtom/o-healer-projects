@@ -12,15 +12,14 @@
 			//最初のロード完了時の初期化
 			private function init():void{
 				//幅を、実際のゲーム画面に合わせる
-				MyViewStack.width  = Game.CAMERA_W;
-				MyViewStack.height = Game.CAMERA_H;
-				button_to_start.width  = Game.CAMERA_W;
-				button_to_start.height = Game.CAMERA_H;
-			}
+				button_to_start.addChild(ImageManager.CreatePlayStartImage(Game.CAMERA_W, Game.CAMERA_H));
 
-			//ボタンが押されて開始する時の処理
-			private function start():void{
-				MyViewStack.selectedChild = main_game;
+				button_to_start.addEventListener(
+					MouseEvent.CLICK,//クリックされたら
+					function(e:Event):void{
+						start();
+					}//投稿処理を実行する
+				);
 
 				var map_str:String;
 				{
@@ -31,16 +30,20 @@
 				}
 				main_game.Init(map_str);
 			}
+
+			//ボタンが押されて開始する時の処理
+			private function start():void{
+				button_to_start.visible = false;
+
+				main_game.UnPause();
+			}
 		]]>
 	</mx:Script>
 
 
 	<!--View-->
-	<mx:ViewStack id="MyViewStack" width="10" height="10">
-		<mx:HBox borderStyle="none">
-			<mx:Button id="button_to_start" label="Click to Start" buttonDown="start()" width="10" height="10"/>
-		</mx:HBox>
-
-		<comp:Game id="main_game" borderStyle="solid"/>
-	</mx:ViewStack>
+	<mx:Canvas id="main_canvas">
+		<comp:Game id="main_game"/>
+		<mx:Image id="button_to_start"/>
+	</mx:Canvas>
 </mx:Application>

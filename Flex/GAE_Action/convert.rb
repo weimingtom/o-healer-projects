@@ -29,8 +29,8 @@ text_out = open("MyFont.as", "w")
 text_out.puts "package{"
 	text_out.puts "\tpublic class MyFont{"
 		text_out.puts "\t\t[Embed("
-			text_out.puts "\t\t\tsource='ume-tgc4.ttf',"
-			text_out.puts "\t\t\tfontName='ume',"
+			text_out.puts "\t\t\tsource='mplus-1m-medium.ttf',"
+			text_out.puts "\t\t\tfontName='system',"
 			text_out.print "\t\t\tunicodeRange='"
 			h.each_key {|key| text_out.print key + ","}
 			text_out.puts "'"

@@ -6,10 +6,12 @@ package{
 	import flash.utils.*;
 	import flash.geom.*;
 	import flash.filters.*;
+	import flash.net.*;
 	//mxml
 	import mx.core.*;
 	import mx.containers.*;
 	import mx.controls.*;
+	import mx.graphics.codec.*;
 
 	public class ImageManager{
 		//==Font==
@@ -34,6 +36,68 @@ package{
 			var bmp_data:BitmapData = new BitmapData(Game.Instance().width, Game.Instance().height, true, 0x00000000);
 			return new Bitmap(bmp_data);
 		}
+
+
+		//#プレイ開始画面
+
+/*
+		[Embed(source='PlayStart.png')]
+		 private static var Bitmap_PlayStart: Class;
+
+		static public function CreatePlayStartImage(i_W:int, i_H:int):Image{
+			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0x00000000);
+			{
+				var src_bmp:Bitmap = new Bitmap_PlayStart();
+
+				var offset_x:int = i_W/2 - src_bmp.width/2;
+				var offset_y:int = i_H/2 - src_bmp.height/2;
+
+				var bg_color:uint = src_bmp.bitmapData.getPixel32(0,0);
+				var bg_color_trans:uint = (bg_color & 0xFFFFFF) + (int(0xFF * 0.91) << 24);
+
+				//clear
+				bmp_data.fillRect(bmp_data.rect, bg_color_trans);
+
+				for(var y:int = 0; y < src_bmp.height; y++){
+					for(var x:int = 0; x < src_bmp.width; x++){
+						if(bg_color == src_bmp.bitmapData.getPixel32(x, y)){
+							bmp_data.setPixel32(offset_x + x, offset_y + y, bg_color_trans);
+						}else{
+							bmp_data.setPixel32(offset_x + x, offset_y + y, src_bmp.bitmapData.getPixel32(x, y));
+						}
+					}
+				}
+			}
+
+			//Save
+			(new FileReference).save((new PNGEncoder()).encode(bmp_data), "PlayStartTrans.png");
+
+			var img:Image = new Image();
+			img.addChild(new Bitmap(bmp_data));
+			return img;
+		}
+/*/
+		[Embed(source='PlayStartTrans.png')]
+		 private static var Bitmap_PlayStart: Class;
+
+		static public function CreatePlayStartImage(i_W:int, i_H:int):Image{
+			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0x00000000);
+			{
+				var src_bmp:Bitmap = new Bitmap_PlayStart();
+
+				//draw
+				var mtx : Matrix = new Matrix(1,0,0,1, -src_bmp.width/2 + i_W/2, -src_bmp.height/2 + i_H/2);
+				bmp_data.draw(src_bmp, mtx);
+
+				//Clear Rest
+				bmp_data.floodFill(0, 0, src_bmp.bitmapData.getPixel32(0,0));
+			}
+
+			var img:Image = new Image();
+			img.addChild(new Bitmap(bmp_data));
+			return img;
+		}
+//*/
 
 
 		//＃BG
@@ -381,6 +445,68 @@ package{
 		}
 
 
+		//#エディタ開始画面
+
+/*
+		[Embed(source='EditStart.png')]
+		 private static var Bitmap_EditStart: Class;
+
+		static public function CreateEditorStartImage(i_W:int, i_H:int):Image{
+			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0x00000000);
+			{
+				var src_bmp:Bitmap = new Bitmap_EditStart();
+
+				var offset_x:int = i_W/2 - src_bmp.width/2;
+				var offset_y:int = i_H/2 - src_bmp.height/2;
+
+				var bg_color:uint = src_bmp.bitmapData.getPixel32(0,0);
+				var bg_color_trans:uint = (bg_color & 0xFFFFFF) + (int(0xFF * 0.91) << 24);
+
+				//clear
+				bmp_data.fillRect(bmp_data.rect, bg_color_trans);
+
+				for(var y:int = 0; y < src_bmp.height; y++){
+					for(var x:int = 0; x < src_bmp.width; x++){
+						if(bg_color == src_bmp.bitmapData.getPixel32(x, y)){
+							bmp_data.setPixel32(offset_x + x, offset_y + y, bg_color_trans);
+						}else{
+							bmp_data.setPixel32(offset_x + x, offset_y + y, src_bmp.bitmapData.getPixel32(x, y));
+						}
+					}
+				}
+			}
+
+			//Save
+			(new FileReference).save((new PNGEncoder()).encode(bmp_data), "EditStartTrans.png");
+
+			var img:Image = new Image();
+			img.addChild(new Bitmap(bmp_data));
+			return img;
+		}
+/*/
+		[Embed(source='EditStartTrans.png')]
+		 private static var Bitmap_EditStart: Class;
+
+		static public function CreateEditorStartImage(i_W:int, i_H:int):Image{
+			var bmp_data:BitmapData = new BitmapData(i_W, i_H, true, 0x00000000);
+			{
+				var src_bmp:Bitmap = new Bitmap_EditStart();
+
+				//draw
+				var mtx : Matrix = new Matrix(1,0,0,1, -src_bmp.width/2 + i_W/2, -src_bmp.height/2 + i_H/2);
+				bmp_data.draw(src_bmp, mtx);
+
+				//Clear Rest
+				bmp_data.floodFill(0, 0, src_bmp.bitmapData.getPixel32(0,0));
+			}
+
+			var img:Image = new Image();
+			img.addChild(new Bitmap(bmp_data));
+			return img;
+		}
+//*/
+
+
 		//#ゲームの枠
 
 		static public const GAME_FRAME_W:int = 16;
@@ -633,6 +759,7 @@ package{
 				var tf:TextField = new TextField();
 				tf.selectable = false;
 				tf.autoSize = TextFieldAutoSize.LEFT;
+/*
 				tf.filters = [
 					new GlowFilter(
 						text_frame_color,
@@ -642,13 +769,14 @@ package{
 						1//Quality
 					),
 				];
+//*/
 
 				for(var i:int = 0; i < i_TabName.length; i += 1){
 /*
 					tf.text = i_TabName.charAt(i);
 /*/
 					tf.embedFonts = true;
-					tf.htmlText = "<font face='ume' size='" + ori_size.toString() + "'>" + i_TabName.charAt(i) + "</font>";
+					tf.htmlText = "<font face='system' size='" + ori_size.toString() + "'>" + i_TabName.charAt(i) + "</font>";
 //*/
 //					tf.width = tf.textWidth;
 //					tf.height = tf.textHeight;
@@ -889,6 +1017,7 @@ package{
 			"Ｒ",//逆ドア
 			"Ｍ",//M:往復ブロック（生成後は空白として扱われる）
 			"Ｔ",//T:トランポリンブロック
+			"Ａ",//A:ダッシュブロック
 			"Ｅ",//E:エネミー
 			//system
 			"Ｃ",//C:
@@ -928,7 +1057,14 @@ package{
 					matrix.tx = HINT_FRAME_RAD + 16;
 					matrix.ty = HINT_FRAME_RAD + 16;
 
+					if(i_Index == Game.R){
+						//img_block.alpha = 0.3;
+						ct.alphaMultiplier = 0.3;
+					}
+
 					bmp_data.draw(img_block, matrix, ct, BlendMode.NORMAL, rect, true);
+
+					ct.alphaMultiplier = 1.0;
 				}
 
 				//枠：円
@@ -1309,13 +1445,13 @@ package{
 
 					var matrix : Matrix = new Matrix(1,0,0,1, 2,6);
 
-					tf.htmlText = "<font face='ume' size='14'>" + "ここに" + "</font>";
+					tf.htmlText = "<font face='system' size='14'>" + "ここに" + "</font>";
 
 					bmp.bitmapData.draw(tf, matrix, ct);
 
 					matrix.ty += 16;
 
-					tf.htmlText = "<font face='ume' size='14'>" + "上書き" + "</font>";
+					tf.htmlText = "<font face='system' size='14'>" + "上書き" + "</font>";
 
 					bmp.bitmapData.draw(tf, matrix, ct);
 				}
@@ -1378,13 +1514,13 @@ package{
 
 					var matrix : Matrix = new Matrix(1,0,0,1, 2,6);
 
-					tf.htmlText = "<font face='ume' size='14'>" + "これを" + "</font>";
+					tf.htmlText = "<font face='system' size='14'>" + "これを" + "</font>";
 
 					bmp.bitmapData.draw(tf, matrix, ct);
 
 					matrix.ty += 16;
 
-					tf.htmlText = "<font face='ume' size='14'>" + "投稿" + "</font>";
+					tf.htmlText = "<font face='system' size='14'>" + "投稿" + "</font>";
 
 					bmp.bitmapData.draw(tf, matrix, ct);
 				}
@@ -1400,8 +1536,32 @@ package{
 		static public function CreateUploadComopleteImage():Image{
 			var bmp:Bitmap = CreateHugeBitmap();//画面全体を多うBitmapを作成
 
-			//!!test
-			bmp.bitmapData.fillRect(bmp.bitmapData.rect, 0x80FFFFFF);
+			//clear
+			{
+				bmp.bitmapData.fillRect(bmp.bitmapData.rect, 0x80FFFFFF);
+			}
+
+			//文字
+			{
+				var tf:TextField = new TextField();
+				tf.selectable = false;
+				tf.autoSize = TextFieldAutoSize.LEFT;
+				tf.embedFonts = true;
+
+				var ct : ColorTransform = new ColorTransform(1,1,1,1, 0,0,0,0);//
+
+				var matrix : Matrix = new Matrix(1,0,0,1, 0,0);
+
+				//
+				{
+					tf.htmlText = "<font face='system' size='48'>" + "投 稿 完 了 ！" + "</font>";
+
+					matrix.tx = bmp.width/2 - tf.width/2;
+					matrix.ty = bmp.height*1/4 - tf.height/2;
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+				}
+			}
 
 			var img:Image = new Image();
 			img.addChild(bmp);
@@ -1413,8 +1573,52 @@ package{
 		static public function CreateUploadFailImage():Image{
 			var bmp:Bitmap = CreateHugeBitmap();//画面全体を多うBitmapを作成
 
-			//!!test
-			bmp.bitmapData.fillRect(bmp.bitmapData.rect, 0x80000000);
+			//clear
+			{
+				bmp.bitmapData.fillRect(bmp.bitmapData.rect, 0x80000000);
+			}
+
+			//文字
+			{
+				var tf:TextField = new TextField();
+				tf.selectable = false;
+				tf.autoSize = TextFieldAutoSize.LEFT;
+				tf.embedFonts = true;
+
+				var ct : ColorTransform = new ColorTransform(1,1,1,1, 0,0,0,0);//
+
+				var matrix : Matrix = new Matrix(1,0,0,1, 0,0);
+
+				//
+				{
+					tf.htmlText = "<font face='system' size='48'>" + "投稿が失敗しました" + "</font>";
+
+					matrix.tx = bmp.width/2 - tf.width/2;
+					matrix.ty = bmp.height*1/4 - tf.height/2;
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+				}
+
+				//
+				{
+					tf.htmlText = "<font face='system' size='32'>" + "メンテ中かもしれません" + "</font>";
+
+					matrix.tx = bmp.width/2 - tf.width/2;
+					matrix.ty = bmp.height*5/8 - tf.height/2;
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+				}
+
+				//
+				{
+					tf.htmlText = "<font face='system' size='32'>" + "１時間ほど後に投稿してみてください" + "</font>";
+
+					matrix.tx = bmp.width/2 - tf.width/2;
+					matrix.ty = bmp.height*7/8 - tf.height/2;
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+				}
+			}
 
 			var img:Image = new Image();
 			img.addChild(bmp);

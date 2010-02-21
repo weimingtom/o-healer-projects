@@ -16,10 +16,14 @@
 			//最初のロード完了時の初期化
 			private function init():void{
 				//幅を、実際のゲーム画面に合わせる
-				button_to_start.width  = EDITOR_W;
-				button_to_start.height = EDITOR_H;
+				button_to_start.addChild(ImageManager.CreateEditorStartImage(EDITOR_W, EDITOR_H));
 
-				button_to_start.label = "現在開発中です。\nローカルにのみ保存できます";
+				button_to_start.addEventListener(
+					MouseEvent.CLICK,//クリックされたら
+					function(e:Event):void{
+						start();
+					}//投稿処理を実行する
+				);
 
 				main_game.Init_ForEditor(EDITOR_W, EDITOR_H);
 			}
@@ -33,8 +37,8 @@
 
 
 	<!--View-->
-	<mx:Canvas>
+	<mx:Canvas id="main_canvas">
 		<comp:Game id="main_game"/>
-		<mx:Button id="button_to_start" label="Click to Start" buttonDown="start()" width="10" height="10" fillAlphas="[0.9,0.8]"/>
+		<mx:Image id="button_to_start"/>
 	</mx:Canvas>
 </mx:Application>
