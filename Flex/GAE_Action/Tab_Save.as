@@ -19,11 +19,14 @@ package{
 
 		//#Message
 
-		static public const HINT_MESSAGE_BUTTON_SAVE_NEW:String = "今のデータを今までのとは別に新しく保存します";
-		static public const HINT_MESSAGE_BUTTON_SAVE_OVERWRITE:String = "このデータに今のデータを上書きして保存します";
+		static public const HINT_MESSAGE_BUTTON_SAVE_NEW:String = "「今のデータ」を新しく保存します";
+		static public const HINT_MESSAGE_BUTTON_SAVE_OVERWRITE:String = "「このデータ」に「今のデータ」を上書きして保存します";
 
-		static public const HINT_MESSAGE_BUTTON_LOAD_NEW:String = "今のデータを全て空にします";
-		static public const HINT_MESSAGE_BUTTON_LOAD_OVERWRITE:String = "このデータをロードします（今のデータは消えます）";
+		static public const HINT_MESSAGE_BUTTON_LOAD_NEW:String = "「今のデータ」を全て空にします";
+		static public const HINT_MESSAGE_BUTTON_LOAD_OVERWRITE:String = "「このデータ」をロードします(「今のデータ」は消えます)";
+
+		static public const HINT_MESSAGE_ZOOM_IN:String  = "データを選択します";
+		static public const HINT_MESSAGE_ZOOM_OUT:String = "一覧画面に戻ります";
 
 		//#State
 
@@ -56,13 +59,13 @@ package{
 		//#Pos
 
 		static public const ZOOM_OUT_OFFSET_X:int = 80;
-		static public const ZOOM_OUT_OFFSET_Y:int = 5;
+		static public const ZOOM_OUT_OFFSET_Y:int = 10;
 
-		static public const SAVE_BUTTON_X:int = ZOOM_OUT_OFFSET_X - 64;
+		static public const SAVE_BUTTON_X:int = 0;
 		static public const SAVE_BUTTON_Y:int = ZOOM_OUT_OFFSET_Y;
 
-		static public const LOAD_BUTTON_X:int = ZOOM_OUT_OFFSET_X - 64;
-		static public const LOAD_BUTTON_Y:int = ZOOM_OUT_OFFSET_Y + (200 + 16*2) - 32;
+		static public const LOAD_BUTTON_X:int = 0;
+		static public const LOAD_BUTTON_Y:int = ZOOM_OUT_OFFSET_Y + (200 + 16*2) - 64;
 
 
 		//==Var==
@@ -106,6 +109,11 @@ package{
 				super("セ｜ブ", 0x0000FF);//縦に表示するため、伸ばし棒は縦にしておく
 			}
 
+			//Message
+			{
+				m_TabMessage = "セーブ・ロードを行います";
+			}
+
 			//Content
 			{
 				InitButtons();
@@ -141,6 +149,7 @@ package{
 
 					//MouseOver
 					m_SaveButton.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE_BUTTON_SAVE_OVERWRITE));//上書き保存用
+					m_SaveButton.addEventListener(MouseEvent.MOUSE_OUT,  CreateHideMessagehandler(HINT_MESSAGE_BUTTON_SAVE_OVERWRITE));//上書き保存用
 
 					//Register
 					m_Content.addChild(m_SaveButton);
@@ -171,6 +180,7 @@ package{
 
 					//MouseOver
 					m_SaveButton_New.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE_BUTTON_SAVE_NEW));//新規保存用
+					m_SaveButton_New.addEventListener(MouseEvent.MOUSE_OUT,  CreateHideMessagehandler(HINT_MESSAGE_BUTTON_SAVE_NEW));//新規保存用
 
 					//Register
 					m_Content.addChild(m_SaveButton_New);
@@ -199,6 +209,7 @@ package{
 
 					//MouseOver
 					m_LoadButton.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE_BUTTON_LOAD_OVERWRITE));//上書き保存用
+					m_LoadButton.addEventListener(MouseEvent.MOUSE_OUT,  CreateHideMessagehandler(HINT_MESSAGE_BUTTON_LOAD_OVERWRITE));//上書き保存用
 
 					//Register
 					m_Content.addChild(m_LoadButton);
@@ -224,6 +235,7 @@ package{
 
 					//MouseOver
 					m_LoadButton_New.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE_BUTTON_LOAD_NEW));//新規保存用
+					m_LoadButton_New.addEventListener(MouseEvent.MOUSE_OUT,  CreateHideMessagehandler(HINT_MESSAGE_BUTTON_LOAD_NEW));//新規保存用
 
 					//Register
 					m_Content.addChild(m_LoadButton_New);
@@ -265,6 +277,13 @@ package{
 					m_UY = next_row * THUMBNAIL_OFFSET_Y;
 					m_UY *= -ZOOM_OUT_SCALE;
 				}
+
+				m_Content.addEventListener(
+					MouseEvent.MOUSE_WHEEL,
+					function(e:MouseEvent):void{
+						m_Scroll.Scroll(e.delta);
+					}
+				);
 
 				//Register
 				m_Content.addChild(m_Scroll);
@@ -380,6 +399,7 @@ package{
 			{
 				//Mouse
 				{
+					//OnDown
 					img_base.addEventListener(
 						MouseEvent.MOUSE_DOWN,
 						function(e:MouseEvent):void{
@@ -431,6 +451,9 @@ package{
 										}
 									}
 								}
+
+								//Hide Message
+								HintMessage.Instance().PopMessage(HINT_MESSAGE_ZOOM_IN);
 							}
 							if(m_State == STATE_SELECTED){//アップ状態でクリックされたら
 								//State
@@ -443,6 +466,35 @@ package{
 								{
 									RefreshButton();
 								}
+
+								//Hide Message
+								HintMessage.Instance().PopMessage(HINT_MESSAGE_ZOOM_OUT);
+							}
+						}
+					);
+
+					//Over
+					img_base.addEventListener(
+						MouseEvent.MOUSE_OVER,
+						function(e:Event):void{
+							if(m_State == STATE_LIST){//一覧状態：ズームインできる旨を伝える
+								HintMessage.Instance().PushMessage(HINT_MESSAGE_ZOOM_IN);
+							}
+							if(m_State == STATE_SELECTED){//選択状態：ズームアウトできる旨を伝える
+								HintMessage.Instance().PushMessage(HINT_MESSAGE_ZOOM_OUT);
+							}
+						}
+					);
+
+					//Out
+					img_base.addEventListener(
+						MouseEvent.MOUSE_OUT,
+						function(e:Event):void{
+							if(m_State == STATE_LIST){//一覧状態：ズームインできる旨を伝える
+								HintMessage.Instance().PopMessage(HINT_MESSAGE_ZOOM_IN);
+							}
+							if(m_State == STATE_SELECTED){//選択状態：ズームアウトできる旨を伝える
+								HintMessage.Instance().PopMessage(HINT_MESSAGE_ZOOM_OUT);
 							}
 						}
 					);

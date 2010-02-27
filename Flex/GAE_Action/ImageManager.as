@@ -7,6 +7,7 @@ package{
 	import flash.geom.*;
 	import flash.filters.*;
 	import flash.net.*;
+	import flash.events.*;
 	//mxml
 	import mx.core.*;
 	import mx.containers.*;
@@ -1007,7 +1008,7 @@ package{
 
 		//ヒントの「文字：画像」のパーツひとまとめ
 		private static var INDEX_TO_CHAR:Array = [
-			"Ｏ",//O:空白
+			"SPACE",//O:空白
 			"Ｗ",//W:地形
 			"Ｐ",//P:プレイヤー位置（生成後は空白として扱われる）
 			"Ｇ",//G:ゴール位置（基本的には空白として扱われる）
@@ -1026,6 +1027,8 @@ package{
 			"Ctrl",//SET_DIR:
 		];
 		static public function CreateHintImage(i_Index:int):Image{
+			var str:String = INDEX_TO_CHAR[i_Index];
+
 			var bmp_data:BitmapData = new BitmapData(Tab_Hint.PANEL_W, Tab_Hint.PANEL_H, true, 0x00000000);
 			{
 				const HINT_FRAME_COLOR:uint = 0x000000;
@@ -1070,9 +1073,15 @@ package{
 				//枠：円
 				{
 					g.clear();
-					g.beginFill(HINT_FRAME_COLOR, 1.0);
-					g.drawCircle(HINT_FRAME_RAD, HINT_FRAME_RAD, HINT_FRAME_RAD);
-					g.endFill();
+					if(str.length <= 1){
+						g.beginFill(HINT_FRAME_COLOR, 1.0);
+						g.drawCircle(HINT_FRAME_RAD, HINT_FRAME_RAD, HINT_FRAME_RAD);
+						g.endFill();
+					}else{
+						g.lineStyle(2*HINT_FRAME_RAD, HINT_FRAME_COLOR, 1.0);
+						g.moveTo(HINT_FRAME_RAD, HINT_FRAME_RAD);
+						g.lineTo(2*HINT_FRAME_RAD+32-HINT_FRAME_RAD, HINT_FRAME_RAD);
+					}
 
 					bmp_data.draw(shape);
 				}
@@ -1084,17 +1093,36 @@ package{
 						text_field.border = false;
 						text_field.x = 0;
 						text_field.y = 0;
-						text_field.width = 999;
-						text_field.height = 999;
+						text_field.autoSize = TextFieldAutoSize.LEFT;
+//						text_field.width = 999;
+//						text_field.height = 999;
 						text_field.textColor = 0xFFFFFF;
+
+						text_field.embedFonts = true;
+
+//						tf.filters = [
+//							new GlowFilter(
+//								0x000044,
+//								0.8,//alpha
+//								7,7,//x, y
+//								2,//Strength
+//								1//Quality
+//							),
+//						];
 					}
 
 					//キー
 					{
-						text_field.text = INDEX_TO_CHAR[i_Index];
+//						text_field.text = str;
+						text_field.htmlText = "<font face='system' size='16'>" + str + "</font>";
 
-						matrix.tx = HINT_FRAME_RAD - text_field.textWidth/2  - 2;
-						matrix.ty = HINT_FRAME_RAD - text_field.textHeight/2 - 2;
+						if(str.length <= 1){
+							matrix.tx = HINT_FRAME_RAD - text_field.width/2 - 0.5;
+							matrix.ty = HINT_FRAME_RAD - text_field.height/2 - 0.5;
+						}else{
+							matrix.tx = (2*HINT_FRAME_RAD+32)/2 - text_field.width/2 - 0.5;
+							matrix.ty = HINT_FRAME_RAD - text_field.height/2 - 0.5;
+						}
 
 						bmp_data.draw(text_field, matrix, ct, BlendMode.NORMAL, rect, true);
 					}
@@ -1107,6 +1135,67 @@ package{
 
 				var img:Image = new Image();
 				img.addChild(bmp);
+
+				return img;
+			}
+		}
+
+
+		//マーク：方向指定
+		[Embed(source='MarkDir.png')]
+		 private static var Bitmap_MarkDir: Class;
+		static public function CreateMarkDir():Image{
+			//Imageに入れて返す
+			{
+				var bmp:Bitmap = new Bitmap_MarkDir();
+
+				var img:Image = new Image();
+				img.addChild(bmp);
+
+				img.width  = bmp.width;
+				img.height = bmp.height;
+
+				const HINT_MESSAGE:String = "方向指定対応マークです";
+				//-Over
+				img.addEventListener(
+					MouseEvent.MOUSE_OVER,
+					function(e:Event):void{HintMessage.Instance().PushMessage(HINT_MESSAGE);}
+				);
+				//-Out
+				img.addEventListener(
+					MouseEvent.MOUSE_OUT,
+					function(e:Event):void{HintMessage.Instance().PopMessage(HINT_MESSAGE);}
+				);
+
+				return img;
+			}
+		}
+
+		//マーク：値指定
+		[Embed(source='MarkNo.png')]
+		 private static var Bitmap_MarkNo: Class;
+		static public function CreateMarkNo():Image{
+			//Imageに入れて返す
+			{
+				var bmp:Bitmap = new Bitmap_MarkNo();
+
+				var img:Image = new Image();
+				img.addChild(bmp);
+
+				img.width  = bmp.width;
+				img.height = bmp.height;
+
+				const HINT_MESSAGE:String = "値指定対応マークです";
+				//-Over
+				img.addEventListener(
+					MouseEvent.MOUSE_OVER,
+					function(e:Event):void{HintMessage.Instance().PushMessage(HINT_MESSAGE);}
+				);
+				//-Out
+				img.addEventListener(
+					MouseEvent.MOUSE_OUT,
+					function(e:Event):void{HintMessage.Instance().PopMessage(HINT_MESSAGE);}
+				);
 
 				return img;
 			}
@@ -1441,17 +1530,25 @@ package{
 					tf.autoSize = TextFieldAutoSize.LEFT;
 					tf.embedFonts = true;
 
-					var ct : ColorTransform = new ColorTransform(1,1,1,1, 0,0,32,0);//強制的に色チェンジ
+					var ct : ColorTransform = new ColorTransform(1,1,1,1, 0,0,0,0);
 
-					var matrix : Matrix = new Matrix(1,0,0,1, 2,6);
+					var matrix : Matrix = new Matrix(1,0,0,1, 0,0);
 
-					tf.htmlText = "<font face='system' size='14'>" + "ここに" + "</font>";
+					tf.htmlText = "<font face='system' size='20'>" + "セーブ" + "</font>";
+					tf.textColor = 0xFFFFFF;
 
-					bmp.bitmapData.draw(tf, matrix, ct);
+					matrix.tx = 3;
+					matrix.ty = bmp.height/2 - tf.height/2;
 
-					matrix.ty += 16;
-
-					tf.htmlText = "<font face='system' size='14'>" + "上書き" + "</font>";
+					tf.filters = [
+						new GlowFilter(
+							0x000044,
+							0.8,//alpha
+							7,7,//x, y
+							2,//Strength
+							1//Quality
+						),
+					];
 
 					bmp.bitmapData.draw(tf, matrix, ct);
 				}
@@ -1479,6 +1576,40 @@ package{
 					bmp = new Bitmap_LoadButton();
 				}else{
 					bmp = new Bitmap_LoadButton_Clear();
+				}
+
+				//文字はこちらで書くことにする
+				{
+					var tf:TextField = new TextField();
+					tf.selectable = false;
+					tf.autoSize = TextFieldAutoSize.LEFT;
+					tf.embedFonts = true;
+
+					var ct : ColorTransform = new ColorTransform(1,1,1,1, 0,0,0,0);
+
+					var matrix : Matrix = new Matrix(1,0,0,1, 0,0);
+
+					if(i_IsOverWrite){
+						tf.htmlText = "<font face='system' size='20'>" + "ロード" + "</font>";
+					}else{
+						tf.htmlText = "<font face='system' size='20'>" + "クリア" + "</font>";
+					}
+					tf.textColor = 0xFFFFFF;
+
+					matrix.tx = bmp.width - tf.width - 3;
+					matrix.ty = bmp.height/2 - tf.height/2;
+
+					tf.filters = [
+						new GlowFilter(
+							0x000044,
+							0.8,//alpha
+							7,7,//x, y
+							2,//Strength
+							1//Quality
+						),
+					];
+
+					bmp.bitmapData.draw(tf, matrix, ct);
 				}
 
 				var img:Image = new Image();

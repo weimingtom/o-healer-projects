@@ -20,22 +20,22 @@ package{
 		static public const PANEL_H:int = 32 * 2;
 
 		public const HINT_MESSAGE:Array = [
-			"Oを押すとそこにあるものを削除します",//O:空白
-			"Wを押すと壁をセットします",//W:地形
-			"Pを押したところがプレイヤーの初期位置になります",//P:プレイヤー位置（生成後は空白として扱われる）
-			"Gを押したところがゴールの位置になります",//G:ゴール位置（基本的には空白として扱われる）
-			"Qを押すと動かせるブロックをセットします",//Q:動かせるブロック（生成後は空白として扱われる）
-			"Sを押すとスイッチをセットします",//S:乗せるスイッチ（動かせるブロックをこれに乗せる）
-			"Dを押すとドアをセットします",//D:ドア（スイッチの上にブロックが乗っていれば通過可能）
-			"Rを押すと逆ドアをセットします",//R:逆ドア（通常のドアとは逆の動作）
-			"Mを押すと往復ブロックをセットします",//M:往復ブロック
-			"Tを押すとトランポリンをセットします",//トランポリンブロック
-			"Aを押すとダッシュブロックをセットします",//A:ダッシュブロック
-			"Eを押すとエネミーをセットします",//E:エネミー
-			"TEST",
-			"TEST",
-			"TEST",
-			"TEST",
+			"SPACEを押すとブロックを「削除」します",//O:空白
+			"Ｗを押すと「かべ」をセットします",//W:地形
+			"Ｐを押したところが「プレイヤーの初期位置」になります",//P:プレイヤー位置（生成後は空白として扱われる）
+			"Ｇを押したところが「ゴールの位置」になります",//G:ゴール位置（基本的には空白として扱われる）
+			"Ｑを押すと「動かせるブロック」をセットします",//Q:動かせるブロック（生成後は空白として扱われる）
+			"Ｓを押すと「スイッチ」をセットします",//S:乗せるスイッチ（動かせるブロックをこれに乗せる）
+			"Ｄを押すと「ドア」をセットします",//D:ドア（スイッチの上にブロックが乗っていれば通過可能）
+			"Ｒを押すと「逆ドア」をセットします",//R:逆ドア（通常のドアとは逆の動作）
+			"Ｍを押すと「往復ブロック」をセットします",//M:往復ブロック
+			"Ｔを押すと「トランポリン」をセットします",//トランポリンブロック
+			"Ａを押すと「ダッシュブロック」をセットします",//A:ダッシュブロック
+			"Ｅを押すと「エネミー」をセットします",//E:エネミー
+			"TEST",//C:コピー
+			"TEST",//V:ペースト
+			"TEST",//SET_RANGE:
+			"TEST",//SET_DIR:
 			"TEST",
 			"TEST",
 			"TEST",
@@ -50,6 +50,11 @@ package{
 				super("対応表", 0x00FF00);
 			}
 
+			//Message
+			{
+				m_TabMessage = "キーボードに対応するブロックのリストを表示します";
+			}
+
 			//Content
 			{
 				//#Base
@@ -58,7 +63,7 @@ package{
 				const BASE_NUM_Y:int = 3;
 
 				const BASE_OFFSET_X:int = PANEL_W;
-				const BASE_OFFSET_Y:int = PANEL_H;
+				const BASE_OFFSET_Y:int = PANEL_H + 16;
 
 				const BASE_CONTENT:Array = [
 					Game.O,//空白
@@ -100,11 +105,46 @@ package{
 							//Set Message Listener
 							{
 								img.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE[block_type]));
+								img.addEventListener(MouseEvent.MOUSE_OUT,  CreateHideMessagehandler(HINT_MESSAGE[block_type]));
 							}
 
 							//Regist
 							{
 								m_Content.addChild(img);
+							}
+
+							//Mark
+							{
+								//Dir
+								{
+									var mark_dir:Image;
+									switch(block_type){
+									case Game.A:
+										mark_dir = ImageManager.CreateMarkDir();
+										mark_dir.x = img.x + 9;
+										mark_dir.y = img.y + 45;
+										m_Content.addChild(mark_dir);
+										break;
+									}
+								}
+
+								//Dir
+								{
+									var mark_no:Image;
+									switch(block_type){
+									case Game.Q:
+									case Game.S:
+									case Game.D:
+									case Game.R:
+									case Game.T:
+									case Game.A:
+										mark_no = ImageManager.CreateMarkNo();
+										mark_no.x = img.x + 28;
+										mark_no.y = img.y + 45;
+										m_Content.addChild(mark_no);
+										break;
+									}
+								}
 							}
 
 							index += 1;
@@ -114,12 +154,60 @@ package{
 
 				//#System
 
-				const SYSTEM_CONTENT:Array = [
-					Game.C,
-					Game.V,
-					Game.SET_RANGE,
-					Game.SET_DIR,
+///				const SYSTEM_CONTENT:Array = [
+//					Game.C,
+//					Game.V,
+//					Game.SET_RANGE,
+//					Game.SET_DIR,
+//				];
+
+				const SYSTEM_OFFSET_Y:int = 3 * BASE_OFFSET_Y;
+
+				var MARK_IMAGE:Array = [
+					ImageManager.CreateMarkDir(),
+					ImageManager.CreateMarkNo(),
 				];
+
+				const SYSTEM_STR:Array = [
+					"Ctrl＋↑↓←→で方向指定",
+					"1～9で値指定（0でリセット）",
+				];
+
+				const SYSTEM_HINT_MESSAGE:Array = [
+					"ブロックの方向を指定します（対応してるものだけ）",
+					"ブロックの値（種類）を指定します（対応してるものだけ）",
+				];
+
+				for(y = 0; y < SYSTEM_STR.length; y += 1){
+					//mark
+					{
+						var mark:Image = MARK_IMAGE[y];
+
+						mark.x = 8;
+						mark.y = SYSTEM_OFFSET_Y + y * 32 + mark.height/2;
+
+						m_Content.addChild(mark);
+					}
+
+					//text
+					{
+						var tf:TextField = new TextField();
+						tf.selectable = false;
+						tf.autoSize = TextFieldAutoSize.LEFT;
+						tf.embedFonts = true;
+
+						tf.htmlText = "<font face='system' size='20'>" + SYSTEM_STR[y] + "</font>";
+	//					tf.textColor = 0xFFFFFF;
+
+						tf.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(SYSTEM_HINT_MESSAGE[y]));
+						tf.addEventListener(MouseEvent.MOUSE_OUT,  CreateHideMessagehandler(SYSTEM_HINT_MESSAGE[y]));
+
+						tf.x = 32;
+						tf.y = SYSTEM_OFFSET_Y + y * 32;
+
+						m_Content.addChild(tf);
+					}
+				}
 			}
 		}
 	}

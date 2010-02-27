@@ -58,7 +58,7 @@ package{
 		static public const ZOOM_OUT_OFFSET_X:int = 80;
 		static public const ZOOM_OUT_OFFSET_Y:int = 5;
 
-		static public const UPLOAD_BUTTON_X:int = ZOOM_OUT_OFFSET_X - 64;
+		static public const UPLOAD_BUTTON_X:int = 0;
 		static public const UPLOAD_BUTTON_Y:int = ZOOM_OUT_OFFSET_Y;
 
 //		static public const LOAD_BUTTON_X:int = ZOOM_OUT_OFFSET_X - 64;
@@ -89,6 +89,9 @@ package{
 		private var m_SelectedIndex:int = -1;//選択されているやつの番号（マイナスなら新規扱い）
 		private var OnSave:Function;//セーブした後に呼ばれるので、これに「サムネイルの更新」などの処理を入れる
 
+		//#ログインを促すメッセージ
+		private var m_Text4Login:TextField;
+
 		//#State
 		private var m_State:int = STATE_LIST;
 		private var m_StateTimer:Number = 0.0;
@@ -104,6 +107,11 @@ package{
 			//Tab
 			{
 				super("投稿", 0xFF8800);
+			}
+
+			//Message
+			{
+				m_TabMessage = "セーブしたステージを投稿できます";
 			}
 
 			//Content
@@ -273,6 +281,13 @@ package{
 					m_UY *= -ZOOM_OUT_SCALE;
 				}
 
+				m_Content.addEventListener(
+					MouseEvent.MOUSE_WHEEL,
+					function(e:MouseEvent):void{
+						m_Scroll.Scroll(e.delta);
+					}
+				);
+
 				//Register
 				m_Content.addChild(m_Scroll);
 
@@ -351,6 +366,38 @@ package{
 //				{
 //					AddThumbnail(-1, DefaultStageData);
 //				}
+			}
+
+			//未ログインであれば、サムネイルの表示は消してログインを促すメッセージを表示する
+			{
+				//m_Text4Login
+				{
+					m_Text4Login = new TextField();
+
+					m_Text4Login.border = false;
+					m_Text4Login.selectable = false;
+					m_Text4Login.autoSize = TextFieldAutoSize.LEFT;
+					m_Text4Login.embedFonts = true;
+
+					m_Text4Login.x = 32;
+					m_Text4Login.y = 32;
+
+					m_Text4Login.multiline = true;
+					m_Text4Login.htmlText = "<font face='system' size='16'>";
+					m_Text4Login.htmlText = m_Text4Login.htmlText + "まだ投稿機能は使えません" + "<br>";
+					m_Text4Login.htmlText = m_Text4Login.htmlText + "（３月中には対応する予定です）";
+					m_Text4Login.htmlText = m_Text4Login.htmlText + "</font>";
+
+					m_Content.addChild(m_Text4Login);
+				}
+
+				if(! Game.Instance().IsLogin()){
+					m_ZoomImage.visible = false;
+					m_Text4Login.visible = true;
+				}else{
+					m_ZoomImage.visible = true;
+					m_Text4Login.visible = false;
+				}
 			}
 		}
 
@@ -492,6 +539,8 @@ package{
 			UpdateState(i_DeltaTime);
 
 			UpdateZoom();
+
+			CheckLogin();
 		}
 
 		//Update : State
@@ -716,6 +765,27 @@ package{
 
 			//表示開始
 			Game.Instance().m_EditRoot.addChild(img);
+		}
+
+		//Check : Login
+		public function CheckLogin():void{
+			//Check
+			{
+				if(! m_ZoomImage){return;}
+				if(! m_Text4Login){return;}
+			}
+
+			//Switch
+			{
+				if(! Game.Instance().IsLogin()){
+					m_ZoomImage.visible = false;
+					m_Text4Login.visible = true;
+					m_Scroll.visible = false;
+				}else{
+					m_ZoomImage.visible = true;
+					m_Text4Login.visible = false;
+				}
+			}
 		}
 	}
 }

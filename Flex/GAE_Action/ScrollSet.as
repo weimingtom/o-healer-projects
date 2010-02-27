@@ -22,6 +22,8 @@ package{
 	public class ScrollSet extends Image{
 		//==Const==
 
+		static public const HINT_MESSAGE:String = "ドラッグしてスクロールできます";
+
 		//==Var==
 
 		//#外側から書き換える
@@ -34,6 +36,11 @@ package{
 
 		//スクロールバーを操作された時の挙動
 		public var ByRatio:Function = function(i_Ratio:Number):void{};
+
+
+		//#Image
+
+		private var m_ScrollBar:Image;
 
 
 		//==Common==
@@ -99,7 +106,7 @@ package{
 				addChild(m_ScrollUnderBar);
 			}
 			//m_ScrollBar
-			var m_ScrollBar:Image;
+//			var m_ScrollBar:Image;
 			{
 				//Create
 				m_ScrollBar = ImageManager.CreateScrollImage_Bar(ScrollHeight);
@@ -146,6 +153,16 @@ package{
 					MouseEvent.MOUSE_UP,
 					function(e:Event):void{IsScroll = false;}
 				);
+				//-Over
+				m_ScrollBar.addEventListener(
+					MouseEvent.MOUSE_OVER,
+					function(e:Event):void{HintMessage.Instance().PushMessage(HINT_MESSAGE);}
+				);
+				//-Out
+				m_ScrollBar.addEventListener(
+					MouseEvent.MOUSE_OUT,
+					function(e:Event):void{HintMessage.Instance().PopMessage(HINT_MESSAGE);}
+				);
 				//Register
 				m_ScrollUnderBar.addChild(m_ScrollBar);
 			}
@@ -155,6 +172,23 @@ package{
 			this.height = i_H;
 		}
 
+		//
+		public function Scroll(i_Delta:int):void{
+			var ScrollHeight:int = this.height;
+
+			//Pos
+			{
+				m_ScrollBar.y += -5 * i_Delta;
+				if(m_ScrollBar.y < 0){m_ScrollBar.y = 0;}
+				if(m_ScrollBar.y > ScrollHeight - m_ScrollBar.height){m_ScrollBar.y = ScrollHeight - m_ScrollBar.height;}
+			}
+
+			//Ratio
+			{
+				var ratio:Number = m_ScrollBar.y / (ScrollHeight - m_ScrollBar.height);
+				ByRatio(ratio);
+			}
+		}
 	}
 }
 

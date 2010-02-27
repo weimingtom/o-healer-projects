@@ -100,17 +100,16 @@ package{
 
 		//＃マップ
 		public var m_Map:Array = [
-			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, O, O, Q, O, O, W, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, W, W, W, W, O, W, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, O, O, W, O, O, O, O, W, O, O, W],
-			[W, O, O, O, O, O, O, O, O, O, O, W, O, O, Q, O, O, W, O, G, W],
-			[W, O, O, O, O, O, O, O, O, O, O, W, O, W, W, O, O, W, O, W, W],
-			[W, O, O, O, Q, O, O, O, O, O, W, O, O, O, O, O, O, O, O, W, W],
-			[W, O, O, W, W, W, O, O, O, O, W, O, O, O, Q, O, O, O, O, W, W],
-			[W, O, O, O, O, O, O, O, O, O, W, W, W, W, W, W, O, W, W, W, W],
-			[W, P, O, O, O, O, O, O, O, T, W, W, W, W, W, W, O, W, W, W, W],
-			[W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W],
+			[W, W, W, W, W, W, W, W, W, A, A, A, W],
+			[W, W, W, O, O, O, O, O, O, O, O, O, W],
+			[W, W, W, O, Q, O, O, O, O, O, O, O, W],
+			[W, G, O, S, W, W, D, D, W, W, W, O, W],
+			[W, R, O, O, O, O, O, O, O, O, O, O, W],
+			[W, R, R, O, Q, O, O, O, O, O, O, O, W],
+			[W, R, R, R, O, O, O, O, O, O, O, T, W],
+			[W, O, O, O, W, W, W, O, O, O, O, W, W],
+			[W, P, O, O, W, W, W, O, O, E, T, W, W],
+			[W, W, W, W, W, W, W, W, W, W, W, W, W],
 		];
 		//Objectへの参照版
 		public var m_ObjMap:Array;
@@ -854,6 +853,9 @@ package{
 		//ゲームの枠
 		public var m_GameFrameImage:Image;
 
+		//Enter用テキスト
+		public var m_Text4Enter:TextField;
+
 		//カーソル
 		private var m_CursorShape:Shape;
 		private var m_CursorIndexSrcX:int = 0;
@@ -937,6 +939,24 @@ package{
 					m_Game_Instruction.addChild(GameInstImage);
 				}
 
+				//
+				{
+					m_Text4Enter = new TextField();
+
+					m_Text4Enter.border = false;
+					m_Text4Enter.selectable = false;
+					m_Text4Enter.autoSize = TextFieldAutoSize.LEFT;
+					m_Text4Enter.embedFonts = true;
+
+					m_Text4Enter.x = 8;
+					m_Text4Enter.y = m_GameFrameImage.y + m_GameFrameImage.height + 8;
+
+					m_Text4Enter.htmlText = "<font face='system' size='16'>" + "Enter：テストプレイ" + "</font>";
+					m_Text4Enter.textColor = 0xFFFFFF;
+
+					m_GameLayer.addChild(m_Text4Enter);
+				}
+
 				//カーソル
 				{
 					m_CursorShape = new Shape();
@@ -958,11 +978,24 @@ package{
 					m_TabWindow.AddTab(new Tab_Save());
 					m_TabWindow.AddTab(new Tab_Upload());
 				}
+
+				//ヒントメッセージ
+				{
+					var HintMessageImage:Image = HintMessage.Instance().GetImage();
+					HintMessageImage.x = m_TabWindow.x+22;//0;
+					HintMessageImage.y = m_GameFrameImage.y + m_GameFrameImage.height + 8;
+					m_TabWindowLayer.addChild(HintMessageImage);
+				}
 			}
 
 			//Resetと共通処理
 			{
 				Reset_ForEditor();
+			}
+
+			//ログインチェック
+			{
+				CheckLogin();
 			}
 		}
 
@@ -1266,6 +1299,8 @@ package{
 			//表示切替
 			{
 				m_TabWindowLayer.visible = false;
+
+				m_Text4Enter.htmlText = "<font face='system' size='16'>" + "Enter：エディットに戻る" + "</font>";
 			}
 
 			m_EditFlag = false;
@@ -1288,6 +1323,8 @@ package{
 			//表示切替
 			{
 				m_TabWindowLayer.visible = true;
+
+				m_Text4Enter.htmlText = "<font face='system' size='16'>" + "Enter：テストプレイ" + "</font>";
 			}
 
 			m_EditFlag = true;
@@ -1514,6 +1551,18 @@ package{
 				var pos_y:int = ImageManager.PANEL_LEN * (y + 0.5);
 				for(var x:int = i_LX; x <= i_RX; x += 1){
 					var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
+
+					//値制限
+					switch(GetMapIndex(m_Map[y][x])){
+					case Q:
+					case S:
+					case D:
+					case R:
+						if(in_Val >= 4){
+							continue;
+						}
+						break;
+					}
 
 					switch(GetMapIndex(m_Map[y][x])){
 					case Q:
@@ -1842,6 +1891,7 @@ package{
 
 		//#Load
 		//指定番号のセーブデータをロード（範囲外ならクリアとみなす）
+		static public var CLEAR_MAP:Array;
 		public function Load(i_Index:int):void{
 			//ローカルセーブを司るSharedObject
 			var so:SharedObject = LoadSharedObject();
@@ -1849,8 +1899,16 @@ package{
 			var NewMap:Array;
 			if(i_Index < 0 || so.data.count <= i_Index){
 				//クリア
-				//!!
-				return;
+				if(! CLEAR_MAP){
+					CLEAR_MAP = new Array(MAP_H_MIN);
+					for(var y:int = 0; y < MAP_H_MIN; y += 1){
+						CLEAR_MAP[y] = new Array(MAP_W_MIN);
+						for(var x:int = 0; x < MAP_W_MIN; x += 1){
+							CLEAR_MAP[y][x] = O;
+						}
+					}
+				}
+				NewMap = CLEAR_MAP;
 			}else{
 				//ステージデータを文字列化したもの
 				var stage_str:String = so.data.list[i_Index].stage;
@@ -1914,22 +1972,33 @@ package{
 
 		//通信に応答するやつ
 		private var m_Responder_Upload:Responder;
+		private var m_Responder_IsLogin:Responder;
 
 		//
-		public function Upload():void{
+		private var m_IsLogin:Boolean = false;
+
+		//
+		public function Connect():void{
 			if(! m_NetConnection){
 				m_NetConnection = new NetConnection();
 /*
-				m_NetConnection.connect("http://enen-pazzle.appspot.com/api/");
+				m_NetConnection.connect("https://first-lab.appspot.com/cage/api");
 /*/
-				m_NetConnection.connect("http://localhost:8080/api/");
+				m_NetConnection.connect("./api");
 //*/
 			}
+		}
 
+		//
+		public function Upload():void{
+			//Connect
+			Connect();
+
+			//Create Responder
 			if(! m_Responder_Upload){
 				m_Responder_Upload = new Responder(
 					//OnComplete
-					function():void{
+					function(key_name:String):void{
 					},
 					//OnFail
 					function(results:*):void{
@@ -1947,5 +2016,33 @@ package{
 			m_NetConnection.call("save", m_Responder_Upload, data);//save(data)     
 		}
 
+		//
+		public function CheckLogin():void{
+			//Connect
+			Connect();
+
+			//Create Responder
+			if(! m_Responder_IsLogin){
+				m_Responder_IsLogin = new Responder(
+					//OnComplete
+					function(nick_name:String):void{
+						if(nick_name.length > 0){
+							m_IsLogin = true;
+						}
+					},
+					//OnFail
+					function(results:*):void{
+					}
+				);
+			}
+
+			//Upload
+			m_NetConnection.call("is_login", m_Responder_IsLogin);//is_login()
+		}
+
+		//
+		public function IsLogin():Boolean{
+			return m_IsLogin;
+		}
 	}
 }

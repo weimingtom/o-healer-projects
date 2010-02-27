@@ -60,6 +60,11 @@ package{
 			{
 				super("設定", 0x000000);
 			}
+
+			//Message
+			{
+				m_TabMessage = "マップの幅などの設定を変更できます";
+			}
 		}
 
 		//位置の計算が特殊なので、登録後にContentの中身を作る
@@ -235,6 +240,7 @@ package{
 
 							//MouseOver
 							img_button_up.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE_BUTTON_UP[i]));
+							img_button_up.addEventListener(MouseEvent.MOUSE_OUT,  CreateHideMessagehandler(HINT_MESSAGE_BUTTON_UP[i]));
 
 							img_base.addChild(img_button_up);
 						}
@@ -254,6 +260,7 @@ package{
 
 							//MouseOver
 							img_button_down.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE_BUTTON_DOWN[i]));
+							img_button_down.addEventListener(MouseEvent.MOUSE_OUT,  CreateHideMessagehandler(HINT_MESSAGE_BUTTON_DOWN[i]));
 
 							img_base.addChild(img_button_down);
 						}

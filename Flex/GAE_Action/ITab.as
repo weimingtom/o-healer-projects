@@ -35,6 +35,9 @@ package{
 
 		public var m_TabLength:int = 3;
 
+		//タブにマウスを合わせた時のメッセージ
+		public var m_TabMessage:String = "";
+
 
 		//==Function==
 
@@ -78,6 +81,15 @@ package{
 					function(e:Event):void{Select();}//このタブを採用する
 				);
 
+				m_TabImage.addEventListener(
+					MouseEvent.MOUSE_OVER,
+					function(e:Event):void{HintMessage.Instance().PushMessage(m_TabMessage);}
+				);
+				m_TabImage.addEventListener(
+					MouseEvent.MOUSE_OUT,
+					function(e:Event):void{HintMessage.Instance().PopMessage(m_TabMessage);}
+				);
+
 				addChild(m_TabImage);
 			}
 		}
@@ -102,7 +114,14 @@ package{
 		public function CreateShowMessagehandler(i_MessageStr:String):Function{
 			//メッセージウィンドウのstatic関数で生成した方が良いかも
 			return function(e:Event):void{
-	//			MyMessageWindow.ShowMessage(i_MessageStr);
+				HintMessage.Instance().PushMessage(i_MessageStr);
+			}
+		}
+		//Hide Message
+		public function CreateHideMessagehandler(i_MessageStr:String):Function{
+			//メッセージウィンドウのstatic関数で生成した方が良いかも
+			return function(e:Event):void{
+				HintMessage.Instance().PopMessage(i_MessageStr);
 			}
 		}
 
