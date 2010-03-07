@@ -25,6 +25,9 @@ package{
 //		static public const HINT_MESSAGE_BUTTON_LOAD_NEW:String = "今のデータを全て空にします";
 //		static public const HINT_MESSAGE_BUTTON_LOAD_OVERWRITE:String = "このデータをロードします（今のデータは消えます）";
 
+		static public const HINT_MESSAGE_ZOOM_IN:String  = "データを選択します";
+		static public const HINT_MESSAGE_ZOOM_OUT:String = "一覧画面に戻ります";
+
 		//#State
 
 		static public const STATE_LIST:int		= 0;//一覧表示中
@@ -492,6 +495,9 @@ package{
 										}
 									}
 								}
+
+								//Hide Message
+								HintMessage.Instance().PopMessage(HINT_MESSAGE_ZOOM_IN);
 							}
 							if(m_State == STATE_SELECTED){//アップ状態でクリックされたら
 								//State
@@ -504,6 +510,35 @@ package{
 								{
 									RefreshButton();
 								}
+
+								//Hide Message
+								HintMessage.Instance().PopMessage(HINT_MESSAGE_ZOOM_OUT);
+							}
+						}
+					);
+
+					//Over
+					img_base.addEventListener(
+						MouseEvent.MOUSE_OVER,
+						function(e:Event):void{
+							if(m_State == STATE_LIST){//一覧状態：ズームインできる旨を伝える
+								HintMessage.Instance().PushMessage(HINT_MESSAGE_ZOOM_IN);
+							}
+							if(m_State == STATE_SELECTED){//選択状態：ズームアウトできる旨を伝える
+								HintMessage.Instance().PushMessage(HINT_MESSAGE_ZOOM_OUT);
+							}
+						}
+					);
+
+					//Out
+					img_base.addEventListener(
+						MouseEvent.MOUSE_OUT,
+						function(e:Event):void{
+							if(m_State == STATE_LIST){//一覧状態：ズームインできる旨を伝える
+								HintMessage.Instance().PopMessage(HINT_MESSAGE_ZOOM_IN);
+							}
+							if(m_State == STATE_SELECTED){//選択状態：ズームアウトできる旨を伝える
+								HintMessage.Instance().PopMessage(HINT_MESSAGE_ZOOM_OUT);
 							}
 						}
 					);
