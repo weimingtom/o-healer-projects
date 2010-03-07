@@ -13,10 +13,14 @@ Find.find('./'){|file_name|
 
 		src.read.unpack('U*').each{|val|
 			num = val.to_s(16)
-#			if num.length > 2
-#				p num
-				h['U+'+num] = 1
-#			end
+
+			while num.length < 4
+				num = '0' + num;
+			end
+
+			num = num.upcase
+
+			h['U+'+num] = 1
 		}
 
 		src.close

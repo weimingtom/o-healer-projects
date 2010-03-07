@@ -105,7 +105,7 @@ package{
 			[W, W, W, O, Q, O, O, O, O, O, O, O, W],
 			[W, G, O, S, W, W, D, D, W, W, W, O, W],
 			[W, R, O, O, O, O, O, O, O, O, O, O, W],
-			[W, R, R, O, Q, O, O, O, O, O, O, O, W],
+			[W, R, R, O, O, O, O, O, O, O, O, O, W],
 			[W, R, R, R, O, O, O, O, O, O, O, T, W],
 			[W, O, O, O, W, W, W, O, O, O, O, W, W],
 			[W, P, O, O, W, W, W, O, O, E, T, W, W],
@@ -2043,6 +2043,45 @@ package{
 		//
 		public function IsLogin():Boolean{
 			return m_IsLogin;
+		}
+
+		//
+		public function OnUploadComplete():void{
+			var so:SharedObject = LoadSharedObject();
+
+			var date:Date = new Date();
+
+			so.data.date = {y:date.fullYear, m:date.month, d:date.day};
+		}
+
+		//アップロード制限中か
+		public function IsUploadLimited():Boolean{
+			var so:SharedObject = LoadSharedObject();
+
+			//まだ投稿してないようなら制限なし
+			if(so.data.date == null){
+				return false;
+			}
+
+			//今の日付と違えば制限なし
+			{
+				var date:Date = new Date();
+
+				if(date.fullYear != so.data.date.y){
+					return false;
+				}
+				if(date.month != so.data.date.m){
+					return false;
+				}
+				if(date.day != so.data.date.d){
+					return false;
+				}
+			}
+
+			//「制限なし」の条件にひっかからなかったので制限あり
+			{
+				return true;
+			}
 		}
 	}
 }

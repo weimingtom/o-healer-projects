@@ -4,7 +4,8 @@
 	xmlns:comp="*"
 	paddingTop="0" paddingLeft="0"
 	paddingRight="0" paddingBottom="0"
-	backgroundColor="#000033"
+	backgroundColor="#000011"
+	backgroundAlpha="1.0"
 	applicationComplete="init()"
 >
 	<!--Script-->

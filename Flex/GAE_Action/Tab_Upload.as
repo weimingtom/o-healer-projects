@@ -20,7 +20,7 @@ package{
 		//#Message
 
 		static public const HINT_MESSAGE_BUTTON_UPLOAD_NEW:String = "";
-		static public const HINT_MESSAGE_BUTTON_UPLOAD_OVERWRITE:String = "";
+		static public const HINT_MESSAGE_BUTTON_UPLOAD_OVERWRITE:String = "投稿します（１日１つまで）";
 
 //		static public const HINT_MESSAGE_BUTTON_LOAD_NEW:String = "今のデータを全て空にします";
 //		static public const HINT_MESSAGE_BUTTON_LOAD_OVERWRITE:String = "このデータをロードします（今のデータは消えます）";
@@ -75,7 +75,6 @@ package{
 
 		//#セーブ＆ロードのボタン
 		private var m_UploadButton:Image;
-		private var m_UploadButton_New:Image;
 //		private var m_LoadButton:Image;
 //		private var m_LoadButton_New:Image;
 
@@ -91,6 +90,9 @@ package{
 
 		//#ログインを促すメッセージ
 		private var m_Text4Login:TextField;
+
+		//#投稿制限を伝えるメッセージ
+		private var m_Text4Limited:TextField;
 
 		//#State
 		private var m_State:int = STATE_LIST;
@@ -161,36 +163,6 @@ package{
 
 					//Hide
 					m_UploadButton.visible = false;
-				}
-
-				//New
-				{
-					//Create
-					m_UploadButton_New = ImageManager.CreateThumbnailImage_Button_Upload(false);
-
-					//Pos
-					m_UploadButton_New.x = UPLOAD_BUTTON_X;
-					m_UploadButton_New.y = UPLOAD_BUTTON_Y;
-
-					//Click
-					m_UploadButton_New.addEventListener(//クリック時の挙動を追加
-						MouseEvent.CLICK,//クリックされたら
-						function(e:Event):void{
-							//新規保存
-							Game.Instance().Save(-1);
-							//サムネイルの更新など
-							OnSave();
-						}//セーブを実行する
-					);
-
-					//MouseOver
-					m_UploadButton_New.addEventListener(MouseEvent.MOUSE_OVER, CreateShowMessagehandler(HINT_MESSAGE_BUTTON_UPLOAD_NEW));//新規投稿用
-
-					//Register
-					m_Content.addChild(m_UploadButton_New);
-
-					//Hide
-					m_UploadButton_New.visible = false;
 				}
 			}
 /*
@@ -384,8 +356,11 @@ package{
 
 					m_Text4Login.multiline = true;
 					m_Text4Login.htmlText = "<font face='system' size='16'>";
-					m_Text4Login.htmlText = m_Text4Login.htmlText + "まだ投稿機能は使えません" + "<br>";
-					m_Text4Login.htmlText = m_Text4Login.htmlText + "（３月中には対応する予定です）";
+					m_Text4Login.htmlText = m_Text4Login.htmlText + "以下の手順で投稿してください" + "<br>";
+					m_Text4Login.htmlText = m_Text4Login.htmlText + "・データをセーブしておく" + "<br>";
+					m_Text4Login.htmlText = m_Text4Login.htmlText + "・ログインする" + "<br>";
+					m_Text4Login.htmlText = m_Text4Login.htmlText + "・再びここを選ぶ" + "<br>";
+					m_Text4Login.htmlText = m_Text4Login.htmlText + "・データを選んで投稿する" + "<br>";
 					m_Text4Login.htmlText = m_Text4Login.htmlText + "</font>";
 
 					m_Content.addChild(m_Text4Login);
@@ -397,6 +372,30 @@ package{
 				}else{
 					m_ZoomImage.visible = true;
 					m_Text4Login.visible = false;
+				}
+			}
+
+			//投稿制限中ならその旨を表示する
+			{
+				//m_Text4Limited
+				{
+					m_Text4Limited = new TextField();
+
+					m_Text4Limited.border = false;
+					m_Text4Limited.selectable = false;
+					m_Text4Limited.autoSize = TextFieldAutoSize.LEFT;
+					m_Text4Limited.embedFonts = true;
+
+					m_Text4Limited.x = 32;
+					m_Text4Limited.y = 32;
+
+					m_Text4Limited.multiline = true;
+					m_Text4Limited.htmlText = "<font face='system' size='16'>";
+					m_Text4Limited.htmlText = m_Text4Limited.htmlText + "現在、ステージの投稿は" + "<br>";
+					m_Text4Limited.htmlText = m_Text4Limited.htmlText + "１日１つまでとなっています" + "<br>";
+					m_Text4Limited.htmlText = m_Text4Limited.htmlText + "</font>";
+
+					m_Content.addChild(m_Text4Limited);
 				}
 			}
 		}
@@ -667,13 +666,11 @@ package{
 			case STATE_ZOOM_IN:
 			case STATE_ZOOM_OUT:
 				m_UploadButton.visible = false;
-				m_UploadButton_New.visible = false;
 //				m_LoadButton.visible = false;
 //				m_LoadButton_New.visible = false;
 				break;
 			case STATE_SELECTED:
-				m_UploadButton.visible = (m_SelectedIndex >= 0);
-				m_UploadButton_New.visible = !m_UploadButton.visible;
+				m_UploadButton.visible = true;
 //				m_LoadButton.visible = (m_SelectedIndex >= 0);
 //				m_LoadButton_New.visible = !m_LoadButton.visible;
 				break;
@@ -689,7 +686,7 @@ package{
 		public function Upload(in_SelectedIndex:int):void{
 			if(! m_NetConnection){
 				m_NetConnection = new NetConnection();
-//*
+/*
 				m_NetConnection.connect("http://first-lab.appspot.com/cage/api/");
 /*/
 				m_NetConnection.connect("http://localhost:8080/cage/api/");
@@ -707,8 +704,8 @@ package{
 			if(! m_Responder_Upload){
 				m_Responder_Upload = new Responder(
 					//OnComplete
-					function(i_Key:String):void{
-						OnUploadComplete();
+					function(i_Link:String):void{
+						OnUploadComplete(i_Link);
 					},
 					//OnFail
 					function(results:*):void{
@@ -734,20 +731,15 @@ package{
 		}
 
 		//Upload : OnComplete
-		public function OnUploadComplete():void{
+		public function OnUploadComplete(i_Link:String):void{
 			//完了した旨を全体表示で伝える
-			var img:Image = ImageManager.CreateUploadComopleteImage();
-
-			//クリックで消えるようにしておく
-			img.addEventListener(
-				MouseEvent.CLICK,//クリックされたら
-				function(e:Event):void{//消える
-					Game.Instance().m_EditRoot.removeChild(img);
-				}
-			);
+			var img:Image = ImageManager.CreateUploadComopleteImage(i_Link);
 
 			//表示開始
 			Game.Instance().m_EditRoot.addChild(img);
+
+			//投稿成功時のGame側の処理
+			Game.Instance().OnUploadComplete();
 		}
 
 		//Upload : OnFail
@@ -777,13 +769,23 @@ package{
 
 			//Switch
 			{
-				if(! Game.Instance().IsLogin()){
+				if(Game.Instance().IsUploadLimited()){
 					m_ZoomImage.visible = false;
-					m_Text4Login.visible = true;
-					m_Scroll.visible = false;
-				}else{
-					m_ZoomImage.visible = true;
 					m_Text4Login.visible = false;
+					m_Scroll.visible = false;
+					m_Text4Limited.visible = true;
+					m_UploadButton.visible = false;
+				}else{
+					if(! Game.Instance().IsLogin()){
+						m_ZoomImage.visible = false;
+						m_Text4Login.visible = true;
+						m_Scroll.visible = false;
+						m_Text4Limited.visible = false;
+					}else{
+						m_ZoomImage.visible = true;
+						m_Text4Login.visible = false;
+						m_Text4Limited.visible = false;
+					}
 				}
 			}
 		}

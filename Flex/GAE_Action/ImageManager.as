@@ -1664,8 +1664,9 @@ package{
 		}
 
 		//投稿完了表示
-		static public function CreateUploadComopleteImage():Image{
+		static public function CreateUploadComopleteImage(i_Link:String):Image{
 			var bmp:Bitmap = CreateHugeBitmap();//画面全体を多うBitmapを作成
+			var bmp_image:Image = new Image();
 
 			//clear
 			{
@@ -1692,10 +1693,40 @@ package{
 
 					bmp.bitmapData.draw(tf, matrix, ct);
 				}
+				{
+					tf.htmlText = "<font face='system' size='24'>" + "↓このURLでプレイできます" + "</font>";
+
+					matrix.tx = bmp.width/2 - tf.width/2;
+					matrix.ty = bmp.height*5/8 - tf.height/2;
+
+					bmp.bitmapData.draw(tf, matrix, ct);
+				}
+				{
+					tf.htmlText = "<a href='" + i_Link + "' target='_blank'> <font face='system' size='16'>" + i_Link + "</font> </a>";
+
+					//matrix.tx = bmp.width/2 - tf.width/2;
+					//matrix.ty = bmp.height*3/4 - tf.height/2;
+					tf.x = bmp.width/2 - tf.width/2;
+					tf.y = bmp.height*3/4 - tf.height/2;
+					tf.selectable = true;
+
+//					bmp.bitmapData.draw(tf, matrix, ct);
+				}
 			}
 
+			bmp_image.addChild(bmp);
+
 			var img:Image = new Image();
-			img.addChild(bmp);
+			img.addChild(bmp_image);
+			img.addChild(tf);
+
+			//クリックで消えるようにしておく
+			bmp_image.addEventListener(
+				MouseEvent.CLICK,//クリックされたら
+				function(e:Event):void{//消える
+					img.parent.removeChild(img);
+				}
+			);
 
 			return img;
 		}
