@@ -12,6 +12,7 @@ package{
 	import mx.core.*;
 	import mx.containers.*;
 	import mx.controls.*;
+	import mx.managers.CursorManager;
 
 	public class Tab_Upload extends ITab
 	{
@@ -276,6 +277,9 @@ package{
 				//Hide
 				m_Scroll.visible = false;
 			}
+
+			//一回まわして、表示のオンオフを確定
+			CheckLogin();
 		}
 
 		//#
@@ -399,6 +403,8 @@ package{
 					m_Text4Limited.htmlText = m_Text4Limited.htmlText + "</font>";
 
 					m_Content.addChild(m_Text4Limited);
+
+					m_Text4Limited.visible = false;
 				}
 			}
 		}
@@ -715,18 +721,10 @@ package{
 
 		//#Upload
 
-		private var m_NetConnection:NetConnection;
 		private var m_Responder_Upload:Responder;
 
 		public function Upload(in_SelectedIndex:int):void{
-			if(! m_NetConnection){
-				m_NetConnection = new NetConnection();
-/*
-				m_NetConnection.connect("http://first-lab.appspot.com/cage/api/");
-/*/
-				m_NetConnection.connect("http://localhost:8080/cage/api/");
-//*/
-			}
+			Game.Instance().Connect();
 /*
 			//接続失敗なら戻る
 			{
@@ -762,7 +760,10 @@ package{
 			};
 
 			//Upload
-			m_NetConnection.call("save", m_Responder_Upload, data);//save(data)     
+			Game.Instance().m_NetConnection.call("save", m_Responder_Upload, data);//save(data)
+
+			//マウスもBusy状態にする
+			CursorManager.setBusyCursor();
 		}
 
 		//Upload : OnComplete
@@ -775,6 +776,9 @@ package{
 
 			//投稿成功時のGame側の処理
 			Game.Instance().OnUploadComplete();
+
+			//マウスのビジー状態を解除
+			CursorManager.removeBusyCursor();
 		}
 
 		//Upload : OnFail
@@ -792,6 +796,9 @@ package{
 
 			//表示開始
 			Game.Instance().m_EditRoot.addChild(img);
+
+			//マウスのビジー状態を解除
+			CursorManager.removeBusyCursor();
 		}
 
 		//Check : Login
@@ -800,6 +807,7 @@ package{
 			{
 				if(! m_ZoomImage){return;}
 				if(! m_Text4Login){return;}
+				if(! m_Scroll){return;}
 			}
 
 			//Switch

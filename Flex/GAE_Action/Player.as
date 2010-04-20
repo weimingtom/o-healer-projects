@@ -21,6 +21,12 @@ package{
 	public class Player extends IGameObject{
 		//==Const==
 
+		//#Type
+		static public var TYPE_COUNTER:int = 0;//enum代わり
+		static public const TYPE_NORMAL:int			= TYPE_COUNTER++;
+		static public const TYPE_BLOCK_SUMMONER:int	= TYPE_COUNTER++;
+		static public const TYPE_NUM:int			= TYPE_COUNTER;
+
 		/*
 			＃X方向の慣性制御
 
@@ -49,6 +55,9 @@ package{
 
 		//==Var==
 
+		//#Type
+//		public var m_PlayerType:int = TYPE_NORMAL;//m_Valを使う
+
 		//#Pos
 		public var m_AX:Number = 0.0;
 //		public var m_AY:Number = GRAVITY;
@@ -57,11 +66,27 @@ package{
 		//#Input
 		public var m_Input:IInput;
 
+		//#Mouse
+		public var m_MouseSrcX:int=0;
+		public var m_MouseSrcY:int=0;
+		public var m_MouseDstX:int=0;
+		public var m_MouseDstY:int=0;
+		public var m_MouseDownFlag:Boolean = false;
+
+		//#Draw
+		public var m_DrawShape:Shape = new Shape();
+
+		//=BlockSummoner
+		//常に一つだけ生成するため、現在生成されているブロックを保持しておく
+		public var m_SwitchBlock:Block_Movable;
+
 
 		//==Common==
 
-		//Reset
+		//#Reset
 		override public function Reset(i_X:int, i_Y:int):void{
+			var InitFlag:Boolean = (m_Body != null);//すでに初期化はされているか
+
 			//Type
 			{
 				SetBlockType(Game.P);
@@ -92,7 +117,7 @@ package{
 			}
 
 			//Collision
-			if(! m_Body)//まだ生成していなければ
+			if(! InitFlag)//まだ生成していなければ
 			{
 				var ColParam:Object = GetDefaultCollisionParam();
 				{//デフォルトのパラメータ
@@ -117,14 +142,210 @@ package{
 					CreateCollision_Circle(COL_RAD, ColParam);
 				}
 			}
+
+			//マウスのイベント
+			if(! InitFlag)
+			{
+				//Down
+				Game.Instance().addEventListener(MouseEvent.MOUSE_DOWN, OnMouseDown);//ステージ上のクリックのみ検出
+				//Move
+				Game.Instance().stage.addEventListener(MouseEvent.MOUSE_MOVE, OnMouseMove);//どこに移動しようとも
+				//Up
+				Game.Instance().stage.addEventListener(MouseEvent.MOUSE_UP, OnMouseUp);//どこでクリックを解除しようとも
+			}
+
+			//m_DrawShape
+			if(! InitFlag)
+			{
+				Game.Instance().m_Root_Gimmick.addChild(m_DrawShape);
+			}
+
+			//デストラクタ
+			if(! InitFlag)
+			{
+				addEventListener(Event.REMOVED_FROM_STAGE, Destruct);
+			}
 		}
 
+		//Destroy
+		public function Destruct(e:Event):void{
+			//Mouse
+			{
+				//Down
+				Game.Instance().removeEventListener(MouseEvent.MOUSE_DOWN, OnMouseDown);//ステージ上のクリックのみ検出
+				//Move
+				Game.Instance().stage.removeEventListener(MouseEvent.MOUSE_MOVE, OnMouseMove);//どこに移動しようとも
+				//Up
+				Game.Instance().stage.removeEventListener(MouseEvent.MOUSE_UP, OnMouseUp);//どこでクリックを解除しようとも
+			}
+		}
+
+
+		//#Input
 		public function SetInput(i_Input:IInput):void{
 			//Input
 			{
 				m_Input = i_Input;
 			}
 		}
+
+
+		//#Mouse
+
+		public function OnMouseDown(e:MouseEvent):void{
+			//ステージでのマウス位置
+			var MouseX:int = Game.Instance().m_Root_Gimmick.mouseX;
+			var MouseY:int = Game.Instance().m_Root_Gimmick.mouseY;
+
+			switch(m_Val){
+			case TYPE_BLOCK_SUMMONER:
+				if(! Game.Instance().IsWall(MouseX/ImageManager.PANEL_LEN, MouseY/ImageManager.PANEL_LEN)){//開始位置はブロックが無いとこじゃないとダメ
+					//クリック位置を始点とする（ついでに現時点での終点ともする）
+					m_MouseSrcX = MouseX;
+					m_MouseSrcY = MouseY;
+					m_MouseDstX = MouseX;
+					m_MouseDstY = MouseY;
+
+					//「マウスでの指定を開始したフラグ」をオン
+					m_MouseDownFlag = true;
+
+					//とりあえず現在のブロックサイズを描画してみる
+					RedrawBlockGraphic();
+				}
+				break;
+			}
+		}
+
+		public function OnMouseMove(e:MouseEvent):void{
+			//ステージでのマウス位置
+			var MouseX:int = Game.Instance().m_Root_Gimmick.mouseX;
+			var MouseY:int = Game.Instance().m_Root_Gimmick.mouseY;
+
+			switch(m_Val){
+			case TYPE_BLOCK_SUMMONER:
+				if(m_MouseDownFlag){
+					if(! IsWallContain(m_MouseSrcX, m_MouseSrcY, MouseX, MouseY)){
+						//現在の終点を更新
+						m_MouseDstX = MouseX;
+						m_MouseDstY = MouseY;
+
+						//現在のブロック候補表示の更新
+						RedrawBlockGraphic();
+					}
+				}
+				break;
+			}
+		}
+
+		public function OnMouseUp(e:MouseEvent):void{
+			//ステージでのマウス位置
+			var MouseX:int = Game.Instance().m_Root_Gimmick.mouseX;
+			var MouseY:int = Game.Instance().m_Root_Gimmick.mouseY;
+
+			switch(m_Val){
+			case TYPE_BLOCK_SUMMONER:
+				if(m_MouseDownFlag){
+					if(! IsWallContain(m_MouseSrcX, m_MouseSrcY, MouseX, MouseY)){
+						//最終的な終点を更新
+						m_MouseDstX = MouseX;
+						m_MouseDstY = MouseY;
+					}
+
+					//前回のブロックはこの時点で削除
+					if(m_SwitchBlock){
+						m_SwitchBlock.Kill();
+					}
+
+					//今回のブロック生成
+					{
+						var BlockX:int = (m_MouseSrcX + m_MouseDstX) / 2;
+						var BlockY:int = (m_MouseSrcY + m_MouseDstY) / 2;
+						var BlockW:int = (m_MouseSrcX < m_MouseDstX)? m_MouseDstX-m_MouseSrcX: m_MouseSrcX-m_MouseDstX;
+						var BlockH:int = (m_MouseSrcY < m_MouseDstY)? m_MouseDstY-m_MouseSrcY: m_MouseSrcY-m_MouseDstY;
+
+						if(BlockW > 0 && BlockH > 0){
+							m_SwitchBlock = new Block_Movable();
+
+							m_SwitchBlock.SetVal(0);
+							m_SwitchBlock.Reset_Inner(BlockX, BlockY, BlockW, BlockH);
+
+							Game.Instance().m_Root_Gimmick.addChild(m_SwitchBlock);
+							GameObjectManager.Register(m_SwitchBlock);
+						}
+					}
+
+					//今までの候補表示をクリア
+					ClearBlockGraphic();
+
+					//マウス操作が終了したのでフラグオフ
+					m_MouseDownFlag = false;
+				}
+				break;
+			}
+		}
+
+
+		//#Utility
+		public function IsWallContain(in_SrcX:int, in_SrcY:int, in_DstX:int, in_DstY:int):Boolean
+		{
+			var SrcX:int = in_SrcX/ImageManager.PANEL_LEN;
+			var SrcY:int = in_SrcY/ImageManager.PANEL_LEN;
+			var DstX:int = in_DstX/ImageManager.PANEL_LEN;
+			var DstY:int = in_DstY/ImageManager.PANEL_LEN;
+
+			for(var iter_x:int = SrcX; ; ){
+				for(var iter_y:int = SrcY; ; ){
+					if(Game.Instance().IsWall(iter_x, iter_y)){
+						return true;//範囲内のどこかにブロックがあった
+					}
+					if(iter_y < DstY){iter_y += 1; continue;}
+					if(iter_y > DstY){iter_y -= 1; continue;}
+					break;
+				}
+
+				if(iter_x < DstX){iter_x += 1; continue;}
+				if(iter_x > DstX){iter_x -= 1; continue;}
+				break;
+			}
+
+			return false;//範囲内のどこにもブロックがなかった
+		}
+
+		//#Draw
+		public function RedrawBlockGraphic():void
+		{
+			var g:Graphics = m_DrawShape.graphics;
+
+			//Clear
+			{
+				g.clear();
+			}
+
+			//Setting
+			{
+				const line_w:int = 3;
+				const line_color:uint = 0xFF8800;
+				const line_alpha:Number = 1.0;
+
+				g.lineStyle(line_w, line_color, line_alpha);
+			}
+
+			//Draw
+			{
+				g.drawRect(m_MouseSrcX, m_MouseSrcY, m_MouseDstX - m_MouseSrcX, m_MouseDstY - m_MouseSrcY);
+			}
+		}
+
+		public function ClearBlockGraphic():void
+		{
+			var g:Graphics = m_DrawShape.graphics;
+
+			//Clear
+			{
+				g.clear();
+			}
+		}
+
 
 		//Update:オーバライドして使う
 		override public function Update(i_DeltaTime:Number):void{

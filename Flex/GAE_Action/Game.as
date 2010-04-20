@@ -282,6 +282,7 @@ package{
 			//＃Map
 			var PlayerX:int = ImageManager.PANEL_LEN * 1.5;
 			var PlayerY:int = ImageManager.PANEL_LEN * 1.5;
+			var PlayerType:int = Player.TYPE_NORMAL;//!!
 			var GoalX:int = ImageManager.PANEL_LEN * 0.5;
 			var GoalY:int = ImageManager.PANEL_LEN * 0.5;
 			{
@@ -318,6 +319,8 @@ package{
 								{
 									PlayerX = pos_x;
 									PlayerY = pos_y;
+
+									PlayerType = (m_Map[y][x] / VAL_OFFSET) % 10;
 								}
 								break;
 							case G:
@@ -445,6 +448,7 @@ package{
 			//＃Player
 			{
 				m_Player = new Player();
+				m_Player.SetVal(PlayerType);
 				m_Player.SetInput(m_Input);
 				m_Player.Reset(PlayerX, PlayerY);
 
@@ -670,6 +674,32 @@ package{
 					}//Scope : Create Block
 				}//loop x
 			}//loop y
+		}
+
+		public function IsWall(i_X:int, i_Y:int):Boolean{
+			var NumX:int = m_Map[0].length;
+			var NumY:int = m_Map.length;
+
+			//Check：範囲外は壁とみなす
+			{
+				if(i_X < 0){return true;}
+				if(i_X >= NumX){return true;}
+				if(i_Y < 0){return true;}
+				if(i_Y >= NumY){return true;}
+			}
+
+			//新規に追加するやつは当たり判定ありのやつだと思うので、空間のみチェックして、それ以外は壁とする
+			switch(m_Map[i_Y][i_X]){
+			case O:
+			case P:
+			case G:
+			case E:
+			case Q:
+				return false;
+			}
+
+			//空間でなければ壁とみなす
+			return true;
 		}
 
 
@@ -1419,6 +1449,7 @@ package{
 					{
 						switch(index % VAL_OFFSET){
 						case P:
+							m_Player.SetVal((index / VAL_OFFSET) % 10);
 							m_Player.Reset(pos_x, pos_y);
 							break;
 						case G:
@@ -1562,6 +1593,11 @@ package{
 							continue;
 						}
 						break;
+					case P:
+						if(in_Val >= Player.TYPE_NUM){
+							continue;
+						}
+						break;
 					}
 
 					switch(GetMapIndex(m_Map[y][x])){
@@ -1572,6 +1608,7 @@ package{
 					case M:
 					case T:
 					case A:
+					case P:
 						m_Map[y][x] = GetMapIndex(m_Map[y][x]) + (in_Val * VAL_OFFSET) + (GetMapDir(m_Map[y][x]) * DIR_OFFSET);
 						m_ObjMap[y][x].SetVal(in_Val);
 						m_ObjMap[y][x].Reset(pos_x, pos_y);
@@ -1968,7 +2005,7 @@ package{
 		//=GAE用投稿まわり=
 
 		//通信用のやつ
-		private var m_NetConnection:NetConnection;
+		public var m_NetConnection:NetConnection;
 
 		//通信に応答するやつ
 		private var m_Responder_Upload:Responder;
@@ -1981,7 +2018,7 @@ package{
 		public function Connect():void{
 			if(! m_NetConnection){
 				m_NetConnection = new NetConnection();
-/*
+//*
 				m_NetConnection.connect("https://first-lab.appspot.com/cage/api");
 /*/
 				m_NetConnection.connect("./api");
