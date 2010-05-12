@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:comp="*"
+	paddingTop="0" paddingLeft="0"
+	paddingRight="0" paddingBottom="0"
+	applicationComplete="init()"
+>
+	<!--Script-->
+	<mx:Script>
+		<![CDATA[
+/*
+			ToDo：
+			・カラーパレットの初期化
+			・カラーパレットの枠（透明でもOKなように）
+			・透明をわからせるための背景スクロール（Bitmapのスクロールで実現可能？）
+			・アルファパレットを用意すべきかなぁ
+			　・汎用性も上がるし、初期化もしやすくなるが、複雑化もする
+*/
+
+			//最初のロード完了時の初期化
+			private function init():void{
+				//色とかの初期化
+				{
+					//色相・彩度
+					palette_hs_color.SetData(
+						[{H:0.0/6, S:1.0/6},
+						 {H:1.0/6, S:1.0/6},
+						 {H:2.0/6, S:1.0/6},
+						 {H:3.0/6, S:1.0/6},
+						 {H:4.0/6, S:1.0/6},
+						 {H:5.0/6, S:1.0/6},
+						 {H:0.0/6, S:6.0/6},
+						 {H:0.0/6, S:6.0/6},
+						 {H:0.0/6, S:6.0/6}]
+					);
+
+					//明度
+					palette_b_color.SetData(
+						[{B:1.0/6},
+						 {B:1.0/6},
+						 {B:1.0/6},
+						 {B:1.0/6},
+						 {B:1.0/6},
+						 {B:1.0/6},
+						 {B:0},
+						 {B:1},
+						 {B:0}]
+					);
+
+					//アルファ
+					palette_a_color.SetData(
+						[{A:1},
+						 {A:1},
+						 {A:1},
+						 {A:1},
+						 {A:1},
+						 {A:1},
+						 {A:1},
+						 {A:1},
+						 {A:0}]
+					);
+
+					//キャンバス
+					canvas_color.SetFunc_Index2Color(
+						function(in_Index:int):uint{
+							return palette_c_color.GetColor(in_Index);
+						}
+					);
+				}
+
+				//色変更の接続：色相・彩度→明度→アルファ→カラーパレット→キャンバス
+				{
+					//色相・彩度→明度
+					{
+						//接続関数
+						var ChangeColor_HS_to_B:Function = function():void{
+							palette_b_color.Redraw(palette_hs_color.GetColor());
+						};
+
+						//初期化
+						ChangeColor_HS_to_B();
+
+						//接続
+						palette_hs_color.SetListener_ChangeColor(function():void{
+							ChangeColor_HS_to_B();
+						});
+					}
+
+					//明度→アルファ
+					{
+						//接続関数
+						var ChangeColor_B_to_A:Function = function():void{
+							palette_a_color.Redraw(palette_b_color.GetColor());
+							//palette_c_colorの選択中のやつを指定色で変更
+						};
+
+						//初期化
+						ChangeColor_B_to_A();
+
+						//接続
+						palette_b_color.SetListener_ChangeColor(function():void{
+							ChangeColor_B_to_A();
+						});
+					}
+
+					//アルファ→カラーパレット
+					{
+						//接続関数
+						var ChangeColor_A_to_C:Function = function():void{
+							palette_c_color.Redraw(palette_a_color.GetColor());
+							//palette_c_colorの選択中のやつを指定色で変更
+						};
+
+						//初期化
+						ChangeColor_A_to_C();
+
+						//接続
+						palette_a_color.SetListener_ChangeColor(function():void{
+							ChangeColor_A_to_C();
+						});
+					}
+
+					//カラーパレット→キャンバスの描画色
+					{
+						//接続関数
+						var ChangeColor_C_to_C:Function = function():void{
+//							canvas_color.SetColor(palette_c_color.GetColor());
+							canvas_color.Redraw();
+						};
+
+						//初期化
+						ChangeColor_C_to_C();
+
+						//接続
+						palette_c_color.SetListener_ChangeColor(function():void{
+							ChangeColor_C_to_C();
+						});
+					}
+				}
+
+				//Index変更の接続：カラーパレット→色相・彩度→明度→アルファ
+				{
+					//カラーパレット→色相・彩度
+					{
+						//接続関数
+						var ChangeIndex_C_to_HS:Function = function():void{
+							palette_hs_color.SetCursorIndex(palette_c_color.GetCursorIndex());
+							//範囲外の時はオールリセットになる感じで
+							//範囲外の時はカーソルを動かないようにしてね
+						};
+
+						//初期化
+						ChangeIndex_C_to_HS();
+
+						//接続
+						palette_c_color.SetListener_ChangeIndex(function():void{
+							ChangeIndex_C_to_HS();
+						});
+					}
+
+					//色相・彩度→明度
+					{
+						//接続関数
+						var ChangeIndex_HS_to_B:Function = function():void{
+							palette_b_color.SetCursorIndex(palette_hs_color.GetCursorIndex());
+							palette_b_color.Redraw(palette_hs_color.GetColor());//表示色も変更
+						};
+
+						//初期化
+						ChangeIndex_HS_to_B();
+
+						//接続
+						palette_hs_color.SetListener_ChangeIndex(function():void{
+							ChangeIndex_HS_to_B();
+						});
+					}
+
+					//明度→アルファ
+					{
+						//接続関数
+						var ChangeIndex_B_to_A:Function = function():void{
+							palette_a_color.SetCursorIndex(palette_b_color.GetCursorIndex());
+							palette_a_color.Redraw(palette_b_color.GetColor());//表示色も変更
+						};
+
+						//初期化
+						ChangeIndex_B_to_A();
+
+						//接続
+						palette_b_color.SetListener_ChangeIndex(function():void{
+							ChangeIndex_B_to_A();
+						});
+					}
+
+					//カラーパレット→キャンバス
+					{
+						//接続関数
+						var ChangeIndex_C_to_C:Function = function():void{
+							canvas_color.SetCursorIndex(palette_c_color.GetCursorIndex());
+							//範囲外の時はオールリセットになる感じで
+							//範囲外の時はカーソルを動かないようにしてね
+						};
+
+						//初期化
+						ChangeIndex_C_to_C();
+
+						//接続
+						palette_c_color.SetListener_ChangeIndex(function():void{
+							ChangeIndex_C_to_C();
+						});
+					}
+				}
+
+				//リスナ連鎖によるカラーパレットの初期化
+				{
+					//ちょっと強引なので、もう少しスマートな方法があればそちらが良い
+					var PaletteNum:int = Palette_Color.PALETTE_NUM;
+					for(var i:int = 0; i <= PaletteNum; i++){
+						palette_c_color.SetCursorIndex(i % PaletteNum);
+
+						for(var j:int = 0; j < palette_hs_color.m_ListenerList_ChangeColor.length; j++){
+							palette_hs_color.m_ListenerList_ChangeColor[j]();
+						}
+					}
+				}
+
+				//最初は透明色で初期化されるように、キャンバスのIndexリストを調整
+				{
+					canvas_color.ClearIndex(8);//8番目のパレットで塗りつぶす
+					canvas_color.Redraw();
+				}
+
+				//キャンバス用のボックスサイズの設定
+				{
+					box_canvas_color.width  = Canvas_Zoom.SIZE_W + box_canvas_color.verticalScrollBar.width;
+					box_canvas_color.height = Canvas_Zoom.SIZE_H + box_canvas_color.horizontalScrollBar.height;
+				}
+			}
+
+			public function Canvas_Color_x(in_Ratio:Number):void{
+				canvas_color.scaleX = in_Ratio;
+				canvas_color.scaleY = in_Ratio;
+			}
+		]]>
+	</mx:Script>
+
+
+	<!--View-->
+	<mx:HBox width="100%" height="100%">
+		<!--Space-->
+		<mx:Spacer width="10"/>
+
+		<!--HSBA-->
+		<mx:VBox>
+			<!--Space-->
+			<mx:Spacer width="100%" height="10%"/>
+
+			<comp:Palette_HS id="palette_hs_color"/>
+			<comp:Palette_B  id="palette_b_color"/>
+			<comp:Palette_A  id="palette_a_color"/>
+		</mx:VBox>
+
+		<!--Space-->
+		<mx:Spacer width="10"/>
+
+		<!--Color-->
+		<mx:VBox>
+			<!--Space-->
+			<mx:Spacer width="100%" height="10%"/>
+
+			<comp:Palette_Color id="palette_c_color"/>
+		</mx:VBox>
+
+		<!--Space-->
+		<mx:Spacer width="10"/>
+
+		<!--Canvas-->
+		<mx:VBox>
+			<!--Space-->
+			<mx:Spacer width="100%" height="10%"/>
+
+			<!--Button-->
+			<mx:HBox>
+				<mx:Button label="x1" buttonDown="Canvas_Color_x(1)" />
+				<mx:Button label="x2" buttonDown="Canvas_Color_x(2)" />
+				<mx:Button label="x4" buttonDown="Canvas_Color_x(4)" />
+				<mx:Button label="x8" buttonDown="Canvas_Color_x(8)" />
+			</mx:HBox>
+
+			<!--Space-->
+			<mx:Spacer width="100%" height="10%"/>
+
+			<!--Canvas-->
+			<mx:Box id="box_canvas_color" verticalScrollPolicy="on" horizontalScrollPolicy="on">
+				<comp:Canvas_Zoom id="canvas_color"/>
+			</mx:Box>
+		</mx:VBox>
+
+		<!--Space-->
+		<mx:Spacer width="100%" height="100%"/>
+	</mx:HBox>
+</mx:Application>
