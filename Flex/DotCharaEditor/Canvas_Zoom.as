@@ -30,6 +30,18 @@ package{
 		static public const SIZE_W:int = DOT_NUM * SIZE_RATIO;
 		static public const SIZE_H:int = DOT_NUM * SIZE_RATIO;
 
+		//＃カーソルのタイプ（カーソルのIndex）
+		static public var CursorTypeIter:int = 0;
+		static public const CURSOR_TYPE_NORMAL:int	= CursorTypeIter++;
+		static public const CURSOR_TYPE_MIRROR:int	= CursorTypeIter++;
+		static public const CURSOR_TYPE_NUM:int		= CursorTypeIter;
+
+		//＃カーソルのモード（カーソルをどう動かすか）
+		static public var CursorModeIter:int = 0;
+		static public const CURSOR_MODE_NORMAL:int	= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR:int	= CursorModeIter++;
+		static public const CURSOR_MODE_NUM:int		= CursorModeIter;
+
 
 		//==Var==
 
@@ -46,28 +58,33 @@ package{
 		//パレットIndexを保持する擬似画像（直接の表示には使わない）
 		public var m_BitmapData_Index:BitmapData;
 
+		//グリッド画像
+		public var m_Grid:Shape;
+
+		//カーソル画像
+		public var m_Cursor:Array;//vec<Shape>：ミラーリングのため、複数のカーソルに対応
+
+		//カーソル同期用に自分自身をstaticなリストに突っ込む
+		static public var m_InstanceList:Array = [];//vec<Canvas_Zoom>
+
+		//カーソルのモード（動かし方）
+		public var m_CursorMode:int = CURSOR_MODE_MIRROR;
+
 		//リスナのリスト
-		public var m_ListenerList:Array = [];
+		public var m_ListenerList_Redraw:Array = [];
 
 		//Index => Color
 		public var m_Index2Color:Function = function(in_Index:int):uint{return 0x00000000};
-
-		//描画色
-		public var m_Color:uint = 0xFF000000;
 
 
 		//==Function==
 
 		//#Public
 
-		//描画色の変更
-		public function SetColor(in_Color:uint):void{
-			m_Color = in_Color;
-		}
-
 		//変更時のリスナを追加
-		public function SetListener(in_Func:Function):void{
-			m_ListenerList.push(in_Func);
+		//変更時のリスナを追加
+		public function SetListener_Redraw(in_Func:Function):void{
+			m_ListenerList_Redraw.push(in_Func);
 		}
 
 		//Index=>Colorの変換処理を設定
@@ -79,16 +96,26 @@ package{
 		public function GetCursorIndex():int{
 			return m_CursorIndex;
 		}
-		public function SetCursorIndex(in_Index:int):void{
+		public function SetCursorIndex(in_Index:int, in_CursorColor:uint = 0xFFFFFFFF):void{
 			//Set Val
 			{
 				m_CursorIndex = in_Index;
+			}
+
+			//Redraw Cursor
+			{
+				RedrawCursor(in_CursorColor);
 			}
 		}
 
 		//Index Bitmapのクリア（主に初期化時に利用）
 		public function ClearIndex(in_Index:int = 0):void{
 			m_BitmapData_Index.fillRect(m_BitmapData_Index.rect, in_Index);
+		}
+
+		//指定位置の色を取得
+		public function GetPixel32(in_X:int, in_Y:int):uint{
+			return m_BitmapData.getPixel32(in_X, in_Y);
 		}
 
 
@@ -106,6 +133,9 @@ package{
 				//自身の幅を設定しておく
 				this.width  = SIZE_W;
 				this.height = SIZE_H;
+
+				//自身をstaticなリストに突っ込む
+				m_InstanceList.push(this);
 			}
 
 			//Init Once
@@ -136,10 +166,103 @@ package{
 				m_Root.addChild(m_Bitmap);
 			}
 
-			//
+			//Bitmap Index
 			{
 				//パレットのIndexを格納するためのBitmap。24bitで十分なはず
 				m_BitmapData_Index = new BitmapData(DOT_NUM, DOT_NUM, false, 0x000000);
+			}
+
+			//Grid
+			{
+				m_Grid = new Shape();
+
+				//Draw
+				{
+					var g:Graphics = m_Grid.graphics;
+
+					//
+					{
+						g.clear();
+
+						g.lineStyle(0, 0x888888, 0.5);
+					}
+
+					//縦線
+					for(var x:int = 0; x <= SIZE_W; x += SIZE_RATIO){
+						g.moveTo(x, 0);
+						g.lineTo(x, SIZE_H);
+					}
+
+					//横線
+					for(var y:int = 0; y <= SIZE_H; y += SIZE_RATIO){
+						g.moveTo(0, y);
+						g.lineTo(SIZE_W, y);
+					}
+				}
+
+				m_Root.addChild(m_Grid);
+			}
+
+			//m_Cursor
+			{
+				m_Cursor = new Array(CURSOR_TYPE_NUM);
+
+				m_Cursor.forEach(function(item:*, index:int, arr:Array):void{
+					m_Cursor[index] = new Shape();
+
+					//Mouse
+					{
+						//Func
+						var mouseMoveFunc:Function = function(e:MouseEvent = null):void{
+							var x:int = m_Bitmap.mouseX;
+							var y:int = m_Bitmap.mouseY;
+
+							var visible_flag:Boolean = true;
+
+							switch(index){
+							case CURSOR_TYPE_NORMAL:
+								break;
+							case CURSOR_TYPE_MIRROR:
+								x = DOT_NUM-1 - x;
+								if(m_CursorMode == CURSOR_MODE_NORMAL){
+									visible_flag = false;
+								}
+								break;
+							}
+
+							x *= SIZE_RATIO;
+							y *= SIZE_RATIO;
+
+							m_InstanceList.forEach(function(instance:*, index_inner:int, arr_inner:Array):void{
+								if(0 <= x && x < SIZE_W && 0 <= y && y < SIZE_H){
+									instance.m_Cursor[index].visible = visible_flag;//true;
+								}else{
+									return;
+//									instance.m_Cursor[index].visible = false;
+								}
+
+								instance.m_Cursor[index].x = x;
+								instance.m_Cursor[index].y = y;
+							});
+						};
+
+						//Init
+						mouseMoveFunc();
+
+						//Regist
+						root.addEventListener(
+							MouseEvent.MOUSE_MOVE,
+							mouseMoveFunc
+						);
+					}
+
+					m_Root.addChild(m_Cursor[index]);
+				});
+
+				//Draw
+				{
+					RedrawCursor();
+				}
 			}
 
 			//mouse
@@ -154,16 +277,25 @@ package{
 					{
 						//ラインだけじゃなく他のも？
 						//!!
-//						m_BitmapData.setPixel32(m_Bitmap.mouseX, m_Bitmap.mouseY, m_Color);
-						m_BitmapData_Index.setPixel(m_Bitmap.mouseX, m_Bitmap.mouseY, m_CursorIndex);
-						Redraw();
-					}
 
-					//Call Listener
-					{
-						for(var i:int = 0; i < m_ListenerList.length; i++){
-							m_ListenerList[i]();
+						//Dot
+						{
+							var drawFunc_Dot:Function = function(in_Index:int):void{
+								m_BitmapData_Index.setPixel(m_Cursor[in_Index].x / SIZE_RATIO, m_Cursor[in_Index].y / SIZE_RATIO, m_CursorIndex);
+							};
+
+							switch(m_CursorMode){
+							case CURSOR_MODE_NORMAL:
+								drawFunc_Dot(CURSOR_TYPE_NORMAL);
+								break;
+							case CURSOR_MODE_MIRROR:
+								drawFunc_Dot(CURSOR_TYPE_NORMAL);
+								drawFunc_Dot(CURSOR_TYPE_MIRROR);
+								break;
+							}
 						}
+
+						Redraw();
 					}
 
 					//Old
@@ -203,6 +335,74 @@ package{
 					m_BitmapData.setPixel32(x, y, Index2Color(m_BitmapData_Index.getPixel(x, y)));
 				}
 			}
+
+			//Call Listener
+			{
+				for(var i:int = 0; i < m_ListenerList_Redraw.length; i++){
+					m_ListenerList_Redraw[i]();
+				}
+			}
+		}
+
+		public function RedrawCursor(in_Color:uint = 0xFFFFFF):void{
+			const colorLerp:Function = function(in_SrcColor:uint, in_DstColor:uint, in_Ratio:Number):uint{
+				var a_src:uint = (in_SrcColor >> 24) & 0xFF;
+				var r_src:uint = (in_SrcColor >> 16) & 0xFF;
+				var g_src:uint = (in_SrcColor >>  8) & 0xFF;
+				var b_src:uint = (in_SrcColor >>  0) & 0xFF;
+
+				var a_dst:uint = (in_DstColor >> 24) & 0xFF;
+				var r_dst:uint = (in_DstColor >> 16) & 0xFF;
+				var g_dst:uint = (in_DstColor >>  8) & 0xFF;
+				var b_dst:uint = (in_DstColor >>  0) & 0xFF;
+
+				var a:uint = (a_src * (1 - in_Ratio)) + (a_dst * in_Ratio);
+				var r:uint = (r_src * (1 - in_Ratio)) + (r_dst * in_Ratio);
+				var g:uint = (g_src * (1 - in_Ratio)) + (g_dst * in_Ratio);
+				var b:uint = (b_src * (1 - in_Ratio)) + (b_dst * in_Ratio);
+
+				return (a << 24) | (r << 16) | (g << 8) | (b << 0);
+			};
+
+			m_Cursor.forEach(function(item:*, index:int, arr:Array):void{
+				var g:Graphics = m_Cursor[index].graphics;
+
+				const SCALE:Number = 2.0;
+				const LEN:Number = SIZE_RATIO/SCALE;
+
+				//Scale
+				{
+					m_Cursor[index].scaleX = m_Cursor[index].scaleY = SCALE;
+				}
+
+				//Reset
+				{
+					g.clear();
+				}
+
+				//Base : Black
+				{
+					var color_base:uint = colorLerp(in_Color, 0xDD000000, 0.5);
+					g.lineStyle(1, color_base & 0xFFFFFF, ((color_base >> 24) & 0xFF)/255.0);
+
+					g.drawRect(0, 0, LEN, LEN);
+				}
+
+				//Cross : White
+				{
+					var color_cross:uint = colorLerp(in_Color, 0xDDFFFFFF, 0.5);
+					g.lineStyle(1, color_cross & 0xFFFFFF, ((color_base >> 24) & 0xFF)/255.0);
+
+					g.moveTo(LEN*1/4,	0);
+					g.lineTo(LEN*3/4,	0);
+					g.moveTo(LEN*1/4,	LEN);
+					g.lineTo(LEN*3/4,	LEN);
+					g.moveTo(0,			LEN*1/4);
+					g.lineTo(0,			LEN*3/4);
+					g.moveTo(LEN,		LEN*1/4);
+					g.lineTo(LEN,		LEN*3/4);
+				}
+			});
 		}
 
 		public function Index2Color(in_Index:int):uint{

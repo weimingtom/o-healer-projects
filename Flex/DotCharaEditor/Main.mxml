@@ -20,45 +20,44 @@
 
 			//最初のロード完了時の初期化
 			private function init():void{
-				//色とかの初期化
+				var i:int;
+				var j:int;
+
+				const info_color:Array = [
+					{H:0/6.0, S:1/6.0, B:1/6.0, A:1},
+					{H:1/6.0, S:1/6.0, B:1/6.0, A:1},
+					{H:2/6.0, S:1/6.0, B:1/6.0, A:1},
+					{H:3/6.0, S:1/6.0, B:1/6.0, A:1},
+					{H:4/6.0, S:1/6.0, B:1/6.0, A:1},
+					{H:5/6.0, S:1/6.0, B:1/6.0, A:1},
+					{H:0/6.0, S:6/6.0, B:0/6.0, A:1},
+					{H:0/6.0, S:6/6.0, B:6/6.0, A:1},
+					{H:0/6.0, S:6/6.0, B:0/6.0, A:0}
+				];
+
+				const info_shade:Array = [
+					{H:0/6.0, S:6/6.0, B:0/6.0, A:0.7},
+					{H:0/6.0, S:6/6.0, B:6/6.0, A:0.7}
+				];
+
+				var PaletteNum:int = Palette_Color.PALETTE_NUM;
+				var PaletteCenterIndex:int = (PaletteNum-1)/2;
+
+				//Init : Color
 				{
 					//色相・彩度
 					palette_hs_color.SetData(
-						[{H:0.0/6, S:1.0/6},
-						 {H:1.0/6, S:1.0/6},
-						 {H:2.0/6, S:1.0/6},
-						 {H:3.0/6, S:1.0/6},
-						 {H:4.0/6, S:1.0/6},
-						 {H:5.0/6, S:1.0/6},
-						 {H:0.0/6, S:6.0/6},
-						 {H:0.0/6, S:6.0/6},
-						 {H:0.0/6, S:6.0/6}]
+						info_color
 					);
 
 					//明度
 					palette_b_color.SetData(
-						[{B:1.0/6},
-						 {B:1.0/6},
-						 {B:1.0/6},
-						 {B:1.0/6},
-						 {B:1.0/6},
-						 {B:1.0/6},
-						 {B:0},
-						 {B:1},
-						 {B:0}]
+						info_color
 					);
 
 					//アルファ
 					palette_a_color.SetData(
-						[{A:1},
-						 {A:1},
-						 {A:1},
-						 {A:1},
-						 {A:1},
-						 {A:1},
-						 {A:1},
-						 {A:1},
-						 {A:0}]
+						info_color
 					);
 
 					//キャンバス
@@ -69,7 +68,46 @@
 					);
 				}
 
-				//色変更の接続：色相・彩度→明度→アルファ→カラーパレット→キャンバス
+				//Init : Shade
+				{
+					//色相・彩度
+					palette_hs_shade.SetData(
+						info_shade
+					);
+
+					//明度
+					palette_b_shade.SetData(
+						info_shade
+					);
+
+					//アルファ
+					palette_a_shade.SetData(
+						info_shade
+					);
+
+					//キャンバス
+					canvas_shade.SetFunc_Index2Color(
+						function(in_Index:int):uint{
+							return palette_c_shade.GetColor(in_Index);
+						}
+					);
+				}
+
+				//Init : Result
+				{
+					canvas_result.SetFunc_GetColor_Color(
+						function(in_X:int, in_Y:int):uint{
+							return canvas_color.GetPixel32(in_X, in_Y);
+						}
+					);
+					canvas_result.SetFunc_GetColor_Shade(
+						function(in_X:int, in_Y:int):uint{
+							return canvas_shade.GetPixel32(in_X, in_Y);
+						}
+					);
+				}
+
+				//色変更の接続：色相・彩度→明度→アルファ→カラーパレット→キャンバス→合成キャンバス
 				{
 					//色相・彩度→明度
 					{
@@ -137,6 +175,22 @@
 							ChangeColor_C_to_C();
 						});
 					}
+
+					//キャンバス（色）→合成キャンバス
+					{
+						//接続関数
+						var ChangeColor_C_to_R:Function = function():void{
+							canvas_result.Redraw();
+						};
+
+						//初期化
+						ChangeColor_C_to_R();//この段階では意味が無いか
+
+						//接続
+						canvas_color.SetListener_Redraw(function():void{
+							ChangeColor_C_to_R();
+						});
+					}
 				}
 
 				//Index変更の接続：カラーパレット→色相・彩度→明度→アルファ
@@ -197,7 +251,7 @@
 					{
 						//接続関数
 						var ChangeIndex_C_to_C:Function = function():void{
-							canvas_color.SetCursorIndex(palette_c_color.GetCursorIndex());
+							canvas_color.SetCursorIndex(palette_c_color.GetCursorIndex(), palette_c_color.GetColor());
 							//範囲外の時はオールリセットになる感じで
 							//範囲外の時はカーソルを動かないようにしてね
 						};
@@ -215,26 +269,248 @@
 				//リスナ連鎖によるカラーパレットの初期化
 				{
 					//ちょっと強引なので、もう少しスマートな方法があればそちらが良い
-					var PaletteNum:int = Palette_Color.PALETTE_NUM;
-					for(var i:int = 0; i <= PaletteNum; i++){
+					for(i = 0; i <= PaletteNum; i++){
 						palette_c_color.SetCursorIndex(i % PaletteNum);
 
-						for(var j:int = 0; j < palette_hs_color.m_ListenerList_ChangeColor.length; j++){
+						for(j = 0; j < palette_hs_color.m_ListenerList_ChangeColor.length; j++){
 							palette_hs_color.m_ListenerList_ChangeColor[j]();
 						}
 					}
 				}
 
+				//陰も同様
+				{
+					//色相・彩度→明度
+					{
+						//接続関数
+						var ChangeShadeColor_HS_to_B:Function = function():void{
+							palette_b_shade.Redraw(palette_hs_shade.GetColor());
+						};
+
+						//初期化
+						ChangeShadeColor_HS_to_B();
+
+						//接続
+						palette_hs_shade.SetListener_ChangeColor(function():void{
+							ChangeShadeColor_HS_to_B();
+						});
+					}
+
+					//明度→アルファ
+					{
+						//接続関数
+						var ChangeShadeColor_B_to_A:Function = function():void{
+							palette_a_shade.Redraw(palette_b_shade.GetColor());
+							//palette_c_shadeの選択中のやつを指定色で変更
+						};
+
+						//初期化
+						ChangeShadeColor_B_to_A();
+
+						//接続
+						palette_b_shade.SetListener_ChangeColor(function():void{
+							ChangeShadeColor_B_to_A();
+						});
+					}
+
+					//#ここは特殊なので「陰」特有仕様
+					//アルファ→カラーパレット
+					{
+						//接続関数
+						var ChangeShadeColor_A_to_C:Function = function():void{
+							var rgb:uint = palette_a_shade.GetColor() & 0x00FFFFFF;
+							var a_ori:uint = (palette_a_shade.GetColor() >> 24) & 0xFF;
+							var a:uint;
+
+							var i:int;
+
+							switch(palette_a_shade.GetCursorIndex()){
+							case 0://光
+								for(i = 0; i < PaletteCenterIndex; i++){
+									a = a_ori * (PaletteCenterIndex-i)/(PaletteCenterIndex+1);
+									palette_c_shade.Redraw((a << 24) | (rgb), i);
+								}
+								break;
+							case 1://陰
+								for(i = 0; i < PaletteCenterIndex; i++){
+									a = a_ori * (PaletteCenterIndex-i)/(PaletteCenterIndex+1);
+									palette_c_shade.Redraw((a << 24) | (rgb), PaletteNum-1 - i);
+								}
+								break;
+							}
+							//palette_c_shadeの選択中のやつを指定色で変更
+						};
+
+						//初期化
+						ChangeShadeColor_A_to_C();
+						palette_c_shade.Redraw(0x00000000, PaletteCenterIndex);//中央色は更新されないのでここで初期化
+
+						//接続
+						palette_a_shade.SetListener_ChangeColor(function():void{
+							ChangeShadeColor_A_to_C();
+						});
+					}
+
+					//カラーパレット→キャンバスの描画色
+					{
+						//接続関数
+						var ChangeShadeColor_C_to_C:Function = function():void{
+//							canvas_shade.SetColor(palette_c_shade.GetColor());
+							canvas_shade.Redraw();
+						};
+
+						//初期化
+						ChangeShadeColor_C_to_C();
+
+						//接続
+						palette_c_shade.SetListener_ChangeColor(function():void{
+							ChangeShadeColor_C_to_C();
+						});
+					}
+
+					//キャンバス（色）→合成キャンバス
+					{
+						//接続関数
+						var ChangeShadeColor_C_to_R:Function = function():void{
+							canvas_result.Redraw();
+						};
+
+						//初期化
+						ChangeShadeColor_C_to_R();//この段階では意味が無いか
+
+						//接続
+						canvas_shade.SetListener_Redraw(function():void{
+							ChangeShadeColor_C_to_R();
+						});
+					}
+				}
+
+				//陰も同様
+				{
+					//#ここは特殊なので「陰」特有仕様
+					//カラーパレット→色相・彩度
+					{
+						//接続関数
+						var ChangeShadeIndex_C_to_HS:Function = function():void{
+							if(palette_c_shade.GetCursorIndex() < PaletteCenterIndex){
+								palette_hs_shade.SetCursorIndex(0);//光
+							}
+							if(palette_c_shade.GetCursorIndex() > PaletteCenterIndex){
+								palette_hs_shade.SetCursorIndex(1);//陰
+							}
+							//範囲外の時はオールリセットになる感じで
+							//範囲外の時はカーソルを動かないようにしてね
+						};
+
+						//初期化
+						ChangeShadeIndex_C_to_HS();
+
+						//接続
+						palette_c_shade.SetListener_ChangeIndex(function():void{
+							ChangeShadeIndex_C_to_HS();
+						});
+					}
+
+					//色相・彩度→明度
+					{
+						//接続関数
+						var ChangeShadeIndex_HS_to_B:Function = function():void{
+							palette_b_shade.SetCursorIndex(palette_hs_shade.GetCursorIndex());
+							palette_b_shade.Redraw(palette_hs_shade.GetColor());//表示色も変更
+						};
+
+						//初期化
+						ChangeShadeIndex_HS_to_B();
+
+						//接続
+						palette_hs_shade.SetListener_ChangeIndex(function():void{
+							ChangeShadeIndex_HS_to_B();
+						});
+					}
+
+					//明度→アルファ
+					{
+						//接続関数
+						var ChangeShadeIndex_B_to_A:Function = function():void{
+							palette_a_shade.SetCursorIndex(palette_b_shade.GetCursorIndex());
+							palette_a_shade.Redraw(palette_b_shade.GetColor());//表示色も変更
+						};
+
+						//初期化
+						ChangeShadeIndex_B_to_A();
+
+						//接続
+						palette_b_shade.SetListener_ChangeIndex(function():void{
+							ChangeShadeIndex_B_to_A();
+						});
+					}
+
+					//カラーパレット→キャンバス
+					{
+						//接続関数
+						var ChangeShadeIndex_C_to_C:Function = function():void{
+							canvas_shade.SetCursorIndex(palette_c_shade.GetCursorIndex());
+							//範囲外の時はオールリセットになる感じで
+							//範囲外の時はカーソルを動かないようにしてね
+						};
+
+						//初期化
+						ChangeShadeIndex_C_to_C();
+
+						//接続
+						palette_c_shade.SetListener_ChangeIndex(function():void{
+							ChangeShadeIndex_C_to_C();
+						});
+					}
+				}
+/*
+				//陰も同様
+				{
+					//ちょっと強引なので、もう少しスマートな方法があればそちらが良い
+					for(i = 0; i <= PaletteNum; i++){
+						palette_c_shade.SetCursorIndex(i % PaletteNum);
+
+						for(j = 0; j < palette_hs_shade.m_ListenerList_ChangeColor.length; j++){
+							palette_hs_shade.m_ListenerList_ChangeColor[j]();
+						}
+					}
+				}
+/*/
+				//陰も同様
+				{
+					//ちょっと強引なので、もう少しスマートな方法があればそちらが良い
+					for(i = 0; i <= PaletteNum; i+=PaletteNum-1){
+						palette_c_shade.SetCursorIndex(i % PaletteNum);
+
+						for(j = 0; j < palette_hs_shade.m_ListenerList_ChangeColor.length; j++){
+							palette_hs_shade.m_ListenerList_ChangeColor[j]();
+						}
+					}
+
+					palette_c_shade.SetCursorIndex(PaletteCenterIndex);
+				}
+//*/
 				//最初は透明色で初期化されるように、キャンバスのIndexリストを調整
 				{
-					canvas_color.ClearIndex(8);//8番目のパレットで塗りつぶす
+					//Color
+					canvas_color.ClearIndex(info_color.length - 1);//8番目のパレットで塗りつぶす
 					canvas_color.Redraw();
+
+					//Shade
+					canvas_shade.ClearIndex(PaletteCenterIndex);//中央のパレットで塗りつぶす
+					canvas_shade.Redraw();
+
+					//Result
+					canvas_result.Redraw();
 				}
 
 				//キャンバス用のボックスサイズの設定
 				{
 					box_canvas_color.width  = Canvas_Zoom.SIZE_W + box_canvas_color.verticalScrollBar.width;
 					box_canvas_color.height = Canvas_Zoom.SIZE_H + box_canvas_color.horizontalScrollBar.height;
+
+					box_canvas_shade.width  = Canvas_Zoom.SIZE_W + box_canvas_shade.verticalScrollBar.width;
+					box_canvas_shade.height = Canvas_Zoom.SIZE_H + box_canvas_shade.horizontalScrollBar.height;
 				}
 			}
 
@@ -242,14 +518,19 @@
 				canvas_color.scaleX = in_Ratio;
 				canvas_color.scaleY = in_Ratio;
 			}
+
+			public function Canvas_Shade_x(in_Ratio:Number):void{
+				canvas_shade.scaleX = in_Ratio;
+				canvas_shade.scaleY = in_Ratio;
+			}
 		]]>
 	</mx:Script>
 
 
 	<!--View-->
-	<mx:HBox width="100%" height="100%">
+	<mx:HBox>
 		<!--Space-->
-		<mx:Spacer width="10"/>
+		<mx:Spacer width="100%"/>
 
 		<!--HSBA-->
 		<mx:VBox>
@@ -275,7 +556,7 @@
 		<!--Space-->
 		<mx:Spacer width="10"/>
 
-		<!--Canvas-->
+		<!--Canvas : Color-->
 		<mx:VBox>
 			<!--Space-->
 			<mx:Spacer width="100%" height="10%"/>
@@ -298,6 +579,67 @@
 		</mx:VBox>
 
 		<!--Space-->
-		<mx:Spacer width="100%" height="100%"/>
+		<mx:Spacer width="100%" height="10"/>
+
+		<!--Canvas : Result-->
+		<mx:VBox height="100%">
+			<!--Space-->
+			<mx:Spacer height="100%"/>
+
+			<!--Canvas-->
+			<comp:Canvas_Result id="canvas_result"/>
+
+			<!--Space-->
+			<mx:Spacer height="100%"/>
+		</mx:VBox>
+
+		<!--Space-->
+		<mx:Spacer width="100%" height="10"/>
+
+		<!--Canvas : Shade-->
+		<mx:VBox>
+			<!--Space-->
+			<mx:Spacer width="100%" height="10%"/>
+
+			<!--Button-->
+			<mx:HBox>
+				<mx:Button label="x1" buttonDown="Canvas_Shade_x(1)" />
+				<mx:Button label="x2" buttonDown="Canvas_Shade_x(2)" />
+				<mx:Button label="x4" buttonDown="Canvas_Shade_x(4)" />
+				<mx:Button label="x8" buttonDown="Canvas_Shade_x(8)" />
+			</mx:HBox>
+
+			<!--Space-->
+			<mx:Spacer width="100%" height="10%"/>
+
+			<!--Canvas-->
+			<mx:Box id="box_canvas_shade" verticalScrollPolicy="on" horizontalScrollPolicy="on">
+				<comp:Canvas_Zoom id="canvas_shade"/>
+			</mx:Box>
+		</mx:VBox>
+
+		<!--Space-->
+		<mx:Spacer width="10"/>
+
+		<!--Color of Shade-->
+		<mx:VBox>
+			<!--Space-->
+			<mx:Spacer width="100%" height="10%"/>
+
+			<comp:Palette_Color id="palette_c_shade"/>
+		</mx:VBox>
+
+		<!--Space-->
+		<mx:Spacer width="10"/>
+
+		<!--HSBA of Shade-->
+		<mx:VBox>
+			<!--Space-->
+			<mx:Spacer width="100%" height="10%"/>
+
+			<comp:Palette_HS id="palette_hs_shade"/>
+			<comp:Palette_B  id="palette_b_shade"/>
+			<comp:Palette_A  id="palette_a_shade"/>
+		</mx:VBox>
 	</mx:HBox>
 </mx:Application>

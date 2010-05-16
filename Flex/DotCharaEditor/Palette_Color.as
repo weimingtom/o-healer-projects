@@ -189,11 +189,18 @@ package{
 
 					g.lineStyle(2, 0xFFFFFF, 0.7);
 
+					//枠
 					g.moveTo(0, 0);
 					g.lineTo(PALETTE_SIZE_W, 0);
 					g.lineTo(PALETTE_SIZE_W, PALETTE_SIZE_W);
 					g.lineTo(0, PALETTE_SIZE_W);
 					g.lineTo(0, 0);
+
+					//矢印
+					g.moveTo(0, PALETTE_SIZE_W/2);
+					g.lineTo(-PALETTE_SIZE_W/2, PALETTE_SIZE_W*1/4);
+					g.lineTo(-PALETTE_SIZE_W/2, PALETTE_SIZE_W*3/4);
+					g.lineTo(0, PALETTE_SIZE_W/2);
 				}
 
 				m_Cursor.x = m_Palette[m_CursorIndex].x;
@@ -204,8 +211,14 @@ package{
 		}
 
 		//描画
-		public function Redraw(in_Color:uint):void{//!!Use
-			m_Palette[m_CursorIndex].bitmapData.fillRect(m_Palette[m_CursorIndex].bitmapData.rect, in_Color);
+		public function Redraw(in_Color:uint, in_Index:int = -1):void{//!!Use
+			//in_Index
+			if(in_Index < 0){
+				in_Index = m_CursorIndex;
+			}
+
+			//Draw
+			m_Palette[in_Index].bitmapData.fillRect(m_Palette[in_Index].bitmapData.rect, in_Color);
 
 			//Call Listener
 			{
