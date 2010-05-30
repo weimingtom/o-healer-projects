@@ -94,6 +94,11 @@ package{
 
 		//Contact:接触したときに呼ばれる
 		override public function OnContact(in_Obj:IGameObject, in_Nrm:Vector3D):void{
+			//重力の反転の考慮
+			if(PhysManager.Instance.IsGravityReversed()){
+				in_Nrm.y = -in_Nrm.y;
+			}
+
 			//対応ブロックが上に乗ったらスイッチオン
 			{
 				if(in_Obj.m_Val == m_Val){//自分と同じ値が指定された

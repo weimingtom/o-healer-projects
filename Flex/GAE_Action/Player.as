@@ -172,10 +172,13 @@ package{
 			//画面のズームをいじっている可能性があるのでリセット
 			{
 				Game.Instance().m_Root_Zoom.scaleY = 1;
+				Game.Instance().m_Root_Zoom.y = 0;
 
 				scaleY = 1;
 
 				PhysManager.Instance.SetGravity(PhysManager.GRAVITY);
+
+				Player_Reverser.m_ReversedFlag = false;
 			}
 
 			//デストラクタ
@@ -534,8 +537,15 @@ package{
 		//#Check : Dead
 		public function CheckDead():void{
 			//落下死
-			if(this.y > Game.Instance().GetStageH() + ImageManager.PANEL_LEN/2){
-				Game.Instance().OnGameOver(Game.GAME_OVER_FALL);
+
+			if(! PhysManager.Instance.IsGravityReversed()){//重力の反転の考慮
+				if(this.y > Game.Instance().GetStageH() + ImageManager.PANEL_LEN/2){
+					Game.Instance().OnGameOver(Game.GAME_OVER_FALL);
+				}
+			}else{
+				if(this.y < -ImageManager.PANEL_LEN/2){
+					Game.Instance().OnGameOver(Game.GAME_OVER_FALL);
+				}
 			}
 		}
 
