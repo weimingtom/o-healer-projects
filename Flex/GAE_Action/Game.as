@@ -689,13 +689,23 @@ package{
 			}
 
 			//新規に追加するやつは当たり判定ありのやつだと思うので、空間のみチェックして、それ以外は壁とする
-			switch(m_Map[i_Y][i_X]){
+			switch(GetMapIndex(m_Map[i_Y][i_X])){
 			case O:
 			case P:
 			case G:
 			case E:
 			case Q:
 				return false;
+			}
+
+			//ドア系は、オフの状態の時のみ空間とみなす
+			switch(GetMapIndex(m_Map[i_Y][i_X])){
+			case D:
+			case R:
+				//該当スイッチがオン→普通のドアであれば開いている
+				if(SwitchCounter.Get(GetMapVal(m_Map[i_Y][i_X])).IsOn() == (GetMapIndex(m_Map[i_Y][i_X]) == D)){
+					return false;
+				}
 			}
 
 			//空間でなければ壁とみなす
@@ -1432,7 +1442,7 @@ package{
 						case G:
 							for(iter_y = 0; iter_y < NumY; iter_y += 1){
 								for(iter_x = 0; iter_x < NumX; iter_x += 1){
-									if(m_Map[iter_y][iter_x] == index){
+									if(GetMapIndex(m_Map[iter_y][iter_x]) == index){
 										m_Map[iter_y][iter_x] = O;//以前のものは空白にする
 									}
 								}

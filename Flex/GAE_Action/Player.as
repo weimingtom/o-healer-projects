@@ -160,6 +160,14 @@ package{
 				Game.Instance().m_Root_Gimmick.addChild(m_DrawShape);
 			}
 
+			//m_SwitchBlock
+			//生成したブロックもリセット
+			if(m_SwitchBlock){
+				m_SwitchBlock.visible = false;//ManagerのUpdateを回さないとKillでは消えないので、表示をオフにしておく
+				m_SwitchBlock.Kill();
+				m_SwitchBlock = null;
+			}
+
 			//デストラクタ
 			if(! InitFlag)
 			{
@@ -224,6 +232,7 @@ package{
 			switch(m_Val){
 			case TYPE_BLOCK_SUMMONER:
 				if(m_MouseDownFlag){
+/*
 					if(! IsWallContain(m_MouseSrcX, m_MouseSrcY, MouseX, MouseY)){
 						//現在の終点を更新
 						m_MouseDstX = MouseX;
@@ -232,6 +241,24 @@ package{
 						//現在のブロック候補表示の更新
 						RedrawBlockGraphic();
 					}
+/*/
+					for(var i:int = 0; i < 10; i++){
+						if(! IsWallContain(m_MouseSrcX, m_MouseSrcY, MouseX, MouseY)){
+							//現在の終点を更新
+							m_MouseDstX = MouseX;
+							m_MouseDstY = MouseY;
+
+							//現在のブロック候補表示の更新
+							RedrawBlockGraphic();
+
+							break;
+						}else{
+							//目標位置を、最後の位置との中間にしてリトライしてみる
+							MouseX = (m_MouseDstX + MouseX) / 2;
+							MouseY = (m_MouseDstY + MouseY) / 2;
+						}
+					}
+//*/
 				}
 				break;
 			}
