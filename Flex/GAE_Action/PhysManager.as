@@ -150,5 +150,19 @@ package{
 			}
 //*/
 		}
+
+
+		//重力
+		public function IsGravityReversed():Boolean{
+			return (m_World.m_gravity.y < 0);
+		}
+		public function SetGravity(in_Gravity:Number):void{
+			m_World.m_gravity.y = in_Gravity;
+
+			//反転してもSleepしてるやつが落下しないので、全員叩き起こす
+			for (var bb:b2Body = m_World.m_bodyList; bb; bb = bb.m_next) {
+				bb.WakeUp();
+			}
+		}
 	}
 }

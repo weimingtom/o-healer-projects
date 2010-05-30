@@ -345,6 +345,12 @@ package{
 
 			var Vel:b2Vec2 = m_Body.GetLinearVelocity();
 
+			//重力反転を考慮
+			if(PhysManager.Instance.IsGravityReversed()){
+				in_Nrm.y = -in_Nrm.y;
+				Vel.y = -Vel.y;
+			}
+
 			//コリジョンの接地判定
 			{//将来的に「横方向にぶつかってる」などの判定が必要になるかもしれないので、Ground以外にも用意しておく
 				//L
@@ -381,6 +387,12 @@ package{
 						}
 					}
 				}
+			}
+
+			//重力反転を考慮
+			if(PhysManager.Instance.IsGravityReversed()){
+				in_Nrm.y = -in_Nrm.y;
+				Vel.y = -Vel.y;
 			}
 
 			//圧死判定

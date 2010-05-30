@@ -25,6 +25,7 @@ package{
 		static public var TYPE_COUNTER:int = 0;//enum代わり
 		static public const TYPE_NORMAL:int			= TYPE_COUNTER++;
 		static public const TYPE_BLOCK_SUMMONER:int	= TYPE_COUNTER++;
+		static public const TYPE_REVERSER:int		= TYPE_COUNTER++;
 		static public const TYPE_NUM:int			= TYPE_COUNTER;
 
 		/*
@@ -166,6 +167,15 @@ package{
 				m_SwitchBlock.visible = false;//ManagerのUpdateを回さないとKillでは消えないので、表示をオフにしておく
 				m_SwitchBlock.Kill();
 				m_SwitchBlock = null;
+			}
+
+			//画面のズームをいじっている可能性があるのでリセット
+			{
+				Game.Instance().m_Root_Zoom.scaleY = 1;
+
+				scaleY = 1;
+
+				PhysManager.Instance.SetGravity(PhysManager.GRAVITY);
 			}
 
 			//デストラクタ
@@ -376,6 +386,11 @@ package{
 
 		//Update:オーバライドして使う
 		override public function Update(i_DeltaTime:Number):void{
+			//Check Input
+			{
+				UpdateByInput();
+			}
+
 			//Graphic Anim
 			{
 				if(m_Input.IsPress(IInput.BUTTON_R)){
@@ -396,6 +411,25 @@ package{
 			//Check : Dead
 			{
 				CheckDead();
+			}
+		}
+
+		//#Action
+		public function UpdateByInput():void{
+			//固有アクションの開始
+			if(m_Input.IsPress_Edge(IInput.BUTTON_ACTION)){
+				switch(m_Val){
+				case TYPE_NORMAL:
+					//こいつは何もしない
+					break;
+				case TYPE_BLOCK_SUMMONER:
+					//こいつはマウスで行うので、ここは特に何もなし
+					break;
+				case TYPE_REVERSER:
+					//ステージを反転させる
+					Player_Reverser.Action();//下のローカルクラスで処理を実際に書く
+					break;
+				}
 			}
 		}
 
@@ -460,6 +494,11 @@ package{
 				{
 //					m_VY += m_AY * i_DeltaTime;//重力計算は物理エンジン任せ
 
+					//重力の反転の考慮
+					if(PhysManager.Instance.IsGravityReversed()){
+						m_VY = -m_VY;//ここで一度反転して、処理を通常のものと一致させる
+					}
+
 					//下降速度に制限を設けてみる
 					if(m_VY > JUMP_VEL){
 						m_VY = JUMP_VEL;//ジャンプ速度と同じにしてみる
@@ -469,6 +508,11 @@ package{
 						if(m_Input.IsPress_Edge(IInput.BUTTON_U)){
 							m_VY = -JUMP_VEL;
 						}
+					}
+
+					//重力の反転の考慮
+					if(PhysManager.Instance.IsGravityReversed()){
+						m_VY = -m_VY;//もとに戻すための反転
 					}
 				}
 			}
@@ -526,6 +570,97 @@ package{
 		//ダメージ死亡時の処理：オーバーライドして使う
 		override public function OnDamageDead():void{
 			Game.Instance().OnGameOver(Game.GAME_OVER_DAMAGE);
+		}
+	}
+}
+
+
+class Player_Reverser
+{
+	//==Const==
+	//反転にかかる時間
+	static public const REVERSE_TIME:Number = 1.0;
+
+	//==Var==
+	//反転状態か否か
+	static public var m_ReversedFlag:Boolean = false;//完全に反転したときにフラグが変更される
+
+	//==Func==
+	//反転させる
+	static public function Action():void{
+		//Game本体のUpdateを、ステージ反転用Updateに差し替える
+
+		//終了時に戻すため、現在のUpdate関数を記憶
+		var oldUpdateFunc:Function = Game.Instance().m_UpdateFunc;
+
+		//すぐさま重力反転
+		if(m_ReversedFlag){
+			//反転状態→元の重力
+			PhysManager.Instance.SetGravity(PhysManager.GRAVITY);
+		}else{
+			//通常状態→逆重力
+			PhysManager.Instance.SetGravity(-PhysManager.GRAVITY);
+		}
+
+		//ローカルタイマー
+		var timer:Number = 0.0;
+
+		//Updateを新しくセット
+		Game.Instance().m_UpdateFunc = function():void{
+			var deltaTime:Number = Game.Instance().GetDeltaTime();
+
+			//timer
+			{
+				timer += deltaTime;
+				if(timer > REVERSE_TIME){
+					timer = REVERSE_TIME;
+				}
+			}
+
+			//Scale
+			{
+				var ratio:Number = timer / REVERSE_TIME;
+
+				//Y方向にスケーリング
+				var stageScaleY:Number = 1 - 2*ratio;
+				if(m_ReversedFlag){
+					stageScaleY = -stageScaleY;
+				}
+				Game.Instance().m_Root_Zoom.scaleY = stageScaleY;
+
+				//それに合わせて位置も修正
+				var posY:Number = Game.CAMERA_H * ratio;
+				if(m_ReversedFlag){
+					posY = Game.CAMERA_H - posY;
+				}
+				Game.Instance().m_Root_Zoom.y = posY;
+			}
+
+			//プレイヤーだけは上下反転はしない
+			{
+				var playerScaleY:Number = 1;
+
+				//初期状態が反転か否かで反転
+				if(m_ReversedFlag){
+					playerScaleY = -playerScaleY;
+				}
+
+				//反転処理が半分を過ぎたら相殺のため反転
+				if(timer >= REVERSE_TIME/2){
+					playerScaleY = -playerScaleY;
+				}
+
+				Game.Instance().m_Player.scaleY = playerScaleY;
+			}
+
+			//終了
+			if(timer >= REVERSE_TIME){
+				//フラグ反転
+				m_ReversedFlag = !m_ReversedFlag;
+
+				//Update関数を元に戻す
+				Game.Instance().m_UpdateFunc = oldUpdateFunc;
+			}
 		}
 	}
 }

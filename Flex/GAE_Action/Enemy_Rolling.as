@@ -80,7 +80,13 @@ package{
 			var PlayerX:int = Game.Instance().m_Player.x;
 
 			if(m_IsFindPlayer){
-				const RadPerSecond:Number = 3.0 * 2.0*MyMath.PI;//回転速度（一秒あたりの回転量）
+				var RadPerSecond:Number = 3.0 * 2.0*MyMath.PI;//回転速度（一秒あたりの回転量）
+
+				//重力反転を考慮
+				if(PhysManager.Instance.IsGravityReversed()){
+					RadPerSecond = -RadPerSecond;
+				}
+
 				if(this.x < PlayerX){
 					//右へ移動
 					m_Body.SetAngularVelocity(RadPerSecond);

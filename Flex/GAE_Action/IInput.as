@@ -9,6 +9,7 @@ package{
 		static public const BUTTON_R:int = INPUT_COUNTER++;
 		static public const BUTTON_U:int = INPUT_COUNTER++;
 		static public const BUTTON_D:int = INPUT_COUNTER++;
+		static public const BUTTON_ACTION:int = INPUT_COUNTER++;
 		//System
 		static public const BUTTON_RESET:int = INPUT_COUNTER++;
 		//Editor

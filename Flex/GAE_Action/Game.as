@@ -82,11 +82,12 @@ package{
 
 		//＃画面構成
 		public var m_Root:Image;
-		public var  m_Root_Game:Image;
-		public var   m_Root_BG:Image;
-		public var   m_Root_Obj:Image;
-		public var    m_Root_Gimmick:Image;
-		public var    m_Root_Player:Image;
+		public var  m_Root_Zoom:Image;
+		public var   m_Root_Game:Image;
+		public var    m_Root_BG:Image;
+		public var    m_Root_Obj:Image;
+		public var     m_Root_Gimmick:Image;
+		public var     m_Root_Player:Image;
 		public var  m_Root_Intetrface:Image;
 
 		//＃Player
@@ -116,6 +117,9 @@ package{
 		static public function GetMapIndex(i_Val:int):int{return (i_Val % VAL_OFFSET);}
 		static public function GetMapVal(i_Val:int):int{return (int(i_Val / VAL_OFFSET) % 10);}
 		static public function GetMapDir(i_Val:int):int{return (int(i_Val / DIR_OFFSET) % 10);}
+
+		//＃Update：差し替えられるようにメンバ変数化
+		public var m_UpdateFunc:Function = function():void{};
 
 		//＃Input
 		public var m_Input:CInput_Keyboard;
@@ -174,6 +178,7 @@ package{
 
 			//毎フレームUpdateを呼ぶ
 			{
+/*
 				if(! m_ForEditor){
 					addEventListener("enterFrame", function(event:Event):void {
 						Update();
@@ -183,6 +188,17 @@ package{
 						Update_ForEditor();
 					});
 				}
+/*/
+				Init_Update();
+
+				if(m_ForEditor){
+					Init_UpdateForEditor();
+				}
+
+				addEventListener("enterFrame", function(event:Event):void {
+					Update();
+				});
+//*/
 			}
 
 			//キーボードのイベント取得
@@ -224,25 +240,30 @@ package{
 
 				//Root：RootはInitで作成したまま
 				{
-					//Game
-					m_Root_Game = new Image();
-					m_Root.addChild(m_Root_Game);
+					//Zoom
+					m_Root_Zoom = new Image();
+					m_Root.addChild(m_Root_Zoom);
 					{
-						//BG
-						m_Root_BG = new Image();
-						m_Root_Game.addChild(m_Root_BG);
-
-						//Obj
-						m_Root_Obj = new Image();
-						m_Root_Game.addChild(m_Root_Obj);
+						//Game
+						m_Root_Game = new Image();
+						m_Root_Zoom.addChild(m_Root_Game);
 						{
-							//Gimmick
-							m_Root_Gimmick = new Image();
-							m_Root_Obj.addChild(m_Root_Gimmick);
+							//BG
+							m_Root_BG = new Image();
+							m_Root_Game.addChild(m_Root_BG);
 
-							//Player
-							m_Root_Player = new Image();
-							m_Root_Obj.addChild(m_Root_Player);
+							//Obj
+							m_Root_Obj = new Image();
+							m_Root_Game.addChild(m_Root_Obj);
+							{
+								//Gimmick
+								m_Root_Gimmick = new Image();
+								m_Root_Obj.addChild(m_Root_Gimmick);
+
+								//Player
+								m_Root_Player = new Image();
+								m_Root_Obj.addChild(m_Root_Player);
+							}
 						}
 					}
 
@@ -721,50 +742,57 @@ package{
 
 		//!毎フレーム更新のために呼ばれる関数
 		private function Update():void{
-			var deltaTime:Number = GetDeltaTime();
+			m_UpdateFunc();
+		}
 
-			//Check
-			{
-				if(m_PauseFlag){
-					return;
-				}
-			}
+		//!通常用Update関数の設定
+		private function Init_Update():void{
+			m_UpdateFunc = function():void{
+				var deltaTime:Number = GetDeltaTime();
 
-			//Input
-			{
-				UpdateInput();
-
-				CheckInput();
-			}
-
-			//ゲーム終了時はここの処理まで
-			{
-				if(m_GameOverType >= 0){
-					//GameOver表示のアニメーショhんをしてみる
-					{
-						if(m_GameOverImage){
-							const src:Number = 0.1;
-							const dst:Number = 0.8;
-							m_GameOverImage.alpha = src + (dst - src)/dst * m_GameOverImage.alpha;
-						}
+				//Check
+				{
+					if(m_PauseFlag){
+						return;
 					}
-					return;
 				}
-			}
 
-			//GameObject
-			{
-				GameObjectManager.Update(deltaTime);
-			}
+				//Input
+				{
+					UpdateInput();
 
-			//Physics
-			{
-				PhysManager.Update(deltaTime);
-			}
+					CheckInput();
+				}
 
-			//Camera
-			{
-				UpdateCamera(deltaTime);
+				//ゲーム終了時はここの処理まで
+				{
+					if(m_GameOverType >= 0){
+						//GameOver表示のアニメーショhんをしてみる
+						{
+							if(m_GameOverImage){
+								const src:Number = 0.1;
+								const dst:Number = 0.8;
+								m_GameOverImage.alpha = src + (dst - src)/dst * m_GameOverImage.alpha;
+							}
+						}
+						return;
+					}
+				}
+
+				//GameObject
+				{
+					GameObjectManager.Update(deltaTime);
+				}
+
+				//Physics
+				{
+					PhysManager.Update(deltaTime);
+				}
+
+				//Camera
+				{
+					UpdateCamera(deltaTime);
+				}
 			}
 		}
 
@@ -1097,36 +1125,43 @@ package{
 		}
 
 		//Update
-		private function Update_ForEditor():void{
-			if(m_EditFlag){
-				var deltaTime:Number = GetDeltaTime();
+		private var m_UpdateFunc_Action:Function;
+		private function Init_UpdateForEditor():void{
+			//通常のアクション用は別で確保
+			m_UpdateFunc_Action = m_UpdateFunc;
 
-				//Input
-				{
-					UpdateInput();
+			//新しくUpdateを設定
+			m_UpdateFunc = function():void{
+				if(m_EditFlag){
+					var deltaTime:Number = GetDeltaTime();
+
+					//Input
+					{
+						UpdateInput();
+
+						CheckInput_ForEditor();
+					}
+
+					//Cursor
+					{
+						UpdateCursor(deltaTime);
+					}
+
+					//Camera
+					{
+						UpdateCamera_ForEditor(deltaTime);
+					}
+
+					//Menu
+					{
+						m_TabWindow.Update(deltaTime);
+					}
+				}else{
+					//プレイを試みる
+					m_UpdateFunc_Action();
 
 					CheckInput_ForEditor();
 				}
-
-				//Cursor
-				{
-					UpdateCursor(deltaTime);
-				}
-
-				//Camera
-				{
-					UpdateCamera_ForEditor(deltaTime);
-				}
-
-				//Menu
-				{
-					m_TabWindow.Update(deltaTime);
-				}
-			}else{
-				//プレイを試みる
-				Update();
-
-				CheckInput_ForEditor();
 			}
 		}
 

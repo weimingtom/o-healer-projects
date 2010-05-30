@@ -96,6 +96,12 @@ package{
 			case KEY_R:				m_Input[BUTTON_RESET] = true;	break;
 			}
 
+			//Player
+			switch(event.keyCode){
+			case Keyboard.SPACE:	m_Input[BUTTON_ACTION] = true; break;
+			}
+
+			//Editor
 			switch(event.keyCode){
 			case Keyboard.ENTER:
 				m_Input[BUTTON_GO_TO_PLAY] = true;
@@ -153,6 +159,12 @@ package{
 			case KEY_R:				m_Input[BUTTON_RESET] = false;	break;
 			}
 
+			//Player
+			switch(event.keyCode){
+			case Keyboard.SPACE:	m_Input[BUTTON_ACTION] = false; break;
+			}
+
+			//Editor
 			switch(event.keyCode){
 			case Keyboard.ENTER:
 				m_Input[BUTTON_GO_TO_PLAY] = false;
