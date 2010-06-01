@@ -231,11 +231,25 @@ package{
 			var x:int;
 			var y:int;
 
+			var g:Graphics;
+
 			//＃画面に相当する部分の初期化
 			{
 				//Reset
 				while(m_Root.numChildren > 0){
 					m_Root.removeChildAt(0);
+				}
+
+				//プレイヤーキャラ「リバーサー」で画面反転時に後ろが見えるため、黒く塗りつぶしておく
+				{
+					var black_bg:Shape = new Shape();
+					{
+						g = black_bg.graphics;
+						g.beginFill(0x000000, 1.0);
+						g.drawRect(0, 0, CAMERA_W, CAMERA_H);
+					}
+
+					m_Root.addChild(black_bg);
 				}
 
 				//Root：RootはInitで作成したまま
@@ -277,7 +291,7 @@ package{
 			{
 				var root_mask:Sprite = new Sprite();
 				{
-					var g:Graphics = root_mask.graphics;
+					g = root_mask.graphics;
 					g.beginFill(0x000000, 1.0);
 					g.drawRect(0, 0, CAMERA_W, CAMERA_H);
 				}
