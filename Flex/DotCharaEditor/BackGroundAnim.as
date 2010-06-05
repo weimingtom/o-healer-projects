@@ -20,6 +20,9 @@ package{
 	public class BackGroundAnim extends Image{
 		//==Const==
 
+		static public const COLOR_WHITE:uint = 0xAAAAAA;//0xEEEEEE;
+		static public const COLOR_BLACK:uint = 0x999999;//0xEEEEEE;
+
 		//==Var==
 
 		//#サイズ
@@ -67,7 +70,7 @@ package{
 
 					//White
 					{
-						g.beginFill(0xEEEEEE, 1.0);
+						g.beginFill(COLOR_WHITE, 1.0);
 
 						g.drawRect(-BLOCK_SIZE, -BLOCK_SIZE, in_W+BLOCK_SIZE, in_H+BLOCK_SIZE);
 
@@ -76,7 +79,7 @@ package{
 
 					//Black
 					{
-						g.beginFill(0xDDDDDD, 1.0);
+						g.beginFill(COLOR_BLACK, 1.0);
 
 						//格子状になるように描画と非描画を繰り返す
 						var DrawFlag_Start:Boolean = true;

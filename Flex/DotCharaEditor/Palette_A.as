@@ -73,6 +73,17 @@ package{
 			return color;
 		}
 
+		//値のリストの取得
+		public function GetAlphaRatioList():Array{
+			var result:Array = new Array(m_Cursor.length);
+
+			for(var i:int = 0; i < m_Cursor.length; i++){
+				result[i] = 1.0 - m_Cursor[i].x / (SIZE_W-1);
+			}
+
+			return result;
+		}
+
 		//選択されているIndexまわり
 		public function GetCursorIndex():int{
 			return m_CursorIndex;
@@ -175,10 +186,11 @@ package{
 						g.lineStyle(1, 0x000000, 0.7);
 						g.beginFill(0xFFFFFF, 0.7);
 
-						g.moveTo( w/2, 0);
-						g.lineTo(   0, w);
-						g.lineTo(-w/2, 0);
-						g.lineTo( w/2, 0);
+						g.moveTo(   0,   0);
+						g.lineTo( w/2, w/2);
+						g.lineTo(   0,   w);
+						g.lineTo(-w/2, w/2);
+						g.lineTo(   0,   0);
 
 						g.endFill();
 					}
@@ -186,6 +198,7 @@ package{
 					//Pos
 					{
 						m_Cursor[i].x = (SIZE_W-1) * (1.0 - m_Info[i].A);
+						m_Cursor[i].y = (SIZE_H-1) * i / Size;
 					}
 
 					m_Root.addChild(m_Cursor[i]);

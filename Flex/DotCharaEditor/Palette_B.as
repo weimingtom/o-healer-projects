@@ -73,6 +73,17 @@ package{
 			return (0xFF000000 | color);
 		}
 
+		//値のリストの取得
+		public function GetBrightnessRatioList():Array{
+			var result:Array = new Array(m_Cursor.length);
+
+			for(var i:int = 0; i < m_Cursor.length; i++){
+				result[i] = m_Cursor[i].x / (SIZE_W-1);
+			}
+
+			return result;
+		}
+
 		//選択されているIndexまわり
 		public function GetCursorIndex():int{
 			return m_CursorIndex;
@@ -170,10 +181,11 @@ package{
 						g.lineStyle(1, 0x000000, 0.7);
 						g.beginFill(0xFFFFFF, 0.7);
 
-						g.moveTo( w/2, 0);
-						g.lineTo(   0, w);
-						g.lineTo(-w/2, 0);
-						g.lineTo( w/2, 0);
+						g.moveTo(   0,   0);
+						g.lineTo( w/2, w/2);
+						g.lineTo(   0,   w);
+						g.lineTo(-w/2, w/2);
+						g.lineTo(   0,   0);
 
 						g.endFill();
 					}
@@ -181,6 +193,7 @@ package{
 					//Pos
 					{
 						m_Cursor[i].x = (SIZE_W-1) * m_Info[i].B;
+						m_Cursor[i].y = (SIZE_H-1) * i / Size;
 					}
 
 					m_Root.addChild(m_Cursor[i]);
@@ -261,12 +274,49 @@ package{
 			var g_ori:uint = (in_ColorHS >>  8) & 0xFF;
 			var b_ori:uint = (in_ColorHS >>  0) & 0xFF;
 
+/*
+/*/
+			var ori_base:uint = Math.max(Math.max(r_ori, g_ori), b_ori);
+			r_ori = r_ori * 0xFF / ori_base;
+			g_ori = g_ori * 0xFF / ori_base;
+			b_ori = b_ori * 0xFF / ori_base;
+
+			var ori_len:Number = (new Vector3D(r_ori, g_ori, b_ori)).length;
+			const total_len:Number = (new Vector3D(0xFF, 0xFF, 0xFF)).length;
+			var divide_ratio:Number = ori_len / total_len;
+
+			const lerp:Function = function(in_Src:int, in_Dst:int, in_Ratio:Number):int{
+				return in_Src * (1 - in_Ratio) + in_Dst * in_Ratio;
+			};
+//*/
+
 			for(var x:int = 0; x < BMP_W; x += 1){//明度：Brightness
 				var ratio:Number = 1.0 * x / BMP_W;
 
+/*
+				//HSB方式
 				var r:uint = (r_ori * (1 - ratio)) + (0x00 * ratio);
 				var g:uint = (g_ori * (1 - ratio)) + (0x00 * ratio);
 				var b:uint = (b_ori * (1 - ratio)) + (0x00 * ratio);
+/*/
+				//HSL方式
+				var r:uint = r_ori;
+				var g:uint = g_ori;
+				var b:uint = b_ori;
+				if(ratio < divide_ratio){
+					//Black ～ Ori
+					ratio /= divide_ratio;
+					r = lerp(0x00, r, ratio);
+					g = lerp(0x00, g, ratio);
+					b = lerp(0x00, b, ratio);
+				}else{
+					//Ori ～ White
+					ratio = (ratio - divide_ratio) / (1 - divide_ratio);
+					r = lerp(r, 0xFF, ratio);
+					g = lerp(g, 0xFF, ratio);
+					b = lerp(b, 0xFF, ratio);
+				}
+//*/
 
 				var color:uint = (r << 16) | (g << 8) | (b << 0);
 

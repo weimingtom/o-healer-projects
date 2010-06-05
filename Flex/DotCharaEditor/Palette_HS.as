@@ -74,6 +74,28 @@ package{
 			return (0xFF000000 | color);
 		}
 
+		//値のリストの取得
+		public function GetHueRatioList():Array{
+			var result:Array = new Array(m_Cursor.length);
+
+			for(var i:int = 0; i < m_Cursor.length; i++){
+				result[i] = m_Cursor[i].y / (SIZE_H-1);
+			}
+
+			return result;
+		}
+
+		//値のリストの取得
+		public function GetSaturationRatioList():Array{
+			var result:Array = new Array(m_Cursor.length);
+
+			for(var i:int = 0; i < m_Cursor.length; i++){
+				result[i] = m_Cursor[i].x / (SIZE_W-1);
+			}
+
+			return result;
+		}
+
 		//選択されているIndexまわり
 		public function GetCursorIndex():int{
 			return m_CursorIndex;
@@ -149,6 +171,10 @@ package{
 			//Create Bitmap
 			{
 				if(! m_BitmapData){
+					const lerp:Function = function(in_Src:int, in_Dst:int, in_Ratio:Number):int{
+						return in_Src * (1 - in_Ratio) + in_Dst * in_Ratio;
+					};
+
 					m_BitmapData = new BitmapData(SIZE_W, SIZE_H, false, 0x000000);
 					{
 						for(var y:int = 0; y < SIZE_H; y += 1){//色相：Hue
@@ -167,6 +193,7 @@ package{
 									if(in_Ratio < 4.0/6.0){return 0x00;}
 									if(in_Ratio < 5.0/6.0){return 0xFF * (in_Ratio*6.0 - 4.0);}
 									if(in_Ratio < 6.0/6.0){return 0xFF;}
+
 									return 0xFF;//err
 								}
 
@@ -179,9 +206,18 @@ package{
 								//彩度計算
 								var ratio:Number = 1.0 * x / SIZE_W;
 
-								var r:uint = (r_ori * (1 - ratio)) + (0xFF * ratio);
-								var g:uint = (g_ori * (1 - ratio)) + (0xFF * ratio);
-								var b:uint = (b_ori * (1 - ratio)) + (0xFF * ratio);
+								var r:uint = lerp(r_ori, 0xFF, ratio);
+								var g:uint = lerp(g_ori, 0xFF, ratio);
+								var b:uint = lerp(b_ori, 0xFF, ratio);
+
+//*
+								//明るさを揃えてみる
+								var vec:Vector3D = new Vector3D(r, g, b);
+								vec.scaleBy(0xFF / vec.length);
+								r = vec.x;
+								g = vec.y;
+								b = vec.z;
+//*/
 
 								var color:uint = (r << 16) | (g << 8) | (b << 0);
 

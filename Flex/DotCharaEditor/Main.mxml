@@ -17,28 +17,60 @@
 			・アルファパレットを用意すべきかなぁ
 			　・汎用性も上がるし、初期化もしやすくなるが、複雑化もする
 */
+			import mx.graphics.codec.*;
+
+			import org.as3yaml.*;
+
+/*
+			//トレース対象
+			[Embed(source='chara02_b_side.png')]
+			 private static var Bitmap_Trace_Color: Class;
+//*/
+/*
+			//模写対象の追加
+			[Embed(source='chara1_ci.png')]
+			 private static var Bitmap_Sample_Color: Class;
+			[Embed(source='chara1_si.png')]
+			 private static var Bitmap_Sample_Shade: Class;
+//*/
+//*
+			//chara1
+			public var info_color:Array = [
+				{H:0.8/6.0,	S:1.0/6.0,	B:3.5/6.0,	A:1},//Hair
+				{H:3.0/6.0,	S:1.0/6.0,	B:2.5/6.0,	A:1},//Eye
+				{H:0.5/6.0,	S:4.5/6.0,	B:4.5/6.0,	A:1},//Skin
+				{H:6.0/6.0,	S:6.0/6.0,	B:3.5/6.0,	A:1},//(no use)
+				{H:3.5/6.0,	S:1.0/6.0,	B:3.5/6.0,	A:1},//Armor : Main
+				{H:2.0/6.0,	S:5.5/6.0,	B:3.5/6.0,	A:1},//Armor : Line
+				{H:2.0/6.0,	S:1.0/6.0,	B:2.0/6.0,	A:1},//Manteau
+				{H:5.5/6.0,	S:1.0/6.0,	B:2.0/6.0,	A:1},//Gauntlet
+				{H:6.0/6.0,	S:6.0/6.0,	B:0.0/6.0,	A:0} //(Trans)
+			];
+//*/
+/*
+			//chara2
+			public var info_color:Array = [
+				{H:0.0/6.0,	S:1.0/6.0,	B:3.0/6.0,	A:1},//Hair
+				{H:1.0/6.0,	S:1.0/6.0,	B:3.0/6.0,	A:1},//Accessory
+				{H:0.5/6.0,	S:4.5/6.0,	B:4.5/6.0,	A:1},//Skin
+				{H:4.0/6.0,	S:6.0/6.0,	B:2.5/6.0,	A:1},//Eye
+				{H:2.0/6.0,	S:1.0/6.0,	B:2.5/6.0,	A:1},//Cloth : Main
+				{H:1.0/6.0,	S:1.0/6.0,	B:2.5/6.0,	A:1},//Cloth : Line
+				{H:3.0/6.0,	S:1.0/6.0,	B:2.5/6.0,	A:1},//Cloth : Line2
+				{H:0.5/6.0,	S:1.0/6.0,	B:2.0/6.0,	A:1},//Leg
+				{H:6.0/6.0,	S:6.0/6.0,	B:0.0/6.0,	A:0} //(Trans)
+			];
+//*/
+
+			public var info_shade:Array = [
+				{H:0, S:1, B:1, A:0.6},
+				{H:0, S:1, B:0, A:0.6}
+			];
 
 			//最初のロード完了時の初期化
 			private function init():void{
 				var i:int;
 				var j:int;
-
-				const info_color:Array = [
-					{H:0/6.0, S:1/6.0, B:1/6.0, A:1},
-					{H:1/6.0, S:1/6.0, B:1/6.0, A:1},
-					{H:2/6.0, S:1/6.0, B:1/6.0, A:1},
-					{H:3/6.0, S:1/6.0, B:1/6.0, A:1},
-					{H:4/6.0, S:1/6.0, B:1/6.0, A:1},
-					{H:5/6.0, S:1/6.0, B:1/6.0, A:1},
-					{H:0/6.0, S:6/6.0, B:0/6.0, A:1},
-					{H:0/6.0, S:6/6.0, B:6/6.0, A:1},
-					{H:0/6.0, S:6/6.0, B:0/6.0, A:0}
-				];
-
-				const info_shade:Array = [
-					{H:0/6.0, S:6/6.0, B:0/6.0, A:0.7},
-					{H:0/6.0, S:6/6.0, B:6/6.0, A:0.7}
-				];
 
 				var PaletteNum:int = Palette_Color.PALETTE_NUM;
 				var PaletteCenterIndex:int = (PaletteNum-1)/2;
@@ -131,6 +163,7 @@
 						var ChangeColor_B_to_A:Function = function():void{
 							palette_a_color.Redraw(palette_b_color.GetColor());
 							//palette_c_colorの選択中のやつを指定色で変更
+							//ChangeLabel();
 						};
 
 						//初期化
@@ -327,13 +360,13 @@
 							switch(palette_a_shade.GetCursorIndex()){
 							case 0://光
 								for(i = 0; i < PaletteCenterIndex; i++){
-									a = a_ori * (PaletteCenterIndex-i)/(PaletteCenterIndex+1);
+									a = a_ori * (PaletteCenterIndex-i)/PaletteCenterIndex;
 									palette_c_shade.Redraw((a << 24) | (rgb), i);
 								}
 								break;
 							case 1://陰
 								for(i = 0; i < PaletteCenterIndex; i++){
-									a = a_ori * (PaletteCenterIndex-i)/(PaletteCenterIndex+1);
+									a = a_ori * (PaletteCenterIndex-i)/PaletteCenterIndex;
 									palette_c_shade.Redraw((a << 24) | (rgb), PaletteNum-1 - i);
 								}
 								break;
@@ -512,6 +545,294 @@
 					box_canvas_shade.width  = Canvas_Zoom.SIZE_W + box_canvas_shade.verticalScrollBar.width;
 					box_canvas_shade.height = Canvas_Zoom.SIZE_H + box_canvas_shade.horizontalScrollBar.height;
 				}
+
+				//トレーステスト
+				{
+					canvas_shade.m_Bitmap_Trace.bitmapData = canvas_color.m_Bitmap.bitmapData;
+					canvas_shade.m_Bitmap_Trace.alpha = 0.3;
+				}
+/*
+				//トレーステスト：色
+				{
+					canvas_color.m_Bitmap_Trace.bitmapData = (new Bitmap_Trace_Color()).bitmapData;
+					canvas_color.m_Bitmap_Trace.alpha = 0.3;
+				}
+//*/
+/*
+				//サンプル画像テスト
+				{
+					canvas_color.m_BitmapData_Index.draw(new Bitmap_Sample_Color());
+					canvas_color.Redraw();
+					canvas_shade.m_BitmapData_Index.draw(new Bitmap_Sample_Shade());
+					canvas_shade.Redraw();
+				}
+//*/
+			}
+
+			private function Save():void{
+				(new FileReference).save((new PNGEncoder()).encode(canvas_result.m_Bitmap.bitmapData), "Result.png");
+//				(new FileReference).save((new PNGEncoder()).encode(canvas_color.m_Bitmap.bitmapData), "Result_Color.png");//連続は不可らしい
+//				(new FileReference).save((new PNGEncoder()).encode(canvas_shade.m_Bitmap.bitmapData), "Result_Shade.png");
+			}
+
+			private function Save_C():void{
+				(new FileReference).save((new PNGEncoder()).encode(canvas_color.m_Bitmap.bitmapData), "Result_Color.png");
+			}
+
+			private function Save_S():void{
+				(new FileReference).save((new PNGEncoder()).encode(canvas_shade.m_Bitmap.bitmapData), "Result_Shade.png");
+			}
+
+			private function Save_C_Index():void{
+				(new FileReference).save((new PNGEncoder()).encode(canvas_color.m_BitmapData_Index), "Result_Color_Index.png");
+			}
+
+			private function Save_S_Index():void{
+				(new FileReference).save((new PNGEncoder()).encode(canvas_shade.m_BitmapData_Index), "Result_Shade_Index.png");
+			}
+
+			private function Load_C_Index():void{
+				var fr:FileReference = new FileReference();
+
+				//Select => Load
+				fr.addEventListener(
+					Event.SELECT,//ファイルが選択されたら
+					function(e:Event):void{fr.load();}//ロード開始
+				);
+
+				//Load => Draw
+				fr.addEventListener(
+					Event.COMPLETE,
+					function(e:Event):void{
+						var loader:Loader = new Loader();
+						loader.loadBytes(fr.data);
+
+						loader.contentLoaderInfo.addEventListener(
+							Event.COMPLETE,
+							function(e:Event):void{
+								canvas_color.m_BitmapData_Index.draw(loader.content);
+								canvas_color.Redraw();
+							}
+						);
+					}
+				);
+
+				//実行
+				fr.browse();
+			}
+
+			private function Load_S_Index():void{
+				var fr:FileReference = new FileReference();
+
+				//Select => Load
+				fr.addEventListener(
+					Event.SELECT,//ファイルが選択されたら
+					function(e:Event):void{fr.load();}//ロード開始
+				);
+
+				//Load => Draw
+				fr.addEventListener(
+					Event.COMPLETE,
+					function(e:Event):void{
+						var loader:Loader = new Loader();
+						loader.loadBytes(fr.data);
+
+						loader.contentLoaderInfo.addEventListener(
+							Event.COMPLETE,
+							function(e:Event):void{
+								canvas_shade.m_BitmapData_Index.draw(loader.content);
+								canvas_shade.Redraw();
+							}
+						);
+					}
+				);
+
+				//実行
+				fr.browse();
+			}
+
+			private var fr_c:FileReference;
+			private function Load_C_Palette():void{
+				if(fr_c == null){
+					fr_c = new FileReference();
+
+					//Select => Load
+					fr_c.addEventListener(
+						Event.SELECT,//ファイルが選択されたら
+						function(e:Event):void{fr_c.load();}//ロード開始
+					);
+
+					//Load => Set
+					fr_c.addEventListener(
+						Event.COMPLETE,
+						function(e:Event):void{
+							var i:int;
+							var j:int;
+							var len:int = info_color.length;
+
+							var yaml_str:String = fr_c.data.toString();
+							var yaml_map:Object = YAML.decode(yaml_str);
+
+							for(i = 0; i < len; i++){
+								info_color[i].H = yaml_map[i].H;
+								info_color[i].S = yaml_map[i].S;
+								info_color[i].B = yaml_map[i].B;
+								info_color[i].A = yaml_map[i].A;
+							}
+
+							//色相・彩度
+							palette_hs_color.SetData(
+								info_color
+							);
+
+							//明度
+							palette_b_color.SetData(
+								info_color
+							);
+
+							//アルファ
+							palette_a_color.SetData(
+								info_color
+							);
+
+							//リスナ連鎖によるカラーパレットの初期化
+							{
+								//ちょっと強引なので、もう少しスマートな方法があればそちらが良い
+								for(i = 0; i <= len; i++){
+									palette_c_color.SetCursorIndex(i % len);
+
+									for(j = 0; j < palette_hs_color.m_ListenerList_ChangeColor.length; j++){
+										palette_hs_color.m_ListenerList_ChangeColor[j]();
+									}
+								}
+							}
+						}
+					);
+				}
+
+				//実行
+				fr_c.browse();
+			}
+
+			private function Save_C_Palette():void{
+				//セーブ情報
+				var palette_color:Object;
+				{
+					var list_h:Array = palette_hs_color.GetHueRatioList();
+					var list_s:Array = palette_hs_color.GetSaturationRatioList();
+					var list_b:Array = palette_b_color.GetBrightnessRatioList();
+					var list_a:Array = palette_a_color.GetAlphaRatioList();
+
+					var list:Array = new Array(info_color.length);
+					{
+						for(var i:int = 0; i < info_color.length; i++){
+							list[i] = {
+								H:(list_h[i]),
+								S:(list_s[i]),
+								B:(list_b[i]),
+								A:(list_a[i])
+							};
+						}
+					}
+
+					palette_color = list;//{palette_color:list};
+				}
+
+				var result:String = YAML.encode(palette_color);
+
+				(new FileReference).save(result, "Palette_Color.yaml");
+			}
+
+			private var fr_s:FileReference;
+			private function Load_S_Palette():void{
+				if(fr_s == null){
+					fr_s = new FileReference();
+
+					//Select => Load
+					fr_s.addEventListener(
+						Event.SELECT,//ファイルが選択されたら
+						function(e:Event):void{fr_s.load();}//ロード開始
+					);
+
+					//Load => Set
+					fr_s.addEventListener(
+						Event.COMPLETE,
+						function(e:Event):void{
+							var i:int;
+							var j:int;
+							var len:int = info_shade.length;
+
+							var yaml_str:String = fr_s.data.toString();
+							var yaml_map:Object = YAML.decode(yaml_str);
+
+							for(i = 0; i < len; i++){
+								info_shade[i].H = yaml_map[i].H;
+								info_shade[i].S = yaml_map[i].S;
+								info_shade[i].B = yaml_map[i].B;
+								info_shade[i].A = yaml_map[i].A;
+							}
+
+							//色相・彩度
+							palette_hs_shade.SetData(
+								info_shade
+							);
+
+							//明度
+							palette_b_shade.SetData(
+								info_shade
+							);
+
+							//アルファ
+							palette_a_shade.SetData(
+								info_shade
+							);
+
+							//リスナ連鎖によるカラーパレットの初期化
+							{
+								//ちょっと強引なので、もう少しスマートな方法があればそちらが良い
+								for(i = 0; i <= len; i++){
+									palette_c_shade.SetCursorIndex(i % len);
+
+									for(j = 0; j < palette_hs_shade.m_ListenerList_ChangeColor.length; j++){
+										palette_hs_shade.m_ListenerList_ChangeColor[j]();
+									}
+								}
+							}
+						}
+					);
+				}
+
+				//実行
+				fr_s.browse();
+			}
+
+			private function Save_S_Palette():void{
+				//セーブ情報
+				var palette_shade:Object;
+				{
+					var list_h:Array = palette_hs_shade.GetHueRatioList();
+					var list_s:Array = palette_hs_shade.GetSaturationRatioList();
+					var list_b:Array = palette_b_shade.GetBrightnessRatioList();
+					var list_a:Array = palette_a_shade.GetAlphaRatioList();
+
+					var list:Array = new Array(info_shade.length);
+					{
+						for(var i:int = 0; i < info_shade.length; i++){
+							list[i] = {
+								H:(list_h[i]),
+								S:(list_s[i]),
+								B:(list_b[i]),
+								A:(list_a[i])
+							};
+						}
+					}
+
+					palette_shade = list;//{palette_shade:list};
+				}
+
+				var result:String = YAML.encode(palette_shade);
+
+				(new FileReference).save(result, "Palette_Shade.yaml");
 			}
 
 			public function Canvas_Color_x(in_Ratio:Number):void{
@@ -523,123 +844,345 @@
 				canvas_shade.scaleX = in_Ratio;
 				canvas_shade.scaleY = in_Ratio;
 			}
+
+			public function Canvas_Color_SetCursorMode(in_Mode:int):void{
+				canvas_color.SetCursorMode(in_Mode);
+			}
+
+			public function Canvas_Shade_SetCursorMode(in_Mode:int):void{
+				canvas_shade.SetCursorMode(in_Mode);
+			}
+
+			public function Canvas_Color_Draw(in_Mode:int):void{
+				canvas_color.SetDrawMode(in_Mode);
+			}
+
+			public function Canvas_Shade_Draw(in_Mode:int):void{
+				canvas_shade.SetDrawMode(in_Mode);
+			}
+
+
+			public function ScrollBitmap(in_MoveX:int, in_MoveY:int):void{
+				const Scroll:Function = function(in_Canvas:Canvas_Zoom):void{
+					var ori_bmp_data:BitmapData = in_Canvas.m_BitmapData_Index.clone();
+
+					//すごく愚直にやるので遅い
+					for(var y:int = Canvas_Zoom.DOT_NUM; y < 2*Canvas_Zoom.DOT_NUM; y++){//「%」だけで済むように、ゲタをはかせる
+						for(var x:int = Canvas_Zoom.DOT_NUM; x < 2*Canvas_Zoom.DOT_NUM; x++){
+							in_Canvas.m_BitmapData_Index.setPixel32(
+								(x + in_MoveX) % Canvas_Zoom.DOT_NUM,
+								(y + in_MoveY) % Canvas_Zoom.DOT_NUM,
+								ori_bmp_data.getPixel32(
+									x % Canvas_Zoom.DOT_NUM,
+									y % Canvas_Zoom.DOT_NUM
+								)
+							);
+						}
+					}
+
+					//反映
+					in_Canvas.Redraw();
+				};
+
+				Scroll(canvas_color);
+				Scroll(canvas_shade);
+			}
+/*
+			public function ChangeLabel():void{
+				var color:uint = palette_b_color.GetColor();
+
+				var vec:Vector3D = new Vector3D((color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF);
+
+				var len:Number = vec.length;
+
+				var str:String = "";
+				for(var i:Number = 100; i >= 0.1; i *= 0.1){
+					var val:int = len / i;
+
+					str = str + val;
+
+					if(0.9 < i && i < 1.1){//i == 1だとNumberなので不安
+						str = str + ".";
+					}
+
+					len -= val * i;
+				}
+
+				label_color.text = str;
+			}
+//*/
 		]]>
 	</mx:Script>
 
+	<!--Style-->
+	<mx:Style source="style.css"/>
 
 	<!--View-->
-	<mx:HBox>
+	<mx:HBox id="base_box" paddingTop="10">
 		<!--Space-->
 		<mx:Spacer width="100%"/>
 
 		<!--HSBA-->
-		<mx:VBox>
+		<mx:VBox height="100%">
+			<mx:Panel title="色相・彩度(H_S)">
+				<comp:Palette_HS id="palette_hs_color"/>
+			</mx:Panel>
+
 			<!--Space-->
-			<mx:Spacer width="100%" height="10%"/>
+			<mx:Spacer height="100%"/>
 
-			<comp:Palette_HS id="palette_hs_color"/>
-			<comp:Palette_B  id="palette_b_color"/>
-			<comp:Palette_A  id="palette_a_color"/>
+			<mx:Panel title="輝度(L)"><!--Old:明度(B)-->
+				<comp:Palette_B  id="palette_b_color"/>
+			</mx:Panel>
+
+			<!--Space-->
+			<mx:Spacer height="100%"/>
+
+			<mx:Panel title="アルファ(A)">
+				<comp:Palette_A  id="palette_a_color"/>
+			</mx:Panel>
+
+<!--
+			<mx:Spacer height="100%"/>
+
+			<mx:Label id="label_color" color="0xFFFFFF"/>
+-->
 		</mx:VBox>
-
-		<!--Space-->
-		<mx:Spacer width="10"/>
 
 		<!--Color-->
 		<mx:VBox>
-			<!--Space-->
-			<mx:Spacer width="100%" height="10%"/>
-
-			<comp:Palette_Color id="palette_c_color"/>
+			<mx:Panel title="色(Color)" paddingLeft="20" paddingRight="20">
+				<comp:Palette_Color id="palette_c_color"/>
+			</mx:Panel>
 		</mx:VBox>
-
-		<!--Space-->
-		<mx:Spacer width="10"/>
 
 		<!--Canvas : Color-->
 		<mx:VBox>
-			<!--Space-->
-			<mx:Spacer width="100%" height="10%"/>
+			<!--Button : Size-->
+			<mx:Panel title="キャンバスの倍率(Size)" width="100%" layout="horizontal">
+				<mx:Spacer width="100%"/>
+				<mx:RadioButtonGroup id="radio_color_size"/>
+				<mx:RadioButton groupName="radio_color_size" label="x1" buttonDown="Canvas_Color_x(1)" selected="true"/>
+				<mx:RadioButton groupName="radio_color_size" label="x2" buttonDown="Canvas_Color_x(2)" />
+				<mx:RadioButton groupName="radio_color_size" label="x4" buttonDown="Canvas_Color_x(4)" />
+				<mx:RadioButton groupName="radio_color_size" label="x8" buttonDown="Canvas_Color_x(8)" />
+				<mx:Spacer width="100%"/>
+			</mx:Panel>
 
-			<!--Button-->
-			<mx:HBox>
-				<mx:Button label="x1" buttonDown="Canvas_Color_x(1)" />
-				<mx:Button label="x2" buttonDown="Canvas_Color_x(2)" />
-				<mx:Button label="x4" buttonDown="Canvas_Color_x(4)" />
-				<mx:Button label="x8" buttonDown="Canvas_Color_x(8)" />
-			</mx:HBox>
+			<!--Space-->
+			<mx:Spacer height="10%"/>
+
+			<!--Button : Cursor-->
+			<mx:Panel title="カーソルのモード(Cursor_Mode)" width="100%" layout="horizontal">
+				<mx:Spacer width="100%"/>
+				<mx:RadioButtonGroup id="radio_color_cursor_mode"/>
+				<mx:RadioButton groupName="radio_color_cursor_mode" label="Normal"
+					buttonDown="Canvas_Color_SetCursorMode(Canvas_Zoom.CURSOR_MODE_NORMAL)"/>
+				<mx:RadioButton groupName="radio_color_cursor_mode" label="Mirror16"
+					buttonDown="Canvas_Color_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_16_16)"/>
+				<mx:RadioButton groupName="radio_color_cursor_mode" label="Mirror15"
+					buttonDown="Canvas_Color_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_15_1_15)" selected="true"/>
+				<mx:Spacer width="100%"/>
+			</mx:Panel>
 
 			<!--Space-->
-			<mx:Spacer width="100%" height="10%"/>
+			<mx:Spacer height="10%"/>
 
 			<!--Canvas-->
-			<mx:Box id="box_canvas_color" verticalScrollPolicy="on" horizontalScrollPolicy="on">
-				<comp:Canvas_Zoom id="canvas_color"/>
-			</mx:Box>
+			<mx:Panel title="「色」キャンバス(Canvas_Color)" width="100%" layout="horizontal">
+				<mx:Box id="box_canvas_color" verticalScrollPolicy="on" horizontalScrollPolicy="on">
+					<comp:Canvas_Zoom id="canvas_color"/>
+				</mx:Box>
+			</mx:Panel>
+
+			<!--Space-->
+			<mx:Spacer height="10%"/>
+
+			<!--Button : Draw-->
+			<mx:Panel title="描画方法(Draw)" width="100%" layout="horizontal">
+				<mx:Spacer width="100%"/>
+				<mx:RadioButtonGroup id="radio_color_draw"/>
+				<mx:RadioButton groupName="radio_color_draw" label="Dot"  buttonDown="Canvas_Color_Draw(Canvas_Zoom.DRAW_MODE_DOT)" selected="true"/>
+				<mx:RadioButton groupName="radio_color_draw" label="Fill" buttonDown="Canvas_Color_Draw(Canvas_Zoom.DRAW_MODE_FILL)" />
+				<mx:Spacer width="100%"/>
+			</mx:Panel>
 		</mx:VBox>
 
 		<!--Space-->
-		<mx:Spacer width="100%" height="10"/>
+		<mx:Spacer width="100%"/>
 
 		<!--Canvas : Result-->
 		<mx:VBox height="100%">
 			<!--Space-->
 			<mx:Spacer height="100%"/>
 
+			<!--Load-->
+			<mx:HBox width="100%">
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Load_CI" buttonDown="Load_C_Index()"/>
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Load_SI" buttonDown="Load_S_Index()"/>
+				<mx:Spacer width="100%"/>
+			</mx:HBox>
+
+			<!--Load-->
+			<mx:HBox width="100%">
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Load_CP" buttonDown="Load_C_Palette()"/>
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Load_SP" buttonDown="Load_S_Palette()"/>
+				<mx:Spacer width="100%"/>
+			</mx:HBox>
+
 			<!--Canvas-->
-			<comp:Canvas_Result id="canvas_result"/>
+			<mx:Panel title="結果(Result)" width="100%">
+				<comp:Canvas_Result id="canvas_result"/>
+			</mx:Panel>
+
+			<!--Save-->
+			<mx:HBox width="100%">
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Save" buttonDown="Save()"/>
+				<mx:Spacer width="100%"/>
+			</mx:HBox>
+
+			<!--Save-->
+			<mx:HBox width="100%">
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Save_C" buttonDown="Save_C()"/>
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Save_S" buttonDown="Save_S()"/>
+				<mx:Spacer width="100%"/>
+			</mx:HBox>
+
+			<!--Save-->
+			<mx:HBox width="100%">
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Save_CI" buttonDown="Save_C_Index()"/>
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Save_SI" buttonDown="Save_S_Index()"/>
+				<mx:Spacer width="100%"/>
+			</mx:HBox>
+
+			<!--Save-->
+			<mx:HBox width="100%">
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Save_CP" buttonDown="Save_C_Palette()"/>
+				<mx:Spacer width="100%"/>
+				<mx:Button label="Save_SP" buttonDown="Save_S_Palette()"/>
+				<mx:Spacer width="100%"/>
+			</mx:HBox>
+
+			<!--Space-->
+			<mx:Spacer height="20"/>
+
+			<mx:HBox width="100%">
+				<mx:Spacer width="100%"/>
+				<mx:Grid>
+					<mx:GridRow>
+						<mx:GridItem/>
+						<mx:GridItem> <mx:Button label="↑" buttonDown="ScrollBitmap( 0, -1)"/> </mx:GridItem>
+						<mx:GridItem/>
+					</mx:GridRow>
+					<mx:GridRow>
+						<mx:GridItem> <mx:Button label="←" buttonDown="ScrollBitmap(-1,  0)"/> </mx:GridItem>
+						<mx:GridItem/>
+						<mx:GridItem> <mx:Button label="→" buttonDown="ScrollBitmap( 1,  0)"/> </mx:GridItem>
+					</mx:GridRow>
+					<mx:GridRow>
+						<mx:GridItem/>
+						<mx:GridItem> <mx:Button label="↓" buttonDown="ScrollBitmap( 0,  1)"/> </mx:GridItem>
+						<mx:GridItem/>
+					</mx:GridRow>
+				</mx:Grid>
+				<mx:Spacer width="100%"/>
+			</mx:HBox>
 
 			<!--Space-->
 			<mx:Spacer height="100%"/>
 		</mx:VBox>
 
 		<!--Space-->
-		<mx:Spacer width="100%" height="10"/>
+		<mx:Spacer width="100%"/>
 
 		<!--Canvas : Shade-->
 		<mx:VBox>
-			<!--Space-->
-			<mx:Spacer width="100%" height="10%"/>
+			<!--Button : Size-->
+			<mx:Panel title="キャンバスの倍率(Size)" width="100%" layout="horizontal">
+				<mx:Spacer width="100%"/>
+				<mx:RadioButtonGroup id="radio_shade_size"/>
+				<mx:RadioButton groupName="radio_shade_size" label="x1" buttonDown="Canvas_Shade_x(1)" selected="true"/>
+				<mx:RadioButton groupName="radio_shade_size" label="x2" buttonDown="Canvas_Shade_x(2)" />
+				<mx:RadioButton groupName="radio_shade_size" label="x4" buttonDown="Canvas_Shade_x(4)" />
+				<mx:RadioButton groupName="radio_shade_size" label="x8" buttonDown="Canvas_Shade_x(8)" />
+				<mx:Spacer width="100%"/>
+			</mx:Panel>
 
-			<!--Button-->
-			<mx:HBox>
-				<mx:Button label="x1" buttonDown="Canvas_Shade_x(1)" />
-				<mx:Button label="x2" buttonDown="Canvas_Shade_x(2)" />
-				<mx:Button label="x4" buttonDown="Canvas_Shade_x(4)" />
-				<mx:Button label="x8" buttonDown="Canvas_Shade_x(8)" />
-			</mx:HBox>
+			<!--Space-->
+			<mx:Spacer height="10%"/>
+
+			<!--Button : Cursor-->
+			<mx:Panel title="カーソルのモード(Cursor_Mode)" width="100%" layout="horizontal">
+				<mx:Spacer width="100%"/>
+				<mx:RadioButtonGroup id="radio_shade_cursor_mode"/>
+				<mx:RadioButton groupName="radio_shade_cursor_mode" label="Normal"
+					buttonDown="Canvas_Shade_SetCursorMode(Canvas_Zoom.CURSOR_MODE_NORMAL)"/>
+				<mx:RadioButton groupName="radio_shade_cursor_mode" label="Mirror16"
+					buttonDown="Canvas_Shade_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_16_16)"/>
+				<mx:RadioButton groupName="radio_shade_cursor_mode" label="Mirror15"
+					buttonDown="Canvas_Shade_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_15_1_15)" selected="true"/>
+				<mx:Spacer width="100%"/>
+			</mx:Panel>
 
 			<!--Space-->
-			<mx:Spacer width="100%" height="10%"/>
+			<mx:Spacer height="10%"/>
 
 			<!--Canvas-->
-			<mx:Box id="box_canvas_shade" verticalScrollPolicy="on" horizontalScrollPolicy="on">
-				<comp:Canvas_Zoom id="canvas_shade"/>
-			</mx:Box>
-		</mx:VBox>
+			<mx:Panel title="「陰」キャンバス(Canvas_Shade)" width="100%" layout="horizontal">
+				<mx:Box id="box_canvas_shade" verticalScrollPolicy="on" horizontalScrollPolicy="on">
+					<comp:Canvas_Zoom id="canvas_shade"/>
+				</mx:Box>
+			</mx:Panel>
 
-		<!--Space-->
-		<mx:Spacer width="10"/>
+			<!--Space-->
+			<mx:Spacer height="10%"/>
+
+			<!--Button : Draw-->
+			<mx:Panel title="描画方法(Draw)" width="100%" layout="horizontal">
+				<mx:Spacer width="100%"/>
+				<mx:RadioButtonGroup id="radio_shade_draw"/>
+				<mx:RadioButton groupName="radio_shade_draw" label="Dot"  buttonDown="Canvas_Shade_Draw(Canvas_Zoom.DRAW_MODE_DOT)" selected="true"/>
+				<mx:RadioButton groupName="radio_shade_draw" label="Fill" buttonDown="Canvas_Shade_Draw(Canvas_Zoom.DRAW_MODE_FILL)" />
+				<mx:Spacer width="100%"/>
+			</mx:Panel>
+		</mx:VBox>
 
 		<!--Color of Shade-->
 		<mx:VBox>
-			<!--Space-->
-			<mx:Spacer width="100%" height="10%"/>
-
-			<comp:Palette_Color id="palette_c_shade"/>
+			<mx:Panel title="光陰(Shade)" paddingLeft="20" paddingRight="20">
+				<comp:Palette_Color id="palette_c_shade"/>
+			</mx:Panel>
 		</mx:VBox>
 
-		<!--Space-->
-		<mx:Spacer width="10"/>
-
 		<!--HSBA of Shade-->
-		<mx:VBox>
-			<!--Space-->
-			<mx:Spacer width="100%" height="10%"/>
+		<mx:VBox height="100%">
+			<mx:Panel title="色相・彩度(H_S)">
+				<comp:Palette_HS id="palette_hs_shade"/>
+			</mx:Panel>
 
-			<comp:Palette_HS id="palette_hs_shade"/>
-			<comp:Palette_B  id="palette_b_shade"/>
-			<comp:Palette_A  id="palette_a_shade"/>
+			<!--Space-->
+			<mx:Spacer height="100%"/>
+
+			<mx:Panel title="輝度(L)"><!--Old:明度(B)-->
+				<comp:Palette_B  id="palette_b_shade"/>
+			</mx:Panel>
+
+			<!--Space-->
+			<mx:Spacer height="100%"/>
+
+			<mx:Panel title="アルファ(A)">
+				<comp:Palette_A  id="palette_a_shade"/>
+			</mx:Panel>
 		</mx:VBox>
 	</mx:HBox>
 </mx:Application>

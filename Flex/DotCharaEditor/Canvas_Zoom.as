@@ -38,9 +38,16 @@ package{
 
 		//＃カーソルのモード（カーソルをどう動かすか）
 		static public var CursorModeIter:int = 0;
-		static public const CURSOR_MODE_NORMAL:int	= CursorModeIter++;
-		static public const CURSOR_MODE_MIRROR:int	= CursorModeIter++;
-		static public const CURSOR_MODE_NUM:int		= CursorModeIter;
+		static public const CURSOR_MODE_NORMAL:int			= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR_16_16:int	= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR_15_1_15:int	= CursorModeIter++;
+		static public const CURSOR_MODE_NUM:int				= CursorModeIter;
+
+		//＃描画方法
+		static public var DrawModeIter:int = 0;
+		static public const DRAW_MODE_DOT:int	= DrawModeIter++;
+		static public const DRAW_MODE_FILL:int	= DrawModeIter++;
+		static public const DRAW_MODE_NUM:int	= DrawModeIter;
 
 
 		//==Var==
@@ -55,6 +62,9 @@ package{
 		public var m_Bitmap:Bitmap;
 		public var m_BitmapData:BitmapData;
 
+		//トレース画像
+		public var m_Bitmap_Trace:Bitmap;
+
 		//パレットIndexを保持する擬似画像（直接の表示には使わない）
 		public var m_BitmapData_Index:BitmapData;
 
@@ -68,7 +78,10 @@ package{
 		static public var m_InstanceList:Array = [];//vec<Canvas_Zoom>
 
 		//カーソルのモード（動かし方）
-		public var m_CursorMode:int = CURSOR_MODE_MIRROR;
+		public var m_CursorMode:int = CURSOR_MODE_MIRROR_15_1_15;
+
+		//描画方法
+		public var m_DrawMode:int = DRAW_MODE_DOT;
 
 		//リスナのリスト
 		public var m_ListenerList_Redraw:Array = [];
@@ -106,6 +119,16 @@ package{
 			{
 				RedrawCursor(in_CursorColor);
 			}
+		}
+
+		//カーソルの動かし方を外部から設定
+		public function SetCursorMode(in_Mode:int):void{
+			m_CursorMode = in_Mode;
+		}
+
+		//描画方法の設定
+		public function SetDrawMode(in_Mode:int):void{
+			m_DrawMode = in_Mode;
 		}
 
 		//Index Bitmapのクリア（主に初期化時に利用）
@@ -152,6 +175,16 @@ package{
 			//BG
 			{
 				m_Root.addChild(new BackGroundAnim(SIZE_W, SIZE_H, SIZE_RATIO*2));
+			}
+
+			//Trace
+			{
+				m_Bitmap_Trace = new Bitmap();
+
+				m_Bitmap_Trace.scaleX = SIZE_RATIO;
+				m_Bitmap_Trace.scaleY = SIZE_RATIO;
+
+				m_Root.addChild(m_Bitmap_Trace);
 			}
 
 			//Create Bitmap
@@ -223,9 +256,16 @@ package{
 							case CURSOR_TYPE_NORMAL:
 								break;
 							case CURSOR_TYPE_MIRROR:
-								x = DOT_NUM-1 - x;
-								if(m_CursorMode == CURSOR_MODE_NORMAL){
+								switch(m_CursorMode){
+								case CURSOR_MODE_NORMAL:
 									visible_flag = false;
+									break;
+								case CURSOR_MODE_MIRROR_16_16:
+									x = DOT_NUM-1 - x;
+									break;
+								case CURSOR_MODE_MIRROR_15_1_15:
+									x = DOT_NUM-2 - x;
+									break;
 								}
 								break;
 							}
@@ -278,21 +318,45 @@ package{
 						//ラインだけじゃなく他のも？
 						//!!
 
-						//Dot
-						{
-							var drawFunc_Dot:Function = function(in_Index:int):void{
-								m_BitmapData_Index.setPixel(m_Cursor[in_Index].x / SIZE_RATIO, m_Cursor[in_Index].y / SIZE_RATIO, m_CursorIndex);
-							};
+						switch(m_DrawMode){
+						case DRAW_MODE_DOT:
+							//フリー描画
+							{
+								const drawFunc_Dot:Function = function(in_Index:int):void{
+									m_BitmapData_Index.setPixel(m_Cursor[in_Index].x / SIZE_RATIO, m_Cursor[in_Index].y / SIZE_RATIO, m_CursorIndex);
+								};
 
-							switch(m_CursorMode){
-							case CURSOR_MODE_NORMAL:
-								drawFunc_Dot(CURSOR_TYPE_NORMAL);
-								break;
-							case CURSOR_MODE_MIRROR:
-								drawFunc_Dot(CURSOR_TYPE_NORMAL);
-								drawFunc_Dot(CURSOR_TYPE_MIRROR);
-								break;
+								switch(m_CursorMode){
+								case CURSOR_MODE_NORMAL:
+									drawFunc_Dot(CURSOR_TYPE_NORMAL);
+									break;
+								case CURSOR_MODE_MIRROR_16_16:
+								case CURSOR_MODE_MIRROR_15_1_15:
+									drawFunc_Dot(CURSOR_TYPE_NORMAL);
+									drawFunc_Dot(CURSOR_TYPE_MIRROR);
+									break;
+								}
 							}
+							break;
+						case DRAW_MODE_FILL:
+							//塗りつぶし
+							{
+								const drawFunc_Fill:Function = function(in_Index:int):void{
+									m_BitmapData_Index.floodFill(m_Cursor[in_Index].x / SIZE_RATIO, m_Cursor[in_Index].y / SIZE_RATIO, m_CursorIndex);
+								};
+
+								switch(m_CursorMode){
+								case CURSOR_MODE_NORMAL:
+									drawFunc_Fill(CURSOR_TYPE_NORMAL);
+									break;
+								case CURSOR_MODE_MIRROR_16_16:
+								case CURSOR_MODE_MIRROR_15_1_15:
+									drawFunc_Fill(CURSOR_TYPE_NORMAL);
+									drawFunc_Fill(CURSOR_TYPE_MIRROR);
+									break;
+								}
+							}
+							break;
 						}
 
 						Redraw();
