@@ -10,6 +10,14 @@
 	<mx:Script>
 		<![CDATA[
 /*
+			以下のライブラリを使っています
+			・as3yaml
+			　・http://code.google.com/p/as3yaml/
+			・AS3 Zip Library
+			　・http://nochump.com/blog/archives/15
+*/
+
+/*
 			ToDo：
 			・カラーパレットの初期化
 			・カラーパレットの枠（透明でもOKなように）
@@ -21,6 +29,10 @@
 
 			import org.as3yaml.*;
 
+			import nochump.util.zip.*;
+
+			import mx.controls.*;
+			import mx.events.*;
 /*
 			//トレース対象
 			[Embed(source='chara02_b_side.png')]
@@ -545,6 +557,11 @@
 					box_canvas_shade.width  = Canvas_Zoom.SIZE_W + box_canvas_shade.verticalScrollBar.width;
 					box_canvas_shade.height = Canvas_Zoom.SIZE_H + box_canvas_shade.horizontalScrollBar.height;
 				}
+				//それに合わせて履歴も
+				{
+					history_color.width = box_canvas_color.width;
+					history_shade.width = box_canvas_shade.width;
+				}
 
 				//トレーステスト
 				{
@@ -567,12 +584,226 @@
 					canvas_shade.Redraw();
 				}
 //*/
+				//履歴
+				{
+					canvas_color.onDrawEnd = AddHistory_C;
+					canvas_shade.onDrawEnd = AddHistory_S;
+/*
+					//履歴が追加されたら、スクロールバーを右に寄せる
+					history_color.horizontalScrollBar.addEventListener(
+						Event.RENDER,//スクロールバーのサイズが変更されるタイミングで実行してみる
+						ChildExistenceChangedEvent.CHILD_ADD,
+						function(e:Event):void{
+							history_color.horizontalScrollPosition = history_color.horizontalScrollBar.maxScrollPosition;
+							//history_color.removeAllChildren();//Check
+						}
+					);
+					history_shade.horizontalScrollBar.addEventListener(
+						Event.RENDER,
+						function(e:Event):void{
+							history_shade.horizontalScrollPosition = history_shade.horizontalScrollBar.maxScrollPosition;
+							//history_shade.removeAllChildren();//Check
+						}
+					);
+//*/
+				}
+				//!!ロード完了時は履歴をリセットしたい
+			}
+
+			//履歴のリセット
+			private function ResetHistory_C():void{
+				history_color.removeAllChildren();
+			}
+			private function ResetHistory_S():void{
+				history_shade.removeAllChildren();
+			}
+
+			//今のグラフィックを履歴に追加する
+			private function AddHistory_C():void{
+				var img:Image = new Image();
+				{//見た目
+					img.addChild(new Bitmap(canvas_color.m_BitmapData.clone()));
+					img.width  = Canvas_Zoom.DOT_NUM;
+					img.height = Canvas_Zoom.DOT_NUM;
+				}
+
+				{//Event
+					var bmp_data_index:BitmapData = canvas_color.m_BitmapData_Index.clone();
+
+					//クリックされたら対応する状態に戻す
+					img.addEventListener(
+						MouseEvent.MOUSE_DOWN,
+						function(e:MouseEvent):void{
+							canvas_color.m_BitmapData_Index.draw(bmp_data_index);
+							canvas_color.Redraw();
+						}
+					);
+
+					//スクロールバーを右端に寄せる
+					img.addEventListener(
+						FlexEvent.CREATION_COMPLETE,//登録完了時に実行
+						function(e:Event):void{
+							history_color.horizontalScrollPosition = history_color.horizontalScrollBar.maxScrollPosition;
+						}
+					);
+				}
+
+				history_color.addChild(img);
+			}
+			private function AddHistory_S():void{
+				var img:Image = new Image();
+				{//見た目
+					img.addChild(new Bitmap(canvas_shade.m_BitmapData.clone()));
+					img.width  = Canvas_Zoom.DOT_NUM;
+					img.height = Canvas_Zoom.DOT_NUM;
+				}
+
+				{//Event
+					var bmp_data_index:BitmapData = canvas_shade.m_BitmapData_Index.clone();
+
+					//クリックされたら対応する状態に戻す
+					img.addEventListener(
+						MouseEvent.MOUSE_DOWN,
+						function(e:MouseEvent):void{
+							canvas_shade.m_BitmapData_Index.draw(bmp_data_index);
+							canvas_shade.Redraw();
+						}
+					);
+
+					//スクロールバーを右端に寄せる
+					img.addEventListener(
+						FlexEvent.CREATION_COMPLETE,//登録完了時に実行
+						function(e:Event):void{
+							history_shade.horizontalScrollPosition = history_shade.horizontalScrollBar.maxScrollPosition;
+						}
+					);
+				}
+
+				history_shade.addChild(img);
 			}
 
 			private function Save():void{
 				(new FileReference).save((new PNGEncoder()).encode(canvas_result.m_Bitmap.bitmapData), "Result.png");
 //				(new FileReference).save((new PNGEncoder()).encode(canvas_color.m_Bitmap.bitmapData), "Result_Color.png");//連続は不可らしい
 //				(new FileReference).save((new PNGEncoder()).encode(canvas_shade.m_Bitmap.bitmapData), "Result_Shade.png");
+			}
+			private function Save_All():void{
+				//Zipで一通りセーブ
+				var fileName:String;
+				var fileData:ByteArray;
+				var ze:ZipEntry;
+
+				var zipOut:ZipOutput = new ZipOutput();
+				{
+					{//Result
+						fileName = "Result.png";
+						fileData = (new PNGEncoder()).encode(canvas_result.m_Bitmap.bitmapData);
+						ze = new ZipEntry(fileName);
+
+						zipOut.putNextEntry(ze);
+						zipOut.write(fileData);
+						zipOut.closeEntry();
+					}
+
+					{//Index : Color
+						fileName = "Index_Color.png";
+						fileData = (new PNGEncoder()).encode(canvas_color.m_BitmapData_Index);
+						ze = new ZipEntry(fileName);
+
+						zipOut.putNextEntry(ze);
+						zipOut.write(fileData);
+						zipOut.closeEntry();
+					}
+
+					{//Index : Shade
+						fileName = "Index_Shade.png";
+						fileData = (new PNGEncoder()).encode(canvas_shade.m_BitmapData_Index);
+						ze = new ZipEntry(fileName);
+
+						zipOut.putNextEntry(ze);
+						zipOut.write(fileData);
+						zipOut.closeEntry();
+					}
+
+					var list_h:Array;
+					var list_s:Array;
+					var list_b:Array;
+					var list_a:Array;
+					var list:Array;
+					var i:int;
+
+					{//Palette : Color
+						//セーブ情報
+						var palette_color:Object;
+						{
+							list_h = palette_hs_color.GetHueRatioList();
+							list_s = palette_hs_color.GetSaturationRatioList();
+							list_b = palette_b_color.GetBrightnessRatioList();
+							list_a = palette_a_color.GetAlphaRatioList();
+
+							list = new Array(info_color.length);
+							{
+								for(i = 0; i < info_color.length; i++){
+									list[i] = {
+										H:(list_h[i]),
+										S:(list_s[i]),
+										B:(list_b[i]),
+										A:(list_a[i])
+									};
+								}
+							}
+
+							palette_color = list;//{palette_color:list};
+						}
+
+						fileName = "Palette_Color.yaml";
+						fileData = new ByteArray();
+						fileData.writeUTFBytes(YAML.encode(palette_color));
+						ze = new ZipEntry(fileName);
+
+						zipOut.putNextEntry(ze);
+						zipOut.write(fileData);
+						zipOut.closeEntry();
+					}
+
+					{//Palette : Shade
+						//セーブ情報
+						var palette_shade:Object;
+						{
+							list_h = palette_hs_shade.GetHueRatioList();
+							list_s = palette_hs_shade.GetSaturationRatioList();
+							list_b = palette_b_shade.GetBrightnessRatioList();
+							list_a = palette_a_shade.GetAlphaRatioList();
+
+							list = new Array(info_shade.length);
+							{
+								for(i = 0; i < info_shade.length; i++){
+									list[i] = {
+										H:(list_h[i]),
+										S:(list_s[i]),
+										B:(list_b[i]),
+										A:(list_a[i])
+									};
+								}
+							}
+
+							palette_shade = list;//{palette_shade:list};
+						}
+
+						fileName = "Palette_Shade.yaml";
+						fileData = new ByteArray();
+						fileData.writeUTFBytes(YAML.encode(palette_shade));
+						ze = new ZipEntry(fileName);
+
+						zipOut.putNextEntry(ze);
+						zipOut.write(fileData);
+						zipOut.closeEntry();
+					}
+
+					zipOut.finish();
+				}
+
+				(new FileReference).save(zipOut.byteArray, "Result.zip");
 			}
 
 			private function Save_C():void{
@@ -589,6 +820,180 @@
 
 			private function Save_S_Index():void{
 				(new FileReference).save((new PNGEncoder()).encode(canvas_shade.m_BitmapData_Index), "Result_Shade_Index.png");
+			}
+
+			private function Load_All():void{
+				var fr:FileReference = new FileReference();
+
+				//Select => Load
+				fr.addEventListener(
+					Event.SELECT,//ファイルが選択されたら
+					function(e:Event):void{
+						//拡張子をチェックして
+						{
+/*
+							if(fr.extension != "zip"){
+								//err
+								return;
+							}
+/*/
+							if(fr.name.indexOf(".zip") < 0){//チェックとしては不十分だけどまぁよし
+								//err
+								return;
+							}
+//*/
+						}
+
+						//ロード開始
+						{
+							fr.load();
+						}
+					}
+				);
+
+				//Load Func
+				var load:Object = {};
+				{
+					load["Index_Color.png"] = function(i_Data:ByteArray):void{
+						var loader:Loader = new Loader();
+						loader.loadBytes(i_Data);
+
+						loader.contentLoaderInfo.addEventListener(
+							Event.COMPLETE,
+							function(e:Event):void{
+								canvas_color.m_BitmapData_Index.draw(loader.content);
+								canvas_color.Redraw();
+
+								//さらに履歴をリセット
+//								ResetHistory_C();
+								AddHistory_C();
+							}
+						);
+					};
+
+					load["Index_Shade.png"] = function(i_Data:ByteArray):void{
+						var loader:Loader = new Loader();
+						loader.loadBytes(i_Data);
+
+						loader.contentLoaderInfo.addEventListener(
+							Event.COMPLETE,
+							function(e:Event):void{
+								canvas_shade.m_BitmapData_Index.draw(loader.content);
+								canvas_shade.Redraw();
+
+								//さらに履歴をリセット
+//								ResetHistory_S();
+								AddHistory_S();
+							}
+						);
+					};
+
+					load["Palette_Color.yaml"] = function(i_Data:ByteArray):void{
+						var i:int;
+						var j:int;
+						var len:int = info_color.length;
+
+						var yaml_str:String = i_Data.toString();
+						var yaml_map:Object = YAML.decode(yaml_str);
+
+						for(i = 0; i < len; i++){
+							info_color[i].H = yaml_map[i].H;
+							info_color[i].S = yaml_map[i].S;
+							info_color[i].B = yaml_map[i].B;
+							info_color[i].A = yaml_map[i].A;
+						}
+
+						//色相・彩度
+						palette_hs_color.SetData(
+							info_color
+						);
+
+						//明度
+						palette_b_color.SetData(
+							info_color
+						);
+
+						//アルファ
+						palette_a_color.SetData(
+							info_color
+						);
+
+						//リスナ連鎖によるカラーパレットの初期化
+						{
+							//ちょっと強引なので、もう少しスマートな方法があればそちらが良い
+							for(i = 0; i <= len; i++){
+								palette_c_color.SetCursorIndex(i % len);
+
+								for(j = 0; j < palette_hs_color.m_ListenerList_ChangeColor.length; j++){
+									palette_hs_color.m_ListenerList_ChangeColor[j]();
+								}
+							}
+						}
+					};
+
+					load["Palette_Shade.yaml"] = function(i_Data:ByteArray):void{
+						var i:int;
+						var j:int;
+						var len:int = info_shade.length;
+
+						var yaml_str:String = i_Data.toString();
+						var yaml_map:Object = YAML.decode(yaml_str);
+
+						for(i = 0; i < len; i++){
+							info_shade[i].H = yaml_map[i].H;
+							info_shade[i].S = yaml_map[i].S;
+							info_shade[i].B = yaml_map[i].B;
+							info_shade[i].A = yaml_map[i].A;
+						}
+
+						//色相・彩度
+						palette_hs_shade.SetData(
+							info_shade
+						);
+
+						//明度
+						palette_b_shade.SetData(
+							info_shade
+						);
+
+						//アルファ
+						palette_a_shade.SetData(
+							info_shade
+						);
+
+						//リスナ連鎖によるカラーパレットの初期化
+						{
+							//ちょっと強引なので、もう少しスマートな方法があればそちらが良い
+							for(i = 0; i <= len; i++){
+								palette_c_shade.SetCursorIndex(i % len);
+
+								for(j = 0; j < palette_hs_shade.m_ListenerList_ChangeColor.length; j++){
+									palette_hs_shade.m_ListenerList_ChangeColor[j]();
+								}
+							}
+						}
+					};
+				}
+
+				//Load => Draw
+				fr.addEventListener(
+					Event.COMPLETE,
+					function(e:Event):void{
+						var zip:ZipFile = new ZipFile(fr.data);
+
+						for(var i:int = 0; i < zip.entries.length; i++){
+							var entry:ZipEntry = zip.entries[i];
+							var zd:ByteArray = zip.getInput(entry);
+
+							if(load[entry.name]){
+								load[entry.name](zd);
+							}
+						}
+					}
+				);
+
+				//実行
+				fr.browse();
 			}
 
 			private function Load_C_Index():void{
@@ -845,11 +1250,8 @@
 				canvas_shade.scaleY = in_Ratio;
 			}
 
-			public function Canvas_Color_SetCursorMode(in_Mode:int):void{
+			public function Canvas_SetCursorMode(in_Mode:int):void{
 				canvas_color.SetCursorMode(in_Mode);
-			}
-
-			public function Canvas_Shade_SetCursorMode(in_Mode:int):void{
 				canvas_shade.SetCursorMode(in_Mode);
 			}
 
@@ -972,17 +1374,10 @@
 			<!--Space-->
 			<mx:Spacer height="10%"/>
 
-			<!--Button : Cursor-->
-			<mx:Panel title="カーソルのモード(Cursor_Mode)" width="100%" layout="horizontal">
-				<mx:Spacer width="100%"/>
-				<mx:RadioButtonGroup id="radio_color_cursor_mode"/>
-				<mx:RadioButton groupName="radio_color_cursor_mode" label="Normal"
-					buttonDown="Canvas_Color_SetCursorMode(Canvas_Zoom.CURSOR_MODE_NORMAL)"/>
-				<mx:RadioButton groupName="radio_color_cursor_mode" label="Mirror16"
-					buttonDown="Canvas_Color_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_16_16)"/>
-				<mx:RadioButton groupName="radio_color_cursor_mode" label="Mirror15"
-					buttonDown="Canvas_Color_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_15_1_15)" selected="true"/>
-				<mx:Spacer width="100%"/>
+			<!--Canvas-->
+			<mx:Panel title="履歴(History)" width="100%" layout="horizontal">
+				<mx:HBox id="history_color" horizontalScrollPolicy="on" height="48">
+				</mx:HBox>
 			</mx:Panel>
 
 			<!--Space-->
@@ -1019,6 +1414,13 @@
 			<!--Load-->
 			<mx:HBox width="100%">
 				<mx:Spacer width="100%"/>
+				<mx:Button label="Load_All" buttonDown="Load_All()"/>
+				<mx:Spacer width="100%"/>
+			</mx:HBox>
+
+			<!--Load-->
+			<mx:HBox width="100%">
+				<mx:Spacer width="100%"/>
 				<mx:Button label="Load_CI" buttonDown="Load_C_Index()"/>
 				<mx:Spacer width="100%"/>
 				<mx:Button label="Load_SI" buttonDown="Load_S_Index()"/>
@@ -1034,6 +1436,19 @@
 				<mx:Spacer width="100%"/>
 			</mx:HBox>
 
+			<!--Button : Cursor-->
+			<mx:Panel title="カーソルのモード(Cursor_Mode)" width="100%" layout="horizontal">
+				<mx:Spacer width="100%"/>
+				<mx:RadioButtonGroup id="radio_cursor_mode"/>
+				<mx:RadioButton groupName="radio_cursor_mode" label="Normal"
+					buttonDown="Canvas_SetCursorMode(Canvas_Zoom.CURSOR_MODE_NORMAL)"/>
+				<mx:RadioButton groupName="radio_cursor_mode" label="Mirror16"
+					buttonDown="Canvas_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_16_16)"/>
+				<mx:RadioButton groupName="radio_cursor_mode" label="Mirror15"
+					buttonDown="Canvas_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_15_1_15)" selected="true"/>
+				<mx:Spacer width="100%"/>
+			</mx:Panel>
+
 			<!--Canvas-->
 			<mx:Panel title="結果(Result)" width="100%">
 				<comp:Canvas_Result id="canvas_result"/>
@@ -1042,7 +1457,7 @@
 			<!--Save-->
 			<mx:HBox width="100%">
 				<mx:Spacer width="100%"/>
-				<mx:Button label="Save" buttonDown="Save()"/>
+				<mx:Button label="Save_All" buttonDown="Save_All()"/>
 				<mx:Spacer width="100%"/>
 			</mx:HBox>
 
@@ -1121,17 +1536,10 @@
 			<!--Space-->
 			<mx:Spacer height="10%"/>
 
-			<!--Button : Cursor-->
-			<mx:Panel title="カーソルのモード(Cursor_Mode)" width="100%" layout="horizontal">
-				<mx:Spacer width="100%"/>
-				<mx:RadioButtonGroup id="radio_shade_cursor_mode"/>
-				<mx:RadioButton groupName="radio_shade_cursor_mode" label="Normal"
-					buttonDown="Canvas_Shade_SetCursorMode(Canvas_Zoom.CURSOR_MODE_NORMAL)"/>
-				<mx:RadioButton groupName="radio_shade_cursor_mode" label="Mirror16"
-					buttonDown="Canvas_Shade_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_16_16)"/>
-				<mx:RadioButton groupName="radio_shade_cursor_mode" label="Mirror15"
-					buttonDown="Canvas_Shade_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_15_1_15)" selected="true"/>
-				<mx:Spacer width="100%"/>
+			<!--Canvas-->
+			<mx:Panel title="履歴(History)" width="100%" layout="horizontal">
+				<mx:HBox id="history_shade" horizontalScrollPolicy="on" height="48">
+				</mx:HBox>
 			</mx:Panel>
 
 			<!--Space-->

@@ -89,6 +89,9 @@ package{
 		//Index => Color
 		public var m_Index2Color:Function = function(in_Index:int):uint{return 0x00000000};
 
+		//
+		public var onDrawEnd:Function = function():void{};
+
 
 		//==Function==
 
@@ -387,6 +390,17 @@ package{
 						}
 						if(MouseDownFlag){
 							onChange();
+						}
+					}
+				);
+
+				root.addEventListener(
+					MouseEvent.MOUSE_UP,
+					function(e:MouseEvent):void{
+						if(MouseDownFlag){
+							MouseDownFlag = false;
+
+							onDrawEnd();
 						}
 					}
 				);
