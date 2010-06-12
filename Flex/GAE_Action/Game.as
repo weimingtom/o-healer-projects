@@ -1642,8 +1642,10 @@ package{
 				for(var x:int = i_LX; x <= i_RX; x += 1){
 					var pos_x:int = ImageManager.PANEL_LEN * (x + 0.5);
 
+					var map_index:int = GetMapIndex(m_Map[y][x]);
+
 					//値制限
-					switch(GetMapIndex(m_Map[y][x])){
+					switch(map_index){
 					case Q:
 					case S:
 					case D:
@@ -1659,7 +1661,7 @@ package{
 						break;
 					}
 
-					switch(GetMapIndex(m_Map[y][x])){
+					switch(map_index){
 					case Q:
 					case S:
 					case D:
@@ -1668,9 +1670,14 @@ package{
 					case T:
 					case A:
 					case P:
-						m_Map[y][x] = GetMapIndex(m_Map[y][x]) + (in_Val * VAL_OFFSET) + (GetMapDir(m_Map[y][x]) * DIR_OFFSET);
-						m_ObjMap[y][x].SetVal(in_Val);
-						m_ObjMap[y][x].Reset(pos_x, pos_y);
+						m_Map[y][x] = map_index + (in_Val * VAL_OFFSET) + (GetMapDir(m_Map[y][x]) * DIR_OFFSET);
+						if(map_index != P){
+							m_ObjMap[y][x].SetVal(in_Val);
+							m_ObjMap[y][x].Reset(pos_x, pos_y);
+						}else{
+							m_Player.SetVal(in_Val);
+							m_Player.Reset(pos_x, pos_y);
+						}
 						break;
 					}
 				}

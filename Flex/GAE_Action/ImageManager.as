@@ -298,11 +298,21 @@ package{
 
 		//＃Character
 
-		[Embed(source='Player.png')]
-		 private static var Bitmap_Player: Class;
+		[Embed(source='Player_Normal.png')]
+		 private static var Bitmap_Player_Normal: Class;
+		[Embed(source='Player_BlockSummoner.png')]
+		 private static var Bitmap_Player_BlockSummoner: Class;
+		[Embed(source='Player_Reverser.png')]
+		 private static var Bitmap_Player_Reverser: Class;
+		[Embed(source='Player_ReverserX.png')]
+		 private static var Bitmap_Player_ReverserX: Class;
 
 		private static var m_EmbedMap:Object = {
-			"Player":(new Bitmap_Player())
+			"Player_Normal":		(new Bitmap_Player_Normal()),
+			"Player_BlockSummoner":	(new Bitmap_Player_BlockSummoner()),
+			"Player_Reverser":		(new Bitmap_Player_Reverser()),
+			"Player_ReverserX":		(new Bitmap_Player_ReverserX()),
+			"dummy":(new Bitmap_Player_Normal())//dummy
 		};
 
 		public static const CHARA_GRAPHIC_LEN_X:int = 24;

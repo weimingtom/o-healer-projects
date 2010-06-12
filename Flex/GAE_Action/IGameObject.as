@@ -108,7 +108,7 @@ package{
 		protected var m_AnimGraphicDir:int = GRAPHIC_DIR_R;
 		protected var m_AnimGraphicIter:int = 0;
 		protected var m_AnimGraphicTimer:Number = 0.0;
-		protected var m_AnimGraphicInterval:Number = 0.1;
+		protected var m_AnimGraphicInterval:Number = 0.15;
 
 		//RPGツクール系の画像の登録
 		public function ResetGraphic(i_AnimGraphicList:Array):void{

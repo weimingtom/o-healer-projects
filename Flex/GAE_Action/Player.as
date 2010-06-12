@@ -111,9 +111,22 @@ package{
 
 			//Graphic Anim
 			{
-				if(! m_AnimGraphicList){//まだ生成していなければ
-					ResetGraphic(ImageManager.LoadCharaImage("Player"));
-				}
+				const ImageName:Array = [
+					"Player_Normal",
+					"Player_BlockSummoner",
+					"Player_Reverser",
+					"Player_Normal",
+					"Player_Normal",
+					"Player_Normal",
+					"Player_Normal",
+					"Player_Normal",
+					"Player_Normal",
+					"Player_Normal",
+					""//dummy
+				];
+//				if(! m_AnimGraphicList){//まだ生成していなければ
+					ResetGraphic(ImageManager.LoadCharaImage(ImageName[m_Val]));//キャラ画像が変わっている可能性があるので、毎回リセット
+//				}
 				SetGraphicDir(GRAPHIC_DIR_R);
 			}
 
@@ -648,6 +661,8 @@ class Player_Reverser
 
 			//プレイヤーだけは上下反転はしない
 			{
+				var player:Player = Game.Instance().m_Player;
+
 				var playerScaleY:Number = 1;
 
 				//初期状態が反転か否かで反転
@@ -660,7 +675,16 @@ class Player_Reverser
 					playerScaleY = -playerScaleY;
 				}
 
-				Game.Instance().m_Player.scaleY = playerScaleY;
+				//キャラグラフィックも変更してみる
+				if(player.scaleY != playerScaleY){
+					if(playerScaleY > 0){
+						player.ResetGraphic(ImageManager.LoadCharaImage("Player_Reverser"));
+					}else{
+						player.ResetGraphic(ImageManager.LoadCharaImage("Player_ReverserX"));
+					}
+				}
+
+				player.scaleY = playerScaleY;
 			}
 
 			//終了
