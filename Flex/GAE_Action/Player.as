@@ -75,7 +75,8 @@ package{
 		public var m_MouseDownFlag:Boolean = false;
 
 		//#Draw
-		public var m_DrawShape:Shape = new Shape();
+		public var m_DrawShape:Shape = new Shape();//ステージ用
+		public var m_DrawShape_Interface:Shape = new Shape();//インターフェース用
 
 		//=BlockSummoner
 		//常に一つだけ生成するため、現在生成されているブロックを保持しておく
@@ -169,9 +170,17 @@ package{
 			}
 
 			//m_DrawShape
-			if(! InitFlag)
 			{
-				Game.Instance().m_Root_Gimmick.addChild(m_DrawShape);
+				if(! InitFlag)
+				{
+					//Regist
+					Game.Instance().m_Root_Player.addChild(m_DrawShape);//手前に表示するため、プレイヤーと同じレイヤー
+					Game.Instance().m_Root_Intetrface.addChild(m_DrawShape_Interface);
+				}
+				m_DrawShape.alpha = 1;
+				m_DrawShape.graphics.clear();
+				m_DrawShape_Interface.alpha = 1;
+				m_DrawShape_Interface.graphics.clear();
 			}
 
 			//m_SwitchBlock
@@ -194,10 +203,35 @@ package{
 				Player_Reverser.m_ReversedFlag = false;
 			}
 
+			//タイプごとのリセット
+			{
+				Reset_ByType();
+			}
+
 			//デストラクタ
 			if(! InitFlag)
 			{
 				addEventListener(Event.REMOVED_FROM_STAGE, Destruct);
+			}
+		}
+
+		//Reset by Type
+		public function Reset_ByType():void{
+			switch(m_Val){
+			case TYPE_NORMAL:
+				break;
+			case TYPE_BLOCK_SUMMONER:
+				{//m_DrawShape：マウスで描く線まわり
+					//Effect
+	//				m_DrawShape.filters = [new BlurFilter()];
+					m_DrawShape.filters = [new BlurFilter(), new GlowFilter(0xFF8800)];
+					var alpha:Number = 1;
+					var blur:Number = 15;
+					m_DrawShape_Interface.filters = [new BlurFilter(), new GlowFilter(0xFF8800, alpha, blur, blur)];
+				}
+				break;
+			case TYPE_REVERSER:
+				break;
 			}
 		}
 
@@ -245,6 +279,9 @@ package{
 
 					//とりあえず現在のブロックサイズを描画してみる
 					RedrawBlockGraphic();
+
+					//マウスの部分に特殊エフェクト
+					OnStartBlockDraw();
 				}
 				break;
 			}
@@ -324,6 +361,28 @@ package{
 
 							Game.Instance().m_Root_Gimmick.addChild(m_SwitchBlock);
 							GameObjectManager.Register(m_SwitchBlock);
+
+							//エフェクトを追加しないとショボく見えるので追加
+							{
+								var shape:Shape = new Shape();
+								var g:Graphics = shape.graphics;
+
+								shape.filters = [new BlurFilter(), new GlowFilter(0xFF8800)];
+								//shape.blendMode = BlendMode.ADD;
+								shape.alpha = 0.8;
+
+								//addChildでスケールされるので、元の大きさで描く
+								const line_w:int = 1;
+								const line_color:uint = 0xFFEE66;//0xFF8800;
+								const line_alpha:Number = 1.0;
+								const W:int = ImageManager.PANEL_LEN;
+								const H:int = ImageManager.PANEL_LEN;
+								g.lineStyle(line_w, line_color, line_alpha);
+								g.beginFill(0xFFEE88, 0.1);
+								g.drawRect(-W/2, -H/2, W, H);
+
+								m_SwitchBlock.addChild(shape);
+							}
 						}
 					}
 
@@ -377,7 +436,7 @@ package{
 			//Setting
 			{
 				const line_w:int = 3;
-				const line_color:uint = 0xFF8800;
+				const line_color:uint = 0xFFEE66;//0xFF8800;
 				const line_alpha:Number = 1.0;
 
 				g.lineStyle(line_w, line_color, line_alpha);
@@ -399,12 +458,44 @@ package{
 			}
 		}
 
+		public function OnStartBlockDraw():void{
+		}
+
+		public function RedrawMouseForBlockSummoner():void{
+			var g:Graphics = m_DrawShape_Interface.graphics;
+
+			const Rad:int = 8;
+
+			var trgX:int, trgY:int;
+			{
+				if(m_MouseDownFlag){
+					//終点（マウス位置だと、四角形の枠からズレておかしく見える）
+					trgX = m_MouseDstX + Game.Instance().m_Root_Game.x;
+					trgY = m_MouseDstY + Game.Instance().m_Root_Game.y;
+				}else{
+					//マウス位置そのまま
+					trgX = Game.Instance().m_Root_Intetrface.mouseX;
+					trgY = Game.Instance().m_Root_Intetrface.mouseY;
+				}
+			}
+
+			g.clear();
+			g.lineStyle(1, 0xFFDD00, 0.5);
+			g.beginFill(0xFFEE88, 1.0);
+			g.drawCircle(trgX, trgY, Rad);
+		}
+
 
 		//Update:オーバライドして使う
 		override public function Update(i_DeltaTime:Number):void{
 			//Check Input
 			{
 				UpdateByInput();
+			}
+
+			//Type
+			{
+				Update_ByType(i_DeltaTime);
 			}
 
 			//Graphic Anim
@@ -427,6 +518,41 @@ package{
 			//Check : Dead
 			{
 				CheckDead();
+			}
+		}
+
+		public var m_Timer_DrawShape:Number = 0.0;
+		public function Update_ByType(i_DeltaTime:Number):void{
+			switch(m_Val){
+			case TYPE_NORMAL:
+				break;
+			case TYPE_BLOCK_SUMMONER:
+				{//m_DrawShape：マウスで描く線まわり
+					const Interval:Number = 0.4;
+
+					//m_Timer_DrawShape
+					{
+						m_Timer_DrawShape += i_DeltaTime;
+						while(m_Timer_DrawShape >= Interval){
+							m_Timer_DrawShape -= Interval;
+						}
+					}
+
+					//m_DrawShape
+					{
+						var ratio:Number = m_Timer_DrawShape / Interval;
+						m_DrawShape.alpha = MyMath.Lerp(0.8, 1.0, MyMath.Cos(2*MyMath.PI * ratio));
+						m_DrawShape_Interface.alpha = MyMath.Lerp(0.8, 1.0, MyMath.Cos(2*MyMath.PI * ratio));
+					}
+
+					//
+					{
+						RedrawMouseForBlockSummoner();
+					}
+				}
+				break;
+			case TYPE_REVERSER:
+				break;
 			}
 		}
 

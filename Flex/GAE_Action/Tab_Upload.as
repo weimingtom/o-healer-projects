@@ -350,6 +350,7 @@ package{
 			//未ログインであれば、サムネイルの表示は消してログインを促すメッセージを表示する
 			{
 				//m_Text4Login
+				if(! m_Text4Login)
 				{
 					m_Text4Login = new TextField();
 
@@ -385,6 +386,7 @@ package{
 			//投稿制限中ならその旨を表示する
 			{
 				//m_Text4Limited
+				if(! m_Text4Limited)
 				{
 					m_Text4Limited = new TextField();
 
