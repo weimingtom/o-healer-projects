@@ -1124,7 +1124,14 @@ package{
 						}
 
 						if(m_ObjMap[y][x]){
-							m_ObjMap[y][x].Reset(pos_x, pos_y);
+							if(m_ObjMap[y][x].parent == null){//Klllされている
+								//再生成：やや適当な処理
+								var map_val:int = m_Map[y][x];
+								m_Map[y][x] = 0;//同じ値だと再セットされないので、別の値にしておく
+								SetBlocks([[map_val]], x, y);
+							}else{
+								m_ObjMap[y][x].Reset(pos_x, pos_y);
+							}
 						}
 					}
 				}

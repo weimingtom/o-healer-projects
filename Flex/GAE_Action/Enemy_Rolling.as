@@ -100,7 +100,8 @@ package{
 
 		//圧死時の処理：オーバーライドして使う
 		override public function OnPressDead(in_Nrm:Vector3D):void{
-			//!!死亡エフェクト
+			//死亡エフェクト
+			Effect_Bomb.Create(this.x, this.y);
 
 			//死亡
 			Kill();
