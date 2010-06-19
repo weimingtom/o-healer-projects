@@ -105,8 +105,20 @@ package{
 
 		[Embed(source='Dangeon.png')]
 		 private static var Bitmap_BG: Class;
+		[Embed(source='Needle_U.png')]
+		 private static var Bitmap_Needle_U: Class;
+		[Embed(source='Needle_D.png')]
+		 private static var Bitmap_Needle_D: Class;
+		[Embed(source='Needle_L.png')]
+		 private static var Bitmap_Needle_L: Class;
+		[Embed(source='Needle_R.png')]
+		 private static var Bitmap_Needle_R: Class;
 
 		static public var m_BitmapBG:Bitmap = new Bitmap_BG();
+		static public var m_BitmapNeedle_U:Bitmap = new Bitmap_Needle_U();
+		static public var m_BitmapNeedle_D:Bitmap = new Bitmap_Needle_D();
+		static public var m_BitmapNeedle_L:Bitmap = new Bitmap_Needle_L();
+		static public var m_BitmapNeedle_R:Bitmap = new Bitmap_Needle_R();
 		static public var m_color_transform : ColorTransform = new ColorTransform(1,1,1,1,0,0,0,0);
 
 		//一つのブロックを４つに分割して描く
@@ -131,17 +143,17 @@ package{
 
 					var id_c:int = GetIndex(x, y, i_Map);
 
+					var id_l:int = GetIndex(x-1, y, i_Map);
+					var id_r:int = GetIndex(x+1, y, i_Map);
+					var id_u:int = GetIndex(x, y-1, i_Map);
+					var id_d:int = GetIndex(x, y+1, i_Map);
+					var id_lu:int = GetIndex(x-1, y-1, i_Map);
+					var id_ru:int = GetIndex(x+1, y-1, i_Map);
+					var id_ld:int = GetIndex(x-1, y+1, i_Map);
+					var id_rd:int = GetIndex(x+1, y+1, i_Map);
+
 					//o_BG_BitmapData
 					{
-						var id_l:int = GetIndex(x-1, y, i_Map);
-						var id_r:int = GetIndex(x+1, y, i_Map);
-						var id_u:int = GetIndex(x, y-1, i_Map);
-						var id_d:int = GetIndex(x, y+1, i_Map);
-						var id_lu:int = GetIndex(x-1, y-1, i_Map);
-						var id_ru:int = GetIndex(x+1, y-1, i_Map);
-						var id_ld:int = GetIndex(x-1, y+1, i_Map);
-						var id_rd:int = GetIndex(x+1, y+1, i_Map);
-
 						//LU
 						DrawBG_Quarter(o_BG_BitmapData, dst_rect_lu, POS_LU, id_c, id_l, id_u, id_lu);
 						//RU
@@ -150,6 +162,34 @@ package{
 						DrawBG_Quarter(o_BG_BitmapData, dst_rect_ld, POS_LD, id_c, id_l, id_d, id_ld);
 						//RD
 						DrawBG_Quarter(o_BG_BitmapData, dst_rect_rd, POS_RD, id_c, id_r, id_d, id_rd);
+					}
+
+					//Add : Needle
+					{
+						//if(! Game.Instance().IsWall(x, y))//逆ドアがうまくいかない
+						if(id_c != W && id_c != Game.N)//他のブロックは、この背景の上に描画されるから、とりあえず同じ背景であるWさえ排除すればOKとしておく
+						{
+							var mtx:Matrix = new Matrix(1,0,0,1, 0,0);
+							mtx.tx = dst_rect_lu.x;
+							mtx.ty = dst_rect_lu.y;
+
+							//U
+							if(id_u == Game.N){
+								o_BG_BitmapData.draw(m_BitmapNeedle_U, mtx);
+							}
+							//D
+							if(id_d == Game.N){
+								o_BG_BitmapData.draw(m_BitmapNeedle_D, mtx);
+							}
+							//L
+							if(id_l == Game.N){
+								o_BG_BitmapData.draw(m_BitmapNeedle_L, mtx);
+							}
+							//R
+							if(id_r == Game.N){
+								o_BG_BitmapData.draw(m_BitmapNeedle_R, mtx);
+							}
+						}
 					}
 				}
 			}
@@ -176,6 +216,8 @@ package{
 
 		//指定された隅を描く
 		static public function DrawBG_Quarter(o_BG_BitmapData:BitmapData, i_DstRect:Rectangle, i_Pos:int, i_ID_C:int, i_ID_X:int, i_ID_Y:int, i_ID_XY:int):void{
+			var matrix : Matrix = new Matrix(1,0,0,1, i_DstRect.left, i_DstRect.top);
+
 			//Indexx
 			var index_xy:Array = [0, 0];
 			{
@@ -207,6 +249,18 @@ package{
 						}
 					}
 					break;
+				case Game.N://トゲブロック
+					{
+						//こいつは別の画象なので描画して終了
+						if(i_Pos == POS_RU || i_Pos == POS_RD){
+							matrix.tx -= PANEL_LEN/2;
+						}
+						if(i_Pos == POS_LD || i_Pos == POS_RD){
+							matrix.ty -= PANEL_LEN/2;
+						}
+						o_BG_BitmapData.draw(m_BlockList[Game.N].bitmapData, matrix, m_color_transform, BlendMode.NORMAL, i_DstRect, true);
+					}
+					return;//ここで終了
 				default://O, P, B
 					index_xy = [3, 2];
 					break;
@@ -216,7 +270,9 @@ package{
 			//Draw
 			{
 				//indexの位置の画像を、DstRectの枠に入るように移動
-				var matrix : Matrix = new Matrix(1,0,0,1, -index_xy[0]*PANEL_LEN/2 + i_DstRect.left, -index_xy[1]*PANEL_LEN/2 + i_DstRect.top);
+				//var matrix : Matrix = new Matrix(1,0,0,1, -index_xy[0]*PANEL_LEN/2 + i_DstRect.left, -index_xy[1]*PANEL_LEN/2 + i_DstRect.top);
+				matrix.tx -= index_xy[0]*PANEL_LEN/2;
+				matrix.ty -= index_xy[1]*PANEL_LEN/2;
 
 				o_BG_BitmapData.draw(m_BitmapBG, matrix, m_color_transform, BlendMode.NORMAL, i_DstRect, true);
 			}
@@ -241,6 +297,8 @@ package{
 		 private static var Bitmap_Block_Trampoline: Class;
 		[Embed(source='BlockA.png')]
 		 private static var Bitmap_Block_Accel: Class;
+		[Embed(source='Block_Metal.png')]
+		 private static var Bitmap_Block_Needle: Class;
 		[Embed(source='Hint_P.png')]
 		 private static var Bitmap_Hint_Player: Class;
 		[Embed(source='EnemyRolling.png')]
@@ -260,6 +318,7 @@ package{
 			new Bitmap_Block_Move(),//M:往復ブロック（生成後は空白として扱われる）
 			new Bitmap_Block_Trampoline(),//T:トランポリンブロック
 			new Bitmap_Block_Accel(),//A:ダッシュブロック
+			new Bitmap_Block_Needle(),//N:トゲブロック
 			new Bitmap_Hint_Enemy(),//E:エネミー
 			//system
 			new Bitmap_Block_Move(),//C:
@@ -1029,6 +1088,7 @@ package{
 			"Ｍ",//M:往復ブロック（生成後は空白として扱われる）
 			"Ｔ",//T:トランポリンブロック
 			"Ａ",//A:ダッシュブロック
+			"Ｎ",//N:トゲブロック
 			"Ｅ",//E:エネミー
 			//system
 			"Ｃ",//C:
@@ -1462,6 +1522,7 @@ package{
 								case Game.R: color = 0x004400; break;
 								case Game.M: color = 0x444444; break;
 								case Game.T: color = 0x88FF88; break;
+								case Game.N: color = 0xFF0000; break;
 								case Game.E: color = 0x880000; break;
 								}
 							}

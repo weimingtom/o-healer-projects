@@ -97,6 +97,7 @@ package{
 
 		//#投稿制限を伝えるメッセージ
 		private var m_Text4Limited:TextField;
+		private var m_Text4LastUpload:TextField;
 
 		//#State
 		private var m_State:int = STATE_LIST;
@@ -405,9 +406,38 @@ package{
 					m_Text4Limited.htmlText = m_Text4Limited.htmlText + "</font>";
 
 					m_Content.addChild(m_Text4Limited);
-
-					m_Text4Limited.visible = false;
 				}
+				if(! m_Text4LastUpload)
+				{
+					m_Text4LastUpload = new TextField();
+
+					m_Text4LastUpload.border = false;
+					m_Text4LastUpload.selectable = false;
+					m_Text4LastUpload.autoSize = TextFieldAutoSize.LEFT;
+					m_Text4LastUpload.embedFonts = true;
+
+					m_Text4LastUpload.x = 32;
+					m_Text4LastUpload.y = 320;
+
+					m_Text4LastUpload.multiline = true;
+
+					if(Game.Instance().IsUploadLimited()){
+						var date:Object = so.data.date;
+						var text:String = date.y.toString() + "/" + (date.m+1).toString() + "/" + (date.d+1).toString();
+						m_Text4LastUpload.htmlText = "<font face='system' size='16'>";
+						m_Text4LastUpload.htmlText = m_Text4LastUpload.htmlText + "LastUpload : " + text + "<br>";
+						m_Text4LastUpload.htmlText = m_Text4LastUpload.htmlText + "</font>";
+					}else{
+						m_Text4LastUpload.htmlText = "<font face='system' size='16'>";
+						m_Text4LastUpload.htmlText = m_Text4LastUpload.htmlText + "LastUpload : Now" + "<br>";
+						m_Text4LastUpload.htmlText = m_Text4LastUpload.htmlText + "</font>";
+					}
+
+					m_Content.addChild(m_Text4LastUpload);
+				}
+
+				m_Text4Limited.visible = false;
+				m_Text4LastUpload.visible = m_Text4Limited.visible;
 			}
 		}
 
@@ -832,6 +862,8 @@ package{
 						m_Text4Limited.visible = false;
 					}
 				}
+
+				m_Text4LastUpload.visible = m_Text4Limited.visible;
 			}
 		}
 	}

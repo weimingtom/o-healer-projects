@@ -1,6 +1,8 @@
 //author Show=O=Healer
 
 /*
+	反省点
+	・ブロックの追加がしにくい
 */
 
 
@@ -44,6 +46,7 @@ package{
 		static public const M:int = BLOCK_INDEX_COUNTER++;//往復ブロック
 		static public const T:int = BLOCK_INDEX_COUNTER++;//トランポリンブロック
 		static public const A:int = BLOCK_INDEX_COUNTER++;//ダッシュブロック
+		static public const N:int = BLOCK_INDEX_COUNTER++;//トゲブロック
 		static public const E:int = BLOCK_INDEX_COUNTER++;//エネミー
 		//system
 		static public const C:int			= BLOCK_INDEX_COUNTER++;
@@ -68,6 +71,7 @@ package{
 			"M",
 			"T",
 			"A",
+			"N",
 			"E",
 		];
 
@@ -457,6 +461,22 @@ package{
 									m_ObjMap[y][x] = block_a;
 								}
 								break;
+/*
+							case N:
+								//トゲブロックを生成
+								{
+									var block_n:Block_Needle = new Block_Needle();
+									block_n.SetVal(GetMapVal(m_Map[y][x]));
+									block_n.SetDir(GetMapDir(m_Map[y][x]));
+									block_n.Reset(pos_x, pos_y);
+
+									m_Root_Gimmick.addChild(block_n);
+									GameObjectManager.Register(block_n);
+
+									m_ObjMap[y][x] = block_n;
+								}
+								break;
+//*/
 							case E:
 								//エネミーを生成
 								{
@@ -580,6 +600,13 @@ package{
 			var y:int;
 			var iter_x:int;
 			var iter_y:int;
+			var lx:int;
+			var rx:int;
+			var uy:int;
+			var dy:int;
+			var map:int;
+			var CreateBlockFlag:Boolean;
+			var break_flag:Boolean;
 
 			var NumX:int = m_Map[0].length;
 			var NumY:int = m_Map.length;
@@ -612,13 +639,13 @@ package{
 			//さらに、それらの下もブロックだったら連結
 			for(y = 0; y < NumY; y += 1){
 
-				var lx:int = -1;
-				var rx:int = -1;
+				lx = -1;
+				rx = -1;
 
 				for(x = -1; x < NumX+1; x += 1){
 
 					//範囲外は空白とみなす
-					var map:int;
+					//var map:int;
 					{
 						if(x < 0){map = O;}
 						else
@@ -628,7 +655,8 @@ package{
 					}
 
 					//必要な処理をしつつ、ブロックの生成が必要になったらフラグを立てて伝達
-					var CreateBlockFlag:Boolean = true;//Wなどでなかったらクラスタリング終了とみなし、生成に移るためデフォはtrue
+					//var CreateBlockFlag:Boolean = true;//Wなどでなかったらクラスタリング終了とみなし、生成に移るためデフォはtrue
+					CreateBlockFlag = true;
 					{
 						switch(map){
 						case W:
@@ -659,14 +687,15 @@ package{
 
 								//uyとdyを求める
 
-								var uy:int;
+								//var uy:int;
 								{
 									uy = y;//今の行が上辺
 								}
 
-								var dy:int;
+								//var dy:int;
 								{
-									var break_flag:Boolean = false;
+									//var break_flag:Boolean = false;
+									break_flag = false;
 									for(dy = uy+1; dy < NumY; dy += 1){
 										for(iter_x = lx; iter_x <= rx; iter_x += 1){
 											if(CopyMap[dy][iter_x] != W){
@@ -682,13 +711,116 @@ package{
 
 								//ブロックを実際に生成
 								{
-									var block:Block_Fix = new Block_Fix();
-									block.Init(lx, rx, uy, dy);
+									var block_f:Block_Fix = new Block_Fix();
+									block_f.Init(lx, rx, uy, dy);
 
-									m_Root_Gimmick.addChild(block);
-									GameObjectManager.Register(block);
+									m_Root_Gimmick.addChild(block_f);
+									GameObjectManager.Register(block_f);
 
-									m_WallList.push(block);
+									m_WallList.push(block_f);
+								}
+
+								//CopyMap上から、該当ブロックを消す
+								{
+									for(iter_y = uy; iter_y <= dy; iter_y += 1){
+										for(iter_x = lx; iter_x <= rx; iter_x += 1){
+											CopyMap[iter_y][iter_x] = O;
+										}
+									}
+								}
+
+								//reset
+								{
+									lx = rx = -1;
+								}
+							}//lx >= 0
+						}//CreateBlockFlag
+					}//Scope : Create Block
+				}//loop x
+			}//loop y
+
+			//Needleも同様の処理
+			for(y = 0; y < NumY; y += 1){
+
+				lx = -1;
+				rx = -1;
+
+				for(x = -1; x < NumX+1; x += 1){
+
+					//範囲外は空白とみなす
+					//var map:int;
+					{
+						if(x < 0){map = O;}
+						else
+						if(x >= NumX){map = O;}
+						else
+						{map = CopyMap[y][x];}
+					}
+
+					//必要な処理をしつつ、ブロックの生成が必要になったらフラグを立てて伝達
+					//var CreateBlockFlag:Boolean = true;//Wなどでなかったらクラスタリング終了とみなし、生成に移るためデフォはtrue
+					CreateBlockFlag = true;
+					{
+						switch(map){
+						case N:
+							{
+								if(lx < 0){lx = x;}
+								rx = x;
+							}
+
+							//横に伸ばす状況ならまだ生成に移らないのでfalseにする
+							{//このブロックの上も元々ブロックであれば、横に長くせず、縦に長くする
+								if(y == 0){CreateBlockFlag = false;}//マップの上辺なら上がブロックなわけはない
+								else
+								if(m_Map[y-1][x] != W){CreateBlockFlag = false;}//一つ上がブロックでなければすぐには生成しない
+							}
+
+							break;
+						}
+					}
+
+					//必要ならブロックを生成
+					{
+						if(CreateBlockFlag)
+						{
+							//左右に連結してるのがあれば、下方向を連結した後、採用
+							if(lx >= 0)
+							{//yの段のlx～rxが連結されている
+								//lx～rx, uy～dyを一つのブロックとみなす
+
+								//uyとdyを求める
+
+								//var uy:int;
+								{
+									uy = y;//今の行が上辺
+								}
+
+								//var dy:int;
+								{
+									//var break_flag:Boolean = false;
+									break_flag = false;
+									for(dy = uy+1; dy < NumY; dy += 1){
+										for(iter_x = lx; iter_x <= rx; iter_x += 1){
+											if(CopyMap[dy][iter_x] != W){
+												break_flag = true;
+											}
+
+											if(break_flag){break;}
+										}
+										if(break_flag){break;}
+									}
+									dy -= 1;
+								}
+
+								//ブロックを実際に生成
+								{
+									var block_n:Block_Needle = new Block_Needle();
+									block_n.Init(lx, rx, uy, dy);
+
+									m_Root_Gimmick.addChild(block_n);
+									GameObjectManager.Register(block_n);
+
+									m_WallList.push(block_n);
 								}
 
 								//CopyMap上から、該当ブロックを消す
@@ -1324,6 +1456,9 @@ package{
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_A)){
 						SetBlock(A, lx, rx, uy, dy);
 					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_N)){
+						SetBlock(N, lx, rx, uy, dy);
+					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_E)){
 						SetBlock(E, lx, rx, uy, dy);
 					}
@@ -1614,6 +1749,22 @@ package{
 								m_ObjMap[y][x] = block_a;
 							}
 							break;
+/*
+						case N:
+							//トゲブロックを生成
+							{
+								var block_n:Block_Needle = new Block_Needle();
+								block_n.SetVal(GetMapVal(index));
+								block_n.SetDir(GetMapDir(index));
+								block_n.Reset(pos_x, pos_y);
+
+								m_Root_Gimmick.addChild(block_n);
+								GameObjectManager.Register(block_n);
+
+								m_ObjMap[y][x] = block_n;
+							}
+							break;
+//*/
 						case E:
 							//エネミーを生成
 							{
@@ -1934,6 +2085,7 @@ package{
 				case 'M': NewMap[y].push(M); break;
 				case 'T': NewMap[y].push(T); break;
 				case 'A': NewMap[y].push(A); break;
+				case 'N': NewMap[y].push(N); break;
 				case 'E': NewMap[y].push(E); break;
 				case '0': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*0; break;
 				case '1': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*1; break;
@@ -2161,7 +2313,7 @@ package{
 
 			var date:Date = new Date();
 
-			so.data.date = {y:date.fullYear, m:date.month, d:date.day};
+			so.data.date = {y:date.getFullYear(), m:date.getMonth(), d:date.getDate()};
 		}
 
 		//アップロード制限中か
@@ -2177,13 +2329,13 @@ package{
 			{
 				var date:Date = new Date();
 
-				if(date.fullYear != so.data.date.y){
+				if(date.getFullYear() != so.data.date.y){
 					return false;
 				}
-				if(date.month != so.data.date.m){
+				if(date.getMonth() != so.data.date.m){
 					return false;
 				}
-				if(date.day != so.data.date.d){
+				if(date.getDate() != so.data.date.d){
 					return false;
 				}
 			}
