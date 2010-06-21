@@ -423,7 +423,7 @@ package{
 
 					if(Game.Instance().IsUploadLimited()){
 						var date:Object = so.data.date;
-						var text:String = date.y.toString() + "/" + (date.m+1).toString() + "/" + (date.d+1).toString();
+						var text:String = date.y.toString() + "/" + (date.m+1).toString() + "/" + date.d.toString();
 						m_Text4LastUpload.htmlText = "<font face='system' size='16'>";
 						m_Text4LastUpload.htmlText = m_Text4LastUpload.htmlText + "LastUpload : " + text + "<br>";
 						m_Text4LastUpload.htmlText = m_Text4LastUpload.htmlText + "</font>";

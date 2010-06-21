@@ -939,6 +939,11 @@ package{
 				{
 					UpdateCamera(deltaTime);
 				}
+
+				//GameObject : Post
+				{
+					GameObjectManager.Update_AfterPhys(deltaTime);
+				}
 			}
 		}
 

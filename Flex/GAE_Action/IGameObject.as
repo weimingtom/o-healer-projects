@@ -47,6 +47,15 @@ package{
 		public function Update(i_DeltaTime:Number):void{
 		}
 
+		//物理更新後のUpdate:共通処理
+		public function Update_AfterPhys_Common(i_DeltaTime:Number):void{
+			CheckPressDead(i_DeltaTime);
+		}
+
+		//物理更新後のUpdate:オーバライドして使う
+		public function Update_AfterPhys(i_DeltaTime:Number):void{
+		}
+
 		//削除される時に呼ばれる処理:オーバライドして使う
 		public function OnDestroy():void{
 			//remove Graphic
@@ -217,6 +226,17 @@ package{
 			}
 		}
 
+		//Pow
+		static public var pow:b2Vec2 = new b2Vec2();
+		static public const pos_ori:b2Vec2 = new b2Vec2();//中心に力を加える
+		public function AddPow(i_Pow:Vector3D):void{
+			if(m_Body){
+				pow.x = i_Pow.x / PhysManager.PHYS_SCALE;
+				pow.y = i_Pow.y / PhysManager.PHYS_SCALE;
+				m_Body.ApplyForce(pow, pos_ori);
+			}
+		}
+
 
 		//==Collision==
 
@@ -286,6 +306,13 @@ package{
 					m_Body.SetMassFromShapes();
 				}
 			}
+
+			//for Search
+			{
+				m_SearchType = SEARCH_TYPE_CIRCLE;
+				m_SearchW = i_Rad;
+				m_SearchH = i_Rad;
+			}
 		}
 
 		//Create:Box
@@ -309,6 +336,13 @@ package{
 				if(i_Param.density > 0){
 					m_Body.SetMassFromShapes();
 				}
+			}
+
+			//for Search
+			{
+				m_SearchType = SEARCH_TYPE_BOX;
+				m_SearchW = i_W/2;
+				m_SearchH = i_H/2;
 			}
 		}
 
@@ -589,6 +623,53 @@ package{
 			return GameObjectManager.IsShareFlagsOn(i_Flags);
 		}
 
+
+		//==Search==
+
+		//（コリジョンセット時に自動的に以下のパラメータは変更される）
+
+		//サーチ時の当たり判定相当
+		static public const SEARCH_TYPE_CIRCLE:int = 0;
+		static public const SEARCH_TYPE_BOX:int    = 1;
+		public var m_SearchType:int = SEARCH_TYPE_CIRCLE;
+
+		//こいつの半径をこれと仮定し、指定位置がその範囲内であればサーチにひっかかる
+		public var m_SearchW:int = ImageManager.PANEL_LEN/2;
+		public var m_SearchH:int = ImageManager.PANEL_LEN/2;
+
+		//リンク時に、強制的に中央にリンクさせるか
+		public var m_SearchForceCenter:Boolean = false;
+
+		//指定位置に居るOBJを探して返す
+		public function SearchObj(in_X:int, in_Y:int):Object{
+			//!!これ自身の回転を考慮していない
+
+			var info:Object;
+			{
+				var gapX:int = in_X - this.x;
+				var gapY:int = in_Y - this.y;
+				switch(m_SearchType){
+				case SEARCH_TYPE_CIRCLE:
+					if(MyMath.Sqrt(gapX*gapX + gapY*gapY) <= m_SearchW){
+						info = {
+							target:this,
+							anchor:(m_SearchForceCenter? new Vector3D(0, 0): new Vector3D(gapX, gapY))
+						};
+					}
+					break;
+				case SEARCH_TYPE_BOX:
+					if(MyMath.Abs(gapX) <= m_SearchW && MyMath.Abs(gapY) <= m_SearchH){
+						info = {
+							target:this,
+							anchor:(m_SearchForceCenter? new Vector3D(0, 0): new Vector3D(gapX, gapY))
+						};
+					}
+					break;
+				}
+			}
+
+			return info;
+		}
 	}
 }
 

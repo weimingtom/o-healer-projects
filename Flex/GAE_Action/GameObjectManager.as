@@ -88,6 +88,30 @@ package{
 			}
 		}
 
+		//#Physics更新後のUpdate
+		static public function Update_AfterPhys(i_DeltaTime:Number):void{
+			//各OBJの更新
+			Update_AfterPhys_EachObj(i_DeltaTime);
+
+			//Killが呼ばれたものは削除する
+			Update_KillCheck();
+		}
+
+		//Update_AfterPhys : EachObj
+		static public function Update_AfterPhys_EachObj(i_DeltaTime:Number):void{
+			var obj:IGameObject;
+
+			//各GameObjectのUpdate
+			obj = m_ObjectList;
+			while(obj){
+				obj.Update_AfterPhys_Common(i_DeltaTime);
+
+				obj.Update_AfterPhys(i_DeltaTime);
+
+				obj = obj.m_NextObj;
+			}
+		}
+
 		//==ShareFlag==
 
 		//#Member
@@ -114,6 +138,28 @@ package{
 				}
 			}
 			return Result;
+		}
+
+
+		//==Search==
+
+		//指定位置に居るOBJを探して返す
+		static public function SearchObj(in_X:int, in_Y:int):Object{
+			var obj:IGameObject;
+
+			//各GameObjectのUpdate
+			obj = m_ObjectList;
+			while(obj){
+				var info:Object = obj.SearchObj(in_X, in_Y);
+
+				if(info != null){
+					return info;
+				}
+
+				obj = obj.m_NextObj;
+			}
+
+			return null;
 		}
 	}
 }

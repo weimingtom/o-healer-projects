@@ -132,6 +132,13 @@ package{
 					}
 //*/
 				}
+
+				//For Search
+				{
+					m_SearchType = SEARCH_TYPE_BOX;
+					m_SearchW = ImageManager.PANEL_LEN/2;
+					m_SearchH = ImageManager.PANEL_LEN/2;
+				}
 			}
 		}
 

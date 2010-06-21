@@ -44,6 +44,7 @@ package{
 			//Flag
 			{
 				m_CheckPressFlag = true;
+				m_SearchForceCenter = true;
 			}
 
 			//Graphic Anim
@@ -71,6 +72,12 @@ package{
 
 					const rad:int = ImageManager.PANEL_LEN/2 - 1;
 					CreateCollision_Circle(rad, ColParam);
+				}
+
+				//For Search
+				{
+					m_SearchW = ImageManager.PANEL_LEN/2 * 1.5;
+					m_SearchH = ImageManager.PANEL_LEN/2 * 1.5;
 				}
 			}
 		}

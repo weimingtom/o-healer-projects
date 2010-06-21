@@ -365,12 +365,15 @@ package{
 		 private static var Bitmap_Player_Reverser: Class;
 		[Embed(source='Player_ReverserX.png')]
 		 private static var Bitmap_Player_ReverserX: Class;
+		[Embed(source='Player_Linker.png')]
+		 private static var Bitmap_Player_Linker: Class;
 
 		private static var m_EmbedMap:Object = {
 			"Player_Normal":		(new Bitmap_Player_Normal()),
 			"Player_BlockSummoner":	(new Bitmap_Player_BlockSummoner()),
 			"Player_Reverser":		(new Bitmap_Player_Reverser()),
 			"Player_ReverserX":		(new Bitmap_Player_ReverserX()),
+			"Player_Linker":		(new Bitmap_Player_Linker()),
 			"dummy":(new Bitmap_Player_Normal())//dummy
 		};
 

@@ -14,6 +14,7 @@ package{
 	//Box2D
 	import Box2D.Dynamics.*;
 	import Box2D.Dynamics.Contacts.*;
+	import Box2D.Dynamics.Joints.*;
 	import Box2D.Collision.*;
 	import Box2D.Collision.Shapes.*;
 	import Box2D.Common.Math.*;

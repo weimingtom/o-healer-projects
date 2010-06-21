@@ -79,6 +79,12 @@ package{
 
 					CreateCollision_Box(w+Offset4PlayerX, h+Offset4PlayerY, ColParam);
 				}
+
+				//For Search
+				{
+					m_SearchW = w/2;
+					m_SearchH = h/2;
+				}
 			}
 		}
 
