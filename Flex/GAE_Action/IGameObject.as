@@ -459,7 +459,7 @@ package{
 
 					var PressPowFlag:Boolean = (Vel3D.dotProduct(in_Nrm) <= -0.01);//自ら隙間にはまったときは圧死しないよう、速度チェックをする
 
-					AddPressPowList(in_Nrm, PressPowFlag);
+					AddPressPowList(in_Nrm, PressPowFlag, in_Obj);
 				}
 			}
 		}
@@ -479,7 +479,7 @@ package{
 		public var m_PressPowList:Array = [];
 
 		//圧力方向を一つ加える
-		public function AddPressPowList(in_Nrm:Vector3D, i_PressPowFlag:Boolean):void{
+		public function AddPressPowList(in_Nrm:Vector3D, i_PressPowFlag:Boolean, in_Obj:IGameObject):void{
 			//新しく加えられた力と、今までに加えられた力が反対方向であれば、挟み込まれていると判断する
 
 			//Check
@@ -493,6 +493,11 @@ package{
 			{
 				var size:int = m_PressPowList.length;
 				for(var i:int = 0; i < size; i += 1){
+					//同じOBJでの挟みこみは無視（連結ブロック用）
+					if(m_PressPowList[i].obj == in_Obj){
+						continue;
+					}
+
 					if(m_PressPowList[i].nrm.dotProduct(in_Nrm) < -0.99){//ほぼ反対側の力なら（どちらも長さは１と仮定）
 						if(i_PressPowFlag || m_PressPowList[i].flg){//すでにこれまでに圧死方向の速度付きの力がかかっていたら
 							OnPressDead(in_Nrm);
@@ -503,7 +508,7 @@ package{
 			}
 
 			//次回判定用に追加
-			m_PressPowList.push({nrm:in_Nrm, flg:i_PressPowFlag});
+			m_PressPowList.push({nrm:in_Nrm, flg:i_PressPowFlag, obj:in_Obj});
 		}
 
 
