@@ -29,6 +29,7 @@ package{
 		static public const BUTTON_BLOCK_T:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_A:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_N:int		= INPUT_COUNTER++;
+		static public const BUTTON_BLOCK_L:int		= INPUT_COUNTER++;
 		static public const BUTTON_BLOCK_E:int		= INPUT_COUNTER++;
 		static public const BUTTON_PLAYER_POS:int	= INPUT_COUNTER++;
 		static public const BUTTON_GOAL_POS:int		= INPUT_COUNTER++;

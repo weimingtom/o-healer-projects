@@ -118,6 +118,7 @@ package{
 			case KEY_T:				m_Input[BUTTON_BLOCK_T] = true;	break;
 			case KEY_A:				m_Input[BUTTON_BLOCK_A] = true;	break;
 			case KEY_N:				m_Input[BUTTON_BLOCK_N] = true;	break;
+			case KEY_L:				m_Input[BUTTON_BLOCK_L] = true;	break;
 			case KEY_E:				m_Input[BUTTON_BLOCK_E] = true;	break;
 
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = true;	break;
@@ -182,6 +183,7 @@ package{
 			case KEY_T:				m_Input[BUTTON_BLOCK_T] = false;	break;
 			case KEY_A:				m_Input[BUTTON_BLOCK_A] = false;	break;
 			case KEY_N:				m_Input[BUTTON_BLOCK_N] = false;	break;
+			case KEY_L:				m_Input[BUTTON_BLOCK_L] = false;	break;
 			case KEY_E:				m_Input[BUTTON_BLOCK_E] = false;	break;
 
 			case KEY_P:				m_Input[BUTTON_PLAYER_POS] = false;	break;

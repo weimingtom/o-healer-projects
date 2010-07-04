@@ -47,6 +47,7 @@ package{
 		static public const T:int = BLOCK_INDEX_COUNTER++;//トランポリンブロック
 		static public const A:int = BLOCK_INDEX_COUNTER++;//ダッシュブロック
 		static public const N:int = BLOCK_INDEX_COUNTER++;//トゲブロック
+		static public const L:int = BLOCK_INDEX_COUNTER++;//連結ブロック
 		static public const E:int = BLOCK_INDEX_COUNTER++;//エネミー
 		//system
 		static public const C:int			= BLOCK_INDEX_COUNTER++;
@@ -72,6 +73,7 @@ package{
 			"T",
 			"A",
 			"N",
+			"L",
 			"E",
 		];
 
@@ -118,6 +120,7 @@ package{
 		];
 		//Objectへの参照版
 		public var m_ObjMap:Array;
+		public var m_ObjList:Array = [];
 		static public function GetMapIndex(i_Val:int):int{return (i_Val % VAL_OFFSET);}
 		static public function GetMapVal(i_Val:int):int{return (int(i_Val / VAL_OFFSET) % 10);}
 		static public function GetMapDir(i_Val:int):int{return (int(i_Val / DIR_OFFSET) % 10);}
@@ -477,6 +480,9 @@ package{
 								}
 								break;
 //*/
+							case L:
+								//CreateTerrainCollision()でまとめてやる
+								break;
 							case E:
 								//エネミーを生成
 								{
@@ -497,6 +503,8 @@ package{
 				//Terrain
 				{
 					CreateTerrainCollision();
+
+					CreateClusterBlock();
 				}
 			}
 
@@ -841,6 +849,123 @@ package{
 					}//Scope : Create Block
 				}//loop x
 			}//loop y
+		}
+
+		public function CreateClusterBlock():void{
+			var x:int;
+			var y:int;
+
+			var NumX:int = m_Map[0].length;
+			var NumY:int = m_Map.length;
+
+			//Delete Old
+			{
+				var num:int = m_ObjList.length;
+				for(var i:int = 0; i < num; i += 1){
+//					if(m_ObjList[i].parent){
+//						m_ObjList[i].parent.removeChild(m_ObjList[i]);
+//						m_ObjList[i].parent = null;
+//					}
+					m_ObjList[i].Kill();
+				}
+
+				if(num > 0){
+					m_ObjList = [];
+				}
+			}
+
+			//m_Mapの内容をコピーして、連結したものは消せるようにしておく
+			var CopyMap:Array;
+			{
+				CopyMap = new Array(NumY);
+
+				for(y = 0; y < NumY; y += 1){
+					CopyMap[y] = new Array(NumX);
+
+					for(x = 0; x < NumX; x += 1){
+						CopyMap[y][x] = m_Map[y][x];
+					}
+				}
+			}
+
+			//連結ブロック
+			{
+				var link_info:Array = [];
+
+				var link_lx:int = MAP_W_MAX;
+				var link_rx:int = 0;
+				var link_uy:int = MAP_H_MAX;
+				var link_dy:int = 0;
+
+				const gather_link_block:Function = function(in_X:int, in_Y:int):void{
+					//Check
+					{//L以外は飛ばす
+						if(GetMapIndex(CopyMap[in_Y][in_X]) != L){
+							return;
+						}
+					}
+
+					//Lがあったので、これと連結しているLを全て集めて連結ブロックを生成
+
+					//まずは自分を追加
+					{
+						link_info.push(new Point(in_X, in_Y));
+					}
+
+					//ここは確認したので消す
+					{
+						CopyMap[in_Y][in_X] = O;
+					}
+
+					//Lのある範囲を求める
+					{
+						if(in_X < link_lx){link_lx = in_X;}
+						if(link_rx < in_X){link_rx = in_X;}
+						if(in_Y < link_uy){link_uy = in_Y;}
+						if(link_dy < in_Y){link_dy = in_Y;}
+					}
+
+					//上下左右について確認
+					{
+						if(in_Y > 0){gather_link_block(in_X, in_Y-1);}
+						if(in_Y < NumY-1){gather_link_block(in_X, in_Y+1);}
+						if(in_X > 0){gather_link_block(in_X-1, in_Y);}
+						if(in_X < NumX-1){gather_link_block(in_X+1, in_Y);}
+					}
+				};
+
+				for(y = 0; y < NumY; y += 1){
+					for(x = 0; x < NumX; x += 1){
+						//
+						gather_link_block(x, y);
+
+						//
+						if(link_info.length > 0){
+//*
+							//Create
+							{
+								var block_l:Block_Cluster = new Block_Cluster();
+								block_l.Init(link_info, link_lx, link_rx, link_uy, link_dy);
+
+								m_Root_Gimmick.addChild(block_l);
+								GameObjectManager.Register(block_l);
+
+								m_ObjList.push(block_l);
+							}
+//*/
+							//Reset
+							{
+								link_info = [];
+
+								link_lx = MAP_W_MAX;
+								link_rx = 0;
+								link_uy = MAP_H_MAX;
+								link_dy = 0;
+							}
+						}
+					}
+				}
+			}
 		}
 
 		public function IsWall(i_X:int, i_Y:int):Boolean{
@@ -1244,7 +1369,7 @@ package{
 			}
 
 			//Objの状態を初期化
-			{
+			{//m_ObjMap
 				var NumX:int = m_Map[0].length;
 				var NumY:int = m_Map.length;
 
@@ -1272,6 +1397,16 @@ package{
 						}
 					}
 				}
+			}
+			{//m_ObjList
+//*
+				var Num:int = m_ObjList.length;
+				for(var i:int = 0; i < Num; i++){
+					m_ObjList[i].Reset(0, 0);//ひとまず「連結ブロック」だけなのでこれで上手くいくようにしとく
+				}
+/*/
+				CreateClusterBlock();
+//*/
 			}
 
 			//GameOver表示のリセット
@@ -1464,6 +1599,9 @@ package{
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_N)){
 						SetBlock(N, lx, rx, uy, dy);
 					}
+					if(m_Input.IsPress(IInput.BUTTON_BLOCK_L)){
+						SetBlock(L, lx, rx, uy, dy);
+					}
 					if(m_Input.IsPress(IInput.BUTTON_BLOCK_E)){
 						SetBlock(E, lx, rx, uy, dy);
 					}
@@ -1596,6 +1734,8 @@ package{
 			var NumX:int = m_Map[0].length;
 			var NumY:int = m_Map.length;
 
+			var reset_cluster:Boolean = false;
+
 			//Set Blocks
 			for(local_y = 0; local_y < LocalNumY; local_y += 1){
 				//Calc Y
@@ -1619,6 +1759,16 @@ package{
 					{
 						if(GetMapIndex(m_Map[y][x]) == index){
 							continue;//今セットされてる値と同じだったらいじらない
+						}
+					}
+
+					//reset_cluster
+					{
+						if(GetMapIndex(m_Map[y][x]) == L){
+							reset_cluster = true;
+						}
+						if(index == L){
+							reset_cluster = true;
 						}
 					}
 
@@ -1790,6 +1940,13 @@ package{
 			//ReDraw BG
 			{
 				ImageManager.DrawBG(m_BG_BitmapData, m_Map, GetMapRect_Area(i_X, i_Y, LocalNumX, LocalNumY));
+			}
+
+			//連結ブロック用
+			{
+				if(reset_cluster){
+					CreateClusterBlock();
+				}
 			}
 
 			//Killしたやつの表示をすぐに消す
@@ -2091,6 +2248,7 @@ package{
 				case 'T': NewMap[y].push(T); break;
 				case 'A': NewMap[y].push(A); break;
 				case 'N': NewMap[y].push(N); break;
+				case 'L': NewMap[y].push(L); break;
 				case 'E': NewMap[y].push(E); break;
 				case '0': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*0; break;
 				case '1': NewMap[y][NewMap[y].length-1] += VAL_OFFSET*1; break;

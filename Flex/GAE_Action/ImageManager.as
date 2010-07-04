@@ -222,10 +222,10 @@ package{
 			var index_xy:Array = [0, 0];
 			{
 				switch(i_ID_C){
-				case W:
-					if(i_ID_X != W){
+				case W://壁
+					if(i_ID_X != i_ID_C){
 						//O
-						if(i_ID_Y != W){
+						if(i_ID_Y != i_ID_C){
 							//OO
 							index_xy = [[0, 0], [2, 0], [0, 2], [2, 2]][i_Pos];//LU. RU, LD, RD
 						}else{
@@ -234,12 +234,12 @@ package{
 						}
 					}else{
 						//W
-						if(i_ID_Y != W){
+						if(i_ID_Y != i_ID_C){
 							//WO
 							index_xy = [[1, 0], [1, 0], [1, 2], [1, 2]][i_Pos];//LU. RU, LD, RD
 						}else{
 							//WW
-							if(i_ID_XY != W){
+							if(i_ID_XY != i_ID_C){
 								//WWO
 								index_xy = [[0, 3], [1, 3], [0, 4], [1, 4]][i_Pos];//LU. RU, LD, RD
 							}else{
@@ -279,6 +279,115 @@ package{
 		}
 
 
+		//＃Block_Connect
+
+		[Embed(source='BlockL.png')]
+		 private static var Bitmap_Block_Connect: Class;
+
+		static public var m_BitmapBlockConnect:Bitmap = new Bitmap_Block_Connect();
+
+		//背景と同じ要領で連結ブロックを描く
+		static public function DrawBlockCluster(o_BitmapData:BitmapData, i_Map:Array):void{
+			var x:int;
+			var y:int;
+
+			var NumX:int = i_Map[0].length;
+			var NumY:int = i_Map.length;
+
+			var dst_rect_lu : Rectangle = new Rectangle(0,0,PANEL_LEN/2,PANEL_LEN/2);
+			var dst_rect_ru : Rectangle = new Rectangle(0,0,PANEL_LEN/2,PANEL_LEN/2);
+			var dst_rect_ld : Rectangle = new Rectangle(0,0,PANEL_LEN/2,PANEL_LEN/2);
+			var dst_rect_rd : Rectangle = new Rectangle(0,0,PANEL_LEN/2,PANEL_LEN/2);
+
+			//draw
+			for(y = 0; y < NumY; y += 1){
+				dst_rect_lu.y = dst_rect_ru.y = y * PANEL_LEN;
+				dst_rect_ld.y = dst_rect_rd.y = y * PANEL_LEN + PANEL_LEN/2;
+
+				for(x = 0; x < NumX; x += 1){
+					dst_rect_lu.x = dst_rect_ld.x = x * PANEL_LEN;
+					dst_rect_ru.x = dst_rect_rd.x = x * PANEL_LEN + PANEL_LEN/2;
+
+
+					var id_c:int = GetIndex(x, y, i_Map);
+
+					var id_l:int = GetIndex(x-1, y, i_Map);
+					var id_r:int = GetIndex(x+1, y, i_Map);
+					var id_u:int = GetIndex(x, y-1, i_Map);
+					var id_d:int = GetIndex(x, y+1, i_Map);
+					var id_lu:int = GetIndex(x-1, y-1, i_Map);
+					var id_ru:int = GetIndex(x+1, y-1, i_Map);
+					var id_ld:int = GetIndex(x-1, y+1, i_Map);
+					var id_rd:int = GetIndex(x+1, y+1, i_Map);
+
+					//o_BitmapData
+					{
+						//LU
+						DrawBlockCluster_Quarter(o_BitmapData, dst_rect_lu, POS_LU, id_c, id_l, id_u, id_lu);
+						//RU
+						DrawBlockCluster_Quarter(o_BitmapData, dst_rect_ru, POS_RU, id_c, id_r, id_u, id_ru);
+						//LD
+						DrawBlockCluster_Quarter(o_BitmapData, dst_rect_ld, POS_LD, id_c, id_l, id_d, id_ld);
+						//RD
+						DrawBlockCluster_Quarter(o_BitmapData, dst_rect_rd, POS_RD, id_c, id_r, id_d, id_rd);
+					}
+				}
+			}
+		}
+
+		//背景と同じ要領で連結ブロックの４分の１も描く
+		static public function DrawBlockCluster_Quarter(o_BitmapData:BitmapData, i_DstRect:Rectangle, i_Pos:int, i_ID_C:int, i_ID_X:int, i_ID_Y:int, i_ID_XY:int):void{
+			var matrix : Matrix = new Matrix(1,0,0,1, i_DstRect.left, i_DstRect.top);
+
+			//Indexx
+			var index_xy:Array = [0, 0];
+			{
+				switch(i_ID_C){
+				case Game.L://連結ブロック
+					if(i_ID_X != i_ID_C){
+						//O
+						if(i_ID_Y != i_ID_C){
+							//OO
+							index_xy = [[0, 0], [2, 0], [0, 2], [2, 2]][i_Pos];//LU. RU, LD, RD
+						}else{
+							//OW
+							index_xy = [[0, 1], [2, 1], [0, 1], [2, 1]][i_Pos];//LU. RU, LD, RD
+						}
+					}else{
+						//W
+						if(i_ID_Y != i_ID_C){
+							//WO
+							index_xy = [[1, 0], [1, 0], [1, 2], [1, 2]][i_Pos];//LU. RU, LD, RD
+						}else{
+							//WW
+							if(i_ID_XY != i_ID_C){
+								//WWO
+								index_xy = [[0, 3], [1, 3], [0, 4], [1, 4]][i_Pos];//LU. RU, LD, RD
+							}else{
+								//WWW
+								index_xy = [1, 1];
+							}
+						}
+					}
+					break;
+				default://O, P, B
+					return;//連結ブロックの場合、背景相当は描画しない
+				}
+			}
+
+			//Draw
+			{
+				//indexの位置の画像を、DstRectの枠に入るように移動
+				//var matrix : Matrix = new Matrix(1,0,0,1, -index_xy[0]*PANEL_LEN/2 + i_DstRect.left, -index_xy[1]*PANEL_LEN/2 + i_DstRect.top);
+				matrix.tx -= index_xy[0]*PANEL_LEN/2;
+				matrix.ty -= index_xy[1]*PANEL_LEN/2;
+
+				o_BitmapData.draw(m_BitmapBlockConnect, matrix, m_color_transform, BlendMode.NORMAL, i_DstRect, true);
+			}
+		}
+
+
+
 		//＃Block
 
 		[Embed(source='Hint_O.png')]
@@ -299,6 +408,8 @@ package{
 		 private static var Bitmap_Block_Accel: Class;
 		[Embed(source='Block_Metal.png')]
 		 private static var Bitmap_Block_Needle: Class;
+		[Embed(source='Hint_W.png')]
+		 private static var Bitmap_Block_Link: Class;
 		[Embed(source='Hint_P.png')]
 		 private static var Bitmap_Hint_Player: Class;
 		[Embed(source='EnemyRolling.png')]
@@ -319,6 +430,7 @@ package{
 			new Bitmap_Block_Trampoline(),//T:トランポリンブロック
 			new Bitmap_Block_Accel(),//A:ダッシュブロック
 			new Bitmap_Block_Needle(),//N:トゲブロック
+			new Bitmap_Block_Link(),//L:連結ブロック
 			new Bitmap_Hint_Enemy(),//E:エネミー
 			//system
 			new Bitmap_Block_Move(),//C:
@@ -1092,6 +1204,7 @@ package{
 			"Ｔ",//T:トランポリンブロック
 			"Ａ",//A:ダッシュブロック
 			"Ｎ",//N:トゲブロック
+			"Ｌ",//L:連結ブロック
 			"Ｅ",//E:エネミー
 			//system
 			"Ｃ",//C:
@@ -1526,6 +1639,7 @@ package{
 								case Game.M: color = 0x444444; break;
 								case Game.T: color = 0x88FF88; break;
 								case Game.N: color = 0xFF0000; break;
+								case Game.L: color = 0x222222; break;
 								case Game.E: color = 0x880000; break;
 								}
 							}
