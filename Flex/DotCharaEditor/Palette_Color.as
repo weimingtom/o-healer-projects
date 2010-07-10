@@ -17,7 +17,7 @@ package{
 	import mx.containers.*;
 	import mx.controls.*;
 
-	public class Palette_Color extends Canvas{
+	public class Palette_Color extends IPalette{
 		//==Const==
 
 		//＃パレット数
@@ -41,183 +41,25 @@ package{
 
 		//==Var==
 
-		//選択中のIndex
-		public var m_CursorIndex:int = 0;
-
-		//画像のRoot（直接BitmapやSpriteをCanvasに登録することはできないため）
-		public var m_Root:Image;
-
 		//パレット画像
 		public var m_Palette:Array;//vec<Bitmap>
-
-		//カーソル画像
-		public var m_Cursor:Sprite;
-
-		//リスナのリスト
-		public var m_ListenerList_ChangeColor:Array = [];
-		public var m_ListenerList_ChangeIndex:Array = [];//選択しているものが変わったら呼ばれる関数のリスト
 
 
 		//==Function==
 
-		//#Public
+		//初期化
 
-		//色の取得
-		public function GetColor(in_Index:int = -1):uint{
-			if(in_Index < 0){
-				return m_Palette[m_CursorIndex].bitmapData.getPixel32(PALETTE_SIZE_W/2, 0);
-			}else{
-				return m_Palette[in_Index].bitmapData.getPixel32(PALETTE_SIZE_W/2, 0);
-			}
-		}
-
-		//選択されているIndexまわり
-		public function GetCursorIndex():int{
-			return m_CursorIndex;
-		}
-		public function SetCursorIndex(in_Index:int):void{
-			//Set Val
-			{
-				m_CursorIndex = in_Index;
-			}
-
-			//Change Cursor Pos
-			{
-				if((in_Index & 1) == 0){
-					m_Cursor.x = m_Palette[m_CursorIndex].parent.parent.x;
-					m_Cursor.y = m_Palette[m_CursorIndex].parent.parent.y;
-
-					m_Cursor.scaleX =  1;
-				}else{
-					m_Cursor.x = m_Palette[m_CursorIndex].parent.parent.x + PALETTE_SIZE_W*1.5;
-					m_Cursor.y = m_Palette[m_CursorIndex].parent.parent.y;
-
-					m_Cursor.scaleX = -1;
-				}
-			}
-
-			//Call Listener
-			{
-				for(var i:int = 0; i < m_ListenerList_ChangeIndex.length; i++){
-					m_ListenerList_ChangeIndex[i]();
-				}
-			}
-		}
-
-		//変更時のリスナを追加
-		public function SetListener_ChangeColor(in_Func:Function):void{
-			m_ListenerList_ChangeColor.push(in_Func);
-		}
-		public function SetListener_ChangeIndex(in_Func:Function):void{
-			m_ListenerList_ChangeIndex.push(in_Func);
-		}
-
-
-		//#Init
-
-		//rootなどに触るので、初期化のタイミングを遅らせる
-		public function Palette_Color(){
-			addEventListener(Event.ADDED_TO_STAGE, Init);
-		}
-
-		//カーソル描画用関数
-		public function DrawPalette(g:Graphics):void{
-			const PointNum:int = PALETTE_SHAPE.length;
-
-/*
-			g.moveTo(PALETTE_SHAPE[0][0], PALETTE_SHAPE[0][1]);
-			for(var i:int = 1; i < PointNum; i++){
-				g.lineTo(PALETTE_SHAPE[i][0], PALETTE_SHAPE[i][1]);
-			}
-			g.lineTo(PALETTE_SHAPE[0][0], PALETTE_SHAPE[0][1]);
-//*/
-/*
-			const Ratio:Number = 1/8.0;
-			for(var i:int = 0; i < PointNum; i++){
-				var pos_1:Array = [
-					(PALETTE_SHAPE[(i+0)%PointNum][0] * (1 - Ratio)) + (PALETTE_SHAPE[(i+1)%PointNum][0] * Ratio),
-					(PALETTE_SHAPE[(i+0)%PointNum][1] * (1 - Ratio)) + (PALETTE_SHAPE[(i+1)%PointNum][1] * Ratio)
-				];
-
-				var pos_2:Array = [
-					(PALETTE_SHAPE[(i+0)%PointNum][0] * Ratio) + (PALETTE_SHAPE[(i+1)%PointNum][0] * (1 - Ratio)),
-					(PALETTE_SHAPE[(i+0)%PointNum][1] * Ratio) + (PALETTE_SHAPE[(i+1)%PointNum][1] * (1 - Ratio))
-				];
-
-				var pos_3:Array = [
-					(PALETTE_SHAPE[(i+1)%PointNum][0] * (1 - Ratio)) + (PALETTE_SHAPE[(i+2)%PointNum][0] * Ratio),
-					(PALETTE_SHAPE[(i+1)%PointNum][1] * (1 - Ratio)) + (PALETTE_SHAPE[(i+2)%PointNum][1] * Ratio)
-				];
-
-				//Line
-				{
-					if(i == 0){
-						g.moveTo(pos_1[0], pos_1[1]);//最初の一回以外は不要のはず
-					}
-					g.lineTo(pos_2[0], pos_2[1]);
-				}
-
-				//Curve
-				{
-					g.curveTo(PALETTE_SHAPE[(i+1)%PointNum][0], PALETTE_SHAPE[(i+1)%PointNum][1], pos_3[0], pos_3[1]);
-				}
-			}
-//*/
-//*
-			//最適化
-			const Ratio:Number = 1/8.0;
-
-			if(PALETTE_SHAPE_BEZIERED == null){
-				PALETTE_SHAPE_BEZIERED = new Array(PointNum*3);
-
-				for(var j:int = 0; j < PointNum; j++){
-					var Pos1:Array = PALETTE_SHAPE[(j+0)%PointNum];
-					var Pos2:Array = PALETTE_SHAPE[(j+1)%PointNum];
-
-					PALETTE_SHAPE_BEZIERED[3*j+0] = [
-						(Pos1[0] * (1 - Ratio)) + (Pos2[0] * Ratio),
-						(Pos1[1] * (1 - Ratio)) + (Pos2[1] * Ratio)
-					];
-
-					PALETTE_SHAPE_BEZIERED[3*j+1] = [
-						(Pos1[0] * Ratio) + (Pos2[0] * (1 - Ratio)),
-						(Pos1[1] * Ratio) + (Pos2[1] * (1 - Ratio))
-					];
-
-					PALETTE_SHAPE_BEZIERED[3*j+2] = [
-						Pos2[0],
-						Pos2[1]
-					];
-				}
-			}
-
-			var BezPointNum:int = PALETTE_SHAPE_BEZIERED.length;
-
-			g.moveTo(PALETTE_SHAPE_BEZIERED[0][0], PALETTE_SHAPE_BEZIERED[0][1]);//最初の一回以外は不要のはず
-			for(var i:int = 0; i < BezPointNum; i += 3){
-//				var Pos_1:Array = PALETTE_SHAPE_BEZIERED[(i + 0) % BezPointNum];
-				var Pos_2:Array = PALETTE_SHAPE_BEZIERED[(i + 1) % BezPointNum];
-				var Pos_3:Array = PALETTE_SHAPE_BEZIERED[(i + 2) % BezPointNum];
-				var Pos_4:Array = PALETTE_SHAPE_BEZIERED[(i + 3) % BezPointNum];
-
-				//Line
-				{
-					g.lineTo(Pos_2[0], Pos_2[1]);
-				}
-
-				//Curve
-				{
-					g.curveTo(Pos_3[0], Pos_3[1], Pos_4[0], Pos_4[1]);
-				}
-			}
-//*/
-		}
-
-		//!stageなどの初期化が終了した後に呼んでもらう
-		public function Init(e:Event):void{
+		override public function init(e:Event=null):void{
 			var i:int;
 
-			//==Common Init==
+			//Check
+			{
+				if(m_Root){
+					return;//すでに初期化されているようなので何もしない
+				}
+			}
+
+			//Common Init
 			{
 				//自身の幅を設定しておく
 				this.width  = SIZE_W;
@@ -226,14 +68,7 @@ package{
 
 			//Init Once
 			{
-				removeEventListener(Event.ADDED_TO_STAGE, Init);
-			}
-
-			//ResetGraphic
-			{
-				while(this.numChildren > 0){
-					removeChildAt(0);
-				}
+				removeEventListener(Event.ADDED_TO_STAGE, init);
 			}
 
 			//Root
@@ -335,7 +170,7 @@ package{
 						pal_root.addEventListener(
 							MouseEvent.MOUSE_DOWN,
 							function(e:MouseEvent):void{
-								SetCursorIndex(index);
+								setCursorIndex(index);
 							}
 						);
 					}
@@ -344,9 +179,9 @@ package{
 
 			//Create Cursor
 			{
-				m_Cursor = new Sprite();
+				m_Cursor = [new Sprite()];
 				{
-					var g:Graphics = m_Cursor.graphics;
+					var g:Graphics = m_Cursor[0].graphics;
 
 					g.lineStyle(2, 0xFFFFFF, 0.7);
 
@@ -360,29 +195,206 @@ package{
 					g.lineTo(0, PALETTE_SIZE_W/2);
 				}
 
-				m_Cursor.x = m_Palette[m_CursorIndex].x;
-				m_Cursor.y = m_Palette[m_CursorIndex].y;
+				m_Cursor[0].x = m_Palette[m_CursorIndex].x;
+				m_Cursor[0].y = m_Palette[m_CursorIndex].y;
 
-				m_Root.addChild(m_Cursor);
+				m_Root.addChild(m_Cursor[0]);
 			}
 		}
 
-		//描画
-		public function Redraw(in_Color:uint, in_Index:int = -1):void{//!!Use
-			//in_Index
-			if(in_Index < 0){
-				in_Index = m_CursorIndex;
-			}
-
-			//Draw
-			m_Palette[in_Index].bitmapData.fillRect(m_Palette[in_Index].bitmapData.rect, in_Color);
-
-			//Call Listener
+		//カーソル変更処理
+		override public function setCursorIndex(in_Index:int, in_InputColor:uint = 0xFFFFFFFF):void{
+			//Check
 			{
-				for(var i:int = 0; i < m_ListenerList_ChangeColor.length; i++){
-					m_ListenerList_ChangeColor[i]();
+				if(m_CursorIndex == in_Index){
+					return;//変更の必要がなければ何もしない
 				}
 			}
+
+			//Param
+			{
+				m_CursorIndex = in_Index;
+			}
+
+			//Change Cursor Pos
+			{
+				if((in_Index & 1) == 0){
+					m_Cursor[0].x = m_Palette[in_Index].parent.parent.x;
+					m_Cursor[0].y = m_Palette[in_Index].parent.parent.y;
+
+					m_Cursor[0].scaleX =  1;
+				}else{
+					m_Cursor[0].x = m_Palette[in_Index].parent.parent.x + PALETTE_SIZE_W*1.5;
+					m_Cursor[0].y = m_Palette[in_Index].parent.parent.y;
+
+					m_Cursor[0].scaleX = -1;
+				}
+			}
+
+			//Next
+			{
+				onCursorChange(in_Index, GetSelectedColor());
+			}
+		}
+
+		override public function reset(in_Info:Array, in_InputColor:Array = null):void{
+			//Param
+			{
+				//m_CursorIndex
+				{
+					if(m_CursorIndex >= in_Info.length){m_CursorIndex = in_Info.length-1;}
+				}
+			}
+
+			//Graphic
+			{
+				//パレットの中身の色を更新
+				var num:int = m_Palette.length;
+				for(var i:int = 0; i < num; i++){
+					m_Palette[i].bitmapData.fillRect(m_Palette[i].bitmapData.rect, in_InputColor[i]);
+				}
+			}
+
+			//Next
+			{
+				onReset(in_Info, in_InputColor);
+			}
+		}
+
+		override public function redraw():void{
+			m_Palette[m_CursorIndex].bitmapData.fillRect(m_Palette[m_CursorIndex].bitmapData.rect, m_InputColor);
+		}
+
+		override public function redraw_cursor():void{
+			//何もしない
+		}
+
+
+		//
+		override public function GetSelectedColor():uint{
+			return m_Palette[m_CursorIndex].bitmapData.getPixel32(0,0);
+		}
+
+		//
+		public function GetColor(in_Index:int):uint{
+			return m_Palette[in_Index].bitmapData.getPixel32(0,0);
+		}
+
+		//
+		public function SetColor(in_Index:int, in_Color:uint):void{
+			m_Palette[in_Index].bitmapData.fillRect(m_Palette[in_Index].bitmapData.rect, in_Color);
+		}
+
+
+		//#Utility
+
+		//カーソル描画用関数
+		public function DrawPalette(g:Graphics):void{
+			const PointNum:int = PALETTE_SHAPE.length;
+
+/*
+			g.moveTo(PALETTE_SHAPE[0][0], PALETTE_SHAPE[0][1]);
+			for(var i:int = 1; i < PointNum; i++){
+				g.lineTo(PALETTE_SHAPE[i][0], PALETTE_SHAPE[i][1]);
+			}
+			g.lineTo(PALETTE_SHAPE[0][0], PALETTE_SHAPE[0][1]);
+//*/
+/*
+			const Ratio:Number = 1/8.0;
+			for(var i:int = 0; i < PointNum; i++){
+				var pos_1:Array = [
+					(PALETTE_SHAPE[(i+0)%PointNum][0] * (1 - Ratio)) + (PALETTE_SHAPE[(i+1)%PointNum][0] * Ratio),
+					(PALETTE_SHAPE[(i+0)%PointNum][1] * (1 - Ratio)) + (PALETTE_SHAPE[(i+1)%PointNum][1] * Ratio)
+				];
+
+				var pos_2:Array = [
+					(PALETTE_SHAPE[(i+0)%PointNum][0] * Ratio) + (PALETTE_SHAPE[(i+1)%PointNum][0] * (1 - Ratio)),
+					(PALETTE_SHAPE[(i+0)%PointNum][1] * Ratio) + (PALETTE_SHAPE[(i+1)%PointNum][1] * (1 - Ratio))
+				];
+
+				var pos_3:Array = [
+					(PALETTE_SHAPE[(i+1)%PointNum][0] * (1 - Ratio)) + (PALETTE_SHAPE[(i+2)%PointNum][0] * Ratio),
+					(PALETTE_SHAPE[(i+1)%PointNum][1] * (1 - Ratio)) + (PALETTE_SHAPE[(i+2)%PointNum][1] * Ratio)
+				];
+
+				//Line
+				{
+					if(i == 0){
+						g.moveTo(pos_1[0], pos_1[1]);//最初の一回以外は不要のはず
+					}
+					g.lineTo(pos_2[0], pos_2[1]);
+				}
+
+				//Curve
+				{
+					g.curveTo(PALETTE_SHAPE[(i+1)%PointNum][0], PALETTE_SHAPE[(i+1)%PointNum][1], pos_3[0], pos_3[1]);
+				}
+			}
+//*/
+//*
+			//最適化
+			const Ratio:Number = 1/8.0;
+
+			if(PALETTE_SHAPE_BEZIERED == null){
+				PALETTE_SHAPE_BEZIERED = new Array(PointNum*3);
+
+				for(var j:int = 0; j < PointNum; j++){
+					var Pos1:Array = PALETTE_SHAPE[(j+0)%PointNum];
+					var Pos2:Array = PALETTE_SHAPE[(j+1)%PointNum];
+
+					PALETTE_SHAPE_BEZIERED[3*j+0] = [
+						(Pos1[0] * (1 - Ratio)) + (Pos2[0] * Ratio),
+						(Pos1[1] * (1 - Ratio)) + (Pos2[1] * Ratio)
+					];
+
+					PALETTE_SHAPE_BEZIERED[3*j+1] = [
+						(Pos1[0] * Ratio) + (Pos2[0] * (1 - Ratio)),
+						(Pos1[1] * Ratio) + (Pos2[1] * (1 - Ratio))
+					];
+
+					PALETTE_SHAPE_BEZIERED[3*j+2] = [
+						Pos2[0],
+						Pos2[1]
+					];
+				}
+			}
+
+			var BezPointNum:int = PALETTE_SHAPE_BEZIERED.length;
+
+			g.moveTo(PALETTE_SHAPE_BEZIERED[0][0], PALETTE_SHAPE_BEZIERED[0][1]);//最初の一回以外は不要のはず
+			for(var i:int = 0; i < BezPointNum; i += 3){
+//				var Pos_1:Array = PALETTE_SHAPE_BEZIERED[(i + 0) % BezPointNum];
+				var Pos_2:Array = PALETTE_SHAPE_BEZIERED[(i + 1) % BezPointNum];
+				var Pos_3:Array = PALETTE_SHAPE_BEZIERED[(i + 2) % BezPointNum];
+				var Pos_4:Array = PALETTE_SHAPE_BEZIERED[(i + 3) % BezPointNum];
+
+				//Line
+				{
+					g.lineTo(Pos_2[0], Pos_2[1]);
+				}
+
+				//Curve
+				{
+					g.curveTo(Pos_3[0], Pos_3[1], Pos_4[0], Pos_4[1]);
+				}
+			}
+//*/
+		}
+
+		//Index => Color
+		public function CreateBitmap_FromIndex(in_BitmapData_Index:BitmapData):BitmapData{
+			var w:int = in_BitmapData_Index.width;
+			var h:int = in_BitmapData_Index.height;
+
+			var bmp_data:BitmapData = new BitmapData(w, h, true, 0x00000000);
+
+			for(var x:int = 0; x < w; x++){
+				for(var y:int = 0; y < h; y++){
+					bmp_data.setPixel32(x, y, GetColor(in_BitmapData_Index.getPixel(x, y)));
+				}
+			}
+
+			return bmp_data;
 		}
 	}
 }

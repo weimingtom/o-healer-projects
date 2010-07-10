@@ -1,5 +1,9 @@
 ﻿Application {
 	backgroundColor: #000000;
+	paddingLeft:	0;
+	paddingRight:	0;
+	paddingTop:		5;
+	paddingBottom:	0;
 }
 
 Panel {
@@ -41,22 +45,13 @@ TabNavigator {
 	color: #DDDDDD;
 	textRollOverColor: #DDDDFF;
 
-	borderColor: #000000;
-	borderAlpha: 0.84;
-	borderThickness: 0;
-	borderThicknessLeft: 0;
-	borderThicknessTop: 0;
-	borderThicknessBottom: 0;
-	borderThicknessRight: 0;
-
-	roundedBottomCorners: true;
+	focusRoundedCorners: "tl tr";
 	cornerRadius: 3;
 
-	headerHeight: 30;
-	headerColors: #331100, #000000;
-	highlightAlphas: 0.3, 0.0;
+	tabOffset: 7;
+	horizontalGap: 3;
 
-	backgroundAlpha: 0.9;
+	backgroundAlpha: 1.0;
 	backgroundColor: #888888;
 
 	dropShadowEnabled: true;

@@ -32,28 +32,25 @@ package{
 
 		//＃カーソルのタイプ（カーソルのIndex）
 		static public var CursorTypeIter:int = 0;
-		static public const CURSOR_TYPE_NORMAL:int	= CursorTypeIter++;
-		static public const CURSOR_TYPE_MIRROR:int	= CursorTypeIter++;
-		static public const CURSOR_TYPE_NUM:int		= CursorTypeIter;
+		static public const CURSOR_TYPE_NORMAL:int		= CursorTypeIter++;
+		static public const CURSOR_TYPE_MIRROR_X:int	= CursorTypeIter++;
+		static public const CURSOR_TYPE_MIRROR_Y:int	= CursorTypeIter++;
+		static public const CURSOR_TYPE_MIRROR_XY:int	= CursorTypeIter++;
+		static public const CURSOR_TYPE_NUM:int			= CursorTypeIter;
 
 		//＃カーソルのモード（カーソルをどう動かすか）
 		static public var CursorModeIter:int = 0;
-		static public const CURSOR_MODE_NORMAL:int			= CursorModeIter++;
-		static public const CURSOR_MODE_MIRROR_16_16:int	= CursorModeIter++;
-		static public const CURSOR_MODE_MIRROR_15_1_15:int	= CursorModeIter++;
-		static public const CURSOR_MODE_NUM:int				= CursorModeIter;
-
-		//＃描画方法
-		static public var DrawModeIter:int = 0;
-		static public const DRAW_MODE_DOT:int	= DrawModeIter++;
-		static public const DRAW_MODE_FILL:int	= DrawModeIter++;
-		static public const DRAW_MODE_NUM:int	= DrawModeIter;
+		static public const CURSOR_MODE_NORMAL:int				= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR_X_16_16:int		= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR_X_15_1_15:int	= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR_Y_16_16:int		= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR_Y_15_1_15:int	= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR_XY_16_16:int		= CursorModeIter++;
+		static public const CURSOR_MODE_MIRROR_XY_15_1_15:int	= CursorModeIter++;
+		static public const CURSOR_MODE_NUM:int					= CursorModeIter;
 
 
 		//==Var==
-
-		//選択中のIndex
-		public var m_CursorIndex:int = 0;
 
 		//画像のRoot（直接BitmapやSpriteをCanvasに登録することはできないため）
 		public var m_Root:Image;
@@ -63,9 +60,9 @@ package{
 		public var m_BitmapData:BitmapData;
 
 		//トレース画像
-		public var m_Bitmap_Trace:Bitmap;
+		public var m_Bitmap_Trace:Bitmap = new Bitmap();
 
-		//パレットIndexを保持する擬似画像（直接の表示には使わない）
+		//パレットIndexやNrmを保持する擬似画像（直接の表示には使わない）
 		public var m_BitmapData_Index:BitmapData;
 
 		//グリッド画像
@@ -74,73 +71,49 @@ package{
 		//カーソル画像
 		public var m_Cursor:Array;//vec<Shape>：ミラーリングのため、複数のカーソルに対応
 
-		//カーソル同期用に自分自身をstaticなリストに突っ込む
-		static public var m_InstanceList:Array = [];//vec<Canvas_Zoom>
-
 		//カーソルのモード（動かし方）
-		public var m_CursorMode:int = CURSOR_MODE_MIRROR_15_1_15;
-
-		//描画方法
-		public var m_DrawMode:int = DRAW_MODE_DOT;
+		public var m_CursorMode:int = CURSOR_MODE_NORMAL;
 
 		//リスナのリスト
-		public var m_ListenerList_Redraw:Array = [];
-
-		//Index => Color
-		public var m_Index2Color:Function = function(in_Index:int):uint{return 0x00000000};
+		public var m_ListenerList_MouseDown:Array = [];
+		public var m_ListenerList_MouseMove:Array = [];
+		public var m_ListenerList_MouseMove_WithDown:Array = [];
+		public var m_ListenerList_MouseUp:Array = [];
 
 		//
-		public var onDrawEnd:Function = function():void{};
+//		public var onDrawEnd:Function = function():void{};
 
 
 		//==Function==
 
 		//#Public
 
-		//変更時のリスナを追加
-		//変更時のリスナを追加
-		public function SetListener_Redraw(in_Func:Function):void{
-			m_ListenerList_Redraw.push(in_Func);
+		//リスナを追加
+		public function addEventListener_MouseDown(in_Func:Function):void{
+			m_ListenerList_MouseDown.push(in_Func);
 		}
-
-		//Index=>Colorの変換処理を設定
-		public function SetFunc_Index2Color(in_Func:Function):void{
-			m_Index2Color = in_Func;
+		public function addEventListener_MouseMove(in_Func:Function):void{
+			m_ListenerList_MouseMove.push(in_Func);
 		}
-
-		//選択されているIndexまわり
-		public function GetCursorIndex():int{
-			return m_CursorIndex;
+		public function addEventListener_MouseMove_WithDown(in_Func:Function):void{
+			m_ListenerList_MouseMove_WithDown.push(in_Func);
 		}
-		public function SetCursorIndex(in_Index:int, in_CursorColor:uint = 0xFFFFFFFF):void{
-			//Set Val
-			{
-				m_CursorIndex = in_Index;
-			}
-
-			//Redraw Cursor
-			{
-				RedrawCursor(in_CursorColor);
-			}
+		public function addEventListener_MouseUp(in_Func:Function):void{
+			m_ListenerList_MouseUp.push(in_Func);
 		}
 
 		//カーソルの動かし方を外部から設定
-		public function SetCursorMode(in_Mode:int):void{
+		public function setCursorMode(in_Mode:int):void{
 			m_CursorMode = in_Mode;
 		}
 
-		//描画方法の設定
-		public function SetDrawMode(in_Mode:int):void{
-			m_DrawMode = in_Mode;
-		}
-
 		//Index Bitmapのクリア（主に初期化時に利用）
-		public function ClearIndex(in_Index:int = 0):void{
+		public function clearIndex(in_Index:int = 0):void{
 			m_BitmapData_Index.fillRect(m_BitmapData_Index.rect, in_Index);
 		}
 
 		//指定位置の色を取得
-		public function GetPixel32(in_X:int, in_Y:int):uint{
+		public function getPixel32(in_X:int, in_Y:int):uint{
 			return m_BitmapData.getPixel32(in_X, in_Y);
 		}
 
@@ -149,24 +122,21 @@ package{
 
 		//rootなどに触るので、初期化のタイミングを遅らせる
 		public function Canvas_Zoom(){
-			addEventListener(Event.ADDED_TO_STAGE, Init);
+			addEventListener(Event.ADDED_TO_STAGE, init);
 		}
 
 		//!stageなどの初期化が終了した後に呼んでもらう
-		public function Init(e:Event=null):void{
+		public function init(e:Event=null):void{
 			//==Common Init==
 			{
 				//自身の幅を設定しておく
 				this.width  = SIZE_W;
 				this.height = SIZE_H;
-
-				//自身をstaticなリストに突っ込む
-				m_InstanceList.push(this);
 			}
 
 			//Init Once
 			{
-				removeEventListener(Event.ADDED_TO_STAGE, Init);
+				removeEventListener(Event.ADDED_TO_STAGE, init);
 			}
 
 			//Root
@@ -182,12 +152,15 @@ package{
 
 			//Trace
 			{
-				m_Bitmap_Trace = new Bitmap();
+				var img_trace:Image = new Image();
+				{
+					img_trace.addChild(m_Bitmap_Trace);
 
-				m_Bitmap_Trace.scaleX = SIZE_RATIO;
-				m_Bitmap_Trace.scaleY = SIZE_RATIO;
-
-				m_Root.addChild(m_Bitmap_Trace);
+					img_trace.alpha = 0.5;
+					img_trace.scaleX = SIZE_RATIO;
+					img_trace.scaleY = SIZE_RATIO;
+				}
+				m_Root.addChild(img_trace);
 			}
 
 			//Create Bitmap
@@ -246,65 +219,14 @@ package{
 				m_Cursor.forEach(function(item:*, index:int, arr:Array):void{
 					m_Cursor[index] = new Shape();
 
-					//Mouse
-					{
-						//Func
-						var mouseMoveFunc:Function = function(e:MouseEvent = null):void{
-							var x:int = m_Bitmap.mouseX;
-							var y:int = m_Bitmap.mouseY;
-
-							var visible_flag:Boolean = true;
-
-							switch(index){
-							case CURSOR_TYPE_NORMAL:
-								break;
-							case CURSOR_TYPE_MIRROR:
-								switch(m_CursorMode){
-								case CURSOR_MODE_NORMAL:
-									visible_flag = false;
-									break;
-								case CURSOR_MODE_MIRROR_16_16:
-									x = DOT_NUM-1 - x;
-									break;
-								case CURSOR_MODE_MIRROR_15_1_15:
-									x = DOT_NUM-2 - x;
-									break;
-								}
-								break;
-							}
-
-							x *= SIZE_RATIO;
-							y *= SIZE_RATIO;
-
-							m_InstanceList.forEach(function(instance:*, index_inner:int, arr_inner:Array):void{
-								if(0 <= x && x < SIZE_W && 0 <= y && y < SIZE_H){
-									instance.m_Cursor[index].visible = visible_flag;//true;
-								}else{
-									return;
-//									instance.m_Cursor[index].visible = false;
-								}
-
-								instance.m_Cursor[index].x = x;
-								instance.m_Cursor[index].y = y;
-							});
-						};
-
-						//Init
-						mouseMoveFunc();
-
-						//Regist
-						root.addEventListener(
-							MouseEvent.MOUSE_MOVE,
-							mouseMoveFunc
-						);
-					}
+					m_Cursor[index].filters = [new BlurFilter(1,1)];
 
 					m_Root.addChild(m_Cursor[index]);
 				});
 
-				//Draw
+				//Init Cursor Graphic
 				{
-					RedrawCursor();
+					redrawCursor();
 				}
 			}
 
@@ -312,84 +234,26 @@ package{
 			{
 				var MouseDownFlag:Boolean = false;
 
-				var mouseOldX:int = m_Bitmap.mouseX;
-				var mouseOldY:int = m_Bitmap.mouseY;
-
-				var onChange:Function = function():void{
-					//Draw
-					{
-						//ラインだけじゃなく他のも？
-						//!!
-
-						switch(m_DrawMode){
-						case DRAW_MODE_DOT:
-							//フリー描画
-							{
-								const drawFunc_Dot:Function = function(in_Index:int):void{
-									m_BitmapData_Index.setPixel(m_Cursor[in_Index].x / SIZE_RATIO, m_Cursor[in_Index].y / SIZE_RATIO, m_CursorIndex);
-								};
-
-								switch(m_CursorMode){
-								case CURSOR_MODE_NORMAL:
-									drawFunc_Dot(CURSOR_TYPE_NORMAL);
-									break;
-								case CURSOR_MODE_MIRROR_16_16:
-								case CURSOR_MODE_MIRROR_15_1_15:
-									drawFunc_Dot(CURSOR_TYPE_NORMAL);
-									drawFunc_Dot(CURSOR_TYPE_MIRROR);
-									break;
-								}
-							}
-							break;
-						case DRAW_MODE_FILL:
-							//塗りつぶし
-							{
-								const drawFunc_Fill:Function = function(in_Index:int):void{
-									m_BitmapData_Index.floodFill(m_Cursor[in_Index].x / SIZE_RATIO, m_Cursor[in_Index].y / SIZE_RATIO, m_CursorIndex);
-								};
-
-								switch(m_CursorMode){
-								case CURSOR_MODE_NORMAL:
-									drawFunc_Fill(CURSOR_TYPE_NORMAL);
-									break;
-								case CURSOR_MODE_MIRROR_16_16:
-								case CURSOR_MODE_MIRROR_15_1_15:
-									drawFunc_Fill(CURSOR_TYPE_NORMAL);
-									drawFunc_Fill(CURSOR_TYPE_MIRROR);
-									break;
-								}
-							}
-							break;
-						}
-
-						Redraw();
-					}
-
-					//Old
-					{
-						mouseOldX = m_Bitmap.mouseX;
-						mouseOldY = m_Bitmap.mouseY;
-					}
-				};
-
 				addEventListener(
 					MouseEvent.MOUSE_DOWN,
 					function(e:MouseEvent):void{
 						MouseDownFlag = true;
-						mouseOldX = mouseX;
-						mouseOldY = mouseY;
-						onChange();
+						onMouseDown(m_Bitmap.mouseX, m_Bitmap.mouseY);
 					}
 				);
 
 				root.addEventListener(
 					MouseEvent.MOUSE_MOVE,
 					function(e:MouseEvent):void{
+						{
+							onMouseMove(m_Bitmap.mouseX, m_Bitmap.mouseY);
+						}
+
 						if(! e.buttonDown){
 							MouseDownFlag = false;
 						}
 						if(MouseDownFlag){
-							onChange();
+							onMouseMove_WithDown(m_Bitmap.mouseX, m_Bitmap.mouseY);
 						}
 					}
 				);
@@ -400,29 +264,124 @@ package{
 						if(MouseDownFlag){
 							MouseDownFlag = false;
 
-							onDrawEnd();
+							onMouseUp(m_Bitmap.mouseX, m_Bitmap.mouseY);
 						}
 					}
 				);
 			}
 		}
 
-		public function Redraw():void{
-			for(var y:int = 0; y < DOT_NUM; y++){
-				for(var x:int = 0; x < DOT_NUM; x++){
-					m_BitmapData.setPixel32(x, y, Index2Color(m_BitmapData_Index.getPixel(x, y)));
-				}
-			}
 
-			//Call Listener
-			{
-				for(var i:int = 0; i < m_ListenerList_Redraw.length; i++){
-					m_ListenerList_Redraw[i]();
-				}
-			}
+		//マウスが押された時の処理
+		public function onMouseDown(in_X:int, in_Y:int):void{
+			m_ListenerList_MouseDown.forEach(function(listener:*, index:int, arr:Array):void{
+				listener(in_X, in_Y);
+			});
 		}
 
-		public function RedrawCursor(in_Color:uint = 0xFFFFFF):void{
+		//マウスが移動した時の処理
+		public function onMouseMove(in_X:int, in_Y:int):void{
+			m_ListenerList_MouseMove.forEach(function(listener:*, index:int, arr:Array):void{
+				listener(in_X, in_Y);
+			});
+		}
+
+		//マウスを押したまま移動した時の処理
+		public function onMouseMove_WithDown(in_X:int, in_Y:int):void{
+			m_ListenerList_MouseMove_WithDown.forEach(function(listener:*, index:int, arr:Array):void{
+				listener(in_X, in_Y);
+			});
+		}
+
+		//マウスが離された時の処理
+		public function onMouseUp(in_X:int, in_Y:int):void{
+			m_ListenerList_MouseUp.forEach(function(listener:*, index:int, arr:Array):void{
+				listener(in_X, in_Y);
+			});
+		}
+
+
+		//カーソルの位置セット
+		public function setCursorPos(in_X:int, in_Y:int):void{
+			m_Cursor.forEach(function(cursor_shape:*, index:int, arr:Array):void{
+				var x:int = in_X;
+				var y:int = in_Y;
+
+				var visible_flag:Boolean = true;
+
+				//カーソルの種類(index)によって位置や表示の有無を変更
+				//表示の有無などは現在のカーソルモード(m_CursorMode)を見て判断
+				switch(index){
+				case CURSOR_TYPE_NORMAL:
+					break;
+				case CURSOR_TYPE_MIRROR_X:
+					switch(m_CursorMode){
+					case CURSOR_MODE_NORMAL:
+					case CURSOR_MODE_MIRROR_Y_16_16:
+					case CURSOR_MODE_MIRROR_Y_15_1_15:
+						visible_flag = false;
+						break;
+					case CURSOR_MODE_MIRROR_X_16_16:
+					case CURSOR_MODE_MIRROR_XY_16_16:
+						x = DOT_NUM-1 - x;
+						break;
+					case CURSOR_MODE_MIRROR_X_15_1_15:
+					case CURSOR_MODE_MIRROR_XY_15_1_15:
+						x = DOT_NUM-2 - x;
+						break;
+					}
+					break;
+				case CURSOR_TYPE_MIRROR_Y:
+					switch(m_CursorMode){
+					case CURSOR_MODE_NORMAL:
+					case CURSOR_MODE_MIRROR_X_16_16:
+					case CURSOR_MODE_MIRROR_X_15_1_15:
+						visible_flag = false;
+						break;
+					case CURSOR_MODE_MIRROR_Y_16_16:
+					case CURSOR_MODE_MIRROR_XY_16_16:
+						y = DOT_NUM-1 - y;
+						break;
+					case CURSOR_MODE_MIRROR_Y_15_1_15:
+					case CURSOR_MODE_MIRROR_XY_15_1_15:
+						y = DOT_NUM-2 - y;
+						break;
+					}
+					break;
+				case CURSOR_TYPE_MIRROR_XY:
+					switch(m_CursorMode){
+					case CURSOR_MODE_NORMAL:
+					case CURSOR_MODE_MIRROR_X_16_16:
+					case CURSOR_MODE_MIRROR_Y_16_16:
+					case CURSOR_MODE_MIRROR_X_15_1_15:
+					case CURSOR_MODE_MIRROR_Y_15_1_15:
+						visible_flag = false;
+						break;
+					case CURSOR_MODE_MIRROR_XY_16_16:
+						x = DOT_NUM-1 - x;
+						y = DOT_NUM-1 - y;
+						break;
+					case CURSOR_MODE_MIRROR_XY_15_1_15:
+						x = DOT_NUM-2 - x;
+						y = DOT_NUM-2 - y;
+						break;
+					}
+					break;
+				}
+
+				x *= SIZE_RATIO;
+				y *= SIZE_RATIO;
+
+				m_Cursor[index].visible = visible_flag;
+
+				m_Cursor[index].x = x;
+				m_Cursor[index].y = y;
+			});
+		}
+
+
+		//カーソルを指定色で再描画
+		public function redrawCursor(in_Color:uint = 0xFFFFFF):void{
 			const colorLerp:Function = function(in_SrcColor:uint, in_DstColor:uint, in_Ratio:Number):uint{
 				var a_src:uint = (in_SrcColor >> 24) & 0xFF;
 				var r_src:uint = (in_SrcColor >> 16) & 0xFF;
@@ -461,7 +420,7 @@ package{
 				//Base : Black
 				{
 					var color_base:uint = colorLerp(in_Color, 0xDD000000, 0.5);
-					g.lineStyle(1, color_base & 0xFFFFFF, ((color_base >> 24) & 0xFF)/255.0);
+					g.lineStyle(0, color_base & 0xFFFFFF, ((color_base >> 24) & 0xFF)/255.0);
 
 					g.drawRect(0, 0, LEN, LEN);
 				}
@@ -483,8 +442,123 @@ package{
 			});
 		}
 
-		public function Index2Color(in_Index:int):uint{
-			return m_Index2Color(in_Index);
+
+		//表示をずらす
+		public function scroll(in_MoveX:int, in_MoveY:int):void{
+			var ori_bmp_data:BitmapData = m_BitmapData_Index.clone();
+
+			var src_lx:int;
+			var src_uy:int;
+			var dst_rx:int;
+			var dst_dy:int;
+			{
+				if(in_MoveX > 0){
+					src_lx = (DOT_NUM - in_MoveX);
+					dst_rx = in_MoveX;
+				}else{
+					src_lx = -in_MoveX;
+					dst_rx = (DOT_NUM + in_MoveX);
+				}
+				if(in_MoveY > 0){
+					src_uy = (DOT_NUM - in_MoveY);
+					dst_dy = in_MoveY;
+				}else{
+					src_uy = -in_MoveY;
+					dst_dy = (DOT_NUM + in_MoveY);
+				}
+			}
+
+			//LU
+			{
+				src_rect.x = src_lx;
+				src_rect.y = src_uy;
+				src_rect.width  = dst_rx;//(in_MoveX > 0)? in_MoveX: (DOT_NUM + in_MoveX);
+				src_rect.height = dst_dy;//(in_MoveY > 0)? in_MoveY: (DOT_NUM + in_MoveY);
+
+				dst_pos.x = 0;
+				dst_pos.y = 0;
+
+				m_BitmapData_Index.copyPixels(
+					ori_bmp_data,
+					src_rect,
+					dst_pos
+				);
+			}
+
+			//RU
+			if(in_MoveX != 0)
+			{
+				src_rect.x = 0;
+				src_rect.y = src_uy;
+				src_rect.width  = src_lx;//(in_MoveX > 0)? (DOT_NUM - in_MoveX): -in_MoveX;
+				src_rect.height = dst_dy;//(in_MoveY > 0)? in_MoveY: (DOT_NUM + in_MoveY);
+
+				dst_pos.x = dst_rx;
+				dst_pos.y = 0;
+
+				m_BitmapData_Index.copyPixels(
+					ori_bmp_data,
+					src_rect,
+					dst_pos
+				);
+			}
+
+			//LD
+			if(in_MoveY != 0)
+			{
+				src_rect.x = src_lx;
+				src_rect.y = 0;
+				src_rect.width  = dst_rx;//(in_MoveX > 0)? in_MoveX: (DOT_NUM + in_MoveX);
+				src_rect.height = src_uy;//(in_MoveY > 0)? (DOT_NUM - in_MoveY): -in_MoveY;
+
+				dst_pos.x = 0;
+				dst_pos.y = dst_dy;
+
+				m_BitmapData_Index.copyPixels(
+					ori_bmp_data,
+					src_rect,
+					dst_pos
+				);
+			}
+
+			//RD
+			if(in_MoveX != 0 && in_MoveY != 0)
+			{
+				src_rect.x = 0;
+				src_rect.y = 0;
+				src_rect.width  = src_lx;//(in_MoveX > 0)? (DOT_NUM - in_MoveX): -in_MoveX;
+				src_rect.height = src_uy;//(in_MoveY > 0)? (DOT_NUM - in_MoveY): -in_MoveY;
+
+				dst_pos.x = dst_rx;
+				dst_pos.y = dst_dy;
+
+				m_BitmapData_Index.copyPixels(
+					ori_bmp_data,
+					src_rect,
+					dst_pos
+				);
+			}
+		}
+		public var src_rect:Rectangle = new Rectangle(0,0,0,0);
+		public var dst_pos:Point = new Point(0,0);
+
+		//表示反転
+		public function reverse(in_IsX:Boolean = true):void{
+			var mtx:Matrix = new Matrix(1,0,0,1, 0,0);
+			{
+				if(in_IsX){
+					mtx.a = -1;
+					mtx.tx = DOT_NUM;
+				}else{
+					mtx.d = -1;
+					mtx.ty = DOT_NUM;
+				}
+			}
+
+			m_BitmapData_Index.draw(
+				m_BitmapData_Index.clone(),
+				mtx
+			);
 		}
 	}
 }

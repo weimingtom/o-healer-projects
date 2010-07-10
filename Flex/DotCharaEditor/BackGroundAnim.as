@@ -32,11 +32,13 @@ package{
 		//#マスのサイズ
 		public var BLOCK_SIZE:int = 16;
 
+//*
 		//背景画像
-		//public var m_Shape:Shape;
+		public var m_Shape:Shape;
+/*/
 		//高速化のため、m_ShapeをBitmap化したもの
 		public var m_Bitmap:Bitmap;
-
+//*/
 		//スクロール用オフセット
 		public var m_Offset:Number = 0;
 
@@ -54,7 +56,7 @@ package{
 
 				BLOCK_SIZE = in_Size;
 			}
-/*
+//*
 			//Image
 			{
 				m_Shape = new Shape();
@@ -120,7 +122,7 @@ package{
 				{
 					//BG
 					{
-						bmp_data = new BitmapData(scale*(in_W+2*BLOCK_SIZE), scale*(in_W+2*BLOCK_SIZE), false, COLOR_WHITE);
+						bmp_data = new BitmapData(scale*(in_W+2*BLOCK_SIZE), scale*(in_H+2*BLOCK_SIZE), false, COLOR_WHITE);
 					}
 
 					//Block
@@ -157,8 +159,8 @@ package{
 				var MaskImage:Shape = new Shape();
 
 				{
-					var g:Graphics = MaskImage.graphics;
-//					g = MaskImage.graphics;
+//					var g:Graphics = MaskImage.graphics;
+					g = MaskImage.graphics;
 
 					//Reset
 					{
@@ -200,7 +202,7 @@ package{
 
 			//適用
 			{
-/*
+//*
 				m_Shape.x = m_Offset;
 				m_Shape.y = m_Offset;
 /*/
