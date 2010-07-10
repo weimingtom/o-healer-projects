@@ -33,7 +33,9 @@ package{
 		public var BLOCK_SIZE:int = 16;
 
 		//背景画像
-		public var m_Shape:Shape;
+		//public var m_Shape:Shape;
+		//高速化のため、m_ShapeをBitmap化したもの
+		public var m_Bitmap:Bitmap;
 
 		//スクロール用オフセット
 		public var m_Offset:Number = 0;
@@ -52,7 +54,7 @@ package{
 
 				BLOCK_SIZE = in_Size;
 			}
-
+/*
 			//Image
 			{
 				m_Shape = new Shape();
@@ -108,14 +110,55 @@ package{
 					addChild(m_Shape);
 				}
 			}
+/*/
+			//高速化のため、Bitmapにしたものを使う
+			//Bitmap
+			{
+				const scale:int = 1;
 
+				var bmp_data:BitmapData;
+				{
+					//BG
+					{
+						bmp_data = new BitmapData(scale*(in_W+2*BLOCK_SIZE), scale*(in_W+2*BLOCK_SIZE), false, COLOR_WHITE);
+					}
+
+					//Block
+					{
+						var rect:Rectangle = new Rectangle(0, 0, scale*BLOCK_SIZE, scale*BLOCK_SIZE);
+						var flag:Boolean = true;//交互に描画するためのフラグ
+						var flag_x:Boolean = true;//交互に描画するためのフラグ
+						for(var x:int = 0; x < bmp_data.rect.width; x += scale*BLOCK_SIZE){
+							flag = flag_x;
+							for(var y:int = 0; y < bmp_data.rect.height; y += scale*BLOCK_SIZE){
+								if(flag){
+									rect.x = x;
+									rect.y = y;
+									bmp_data.fillRect(rect, COLOR_BLACK);
+								}
+
+								flag = !flag;
+							}
+							flag_x = !flag_x;
+						}
+					}
+				}
+
+				{
+					m_Bitmap = new Bitmap(bmp_data);
+					addChild(m_Bitmap);
+					m_Bitmap.scaleX = 1.0 / scale;
+					m_Bitmap.scaleY = 1.0 / scale;
+				}
+			}
+//*/
 			//Mask
 			{
 				var MaskImage:Shape = new Shape();
 
 				{
-//					var g:Graphics = MaskImage.graphics;
-					g = MaskImage.graphics;
+					var g:Graphics = MaskImage.graphics;
+//					g = MaskImage.graphics;
 
 					//Reset
 					{
@@ -157,8 +200,13 @@ package{
 
 			//適用
 			{
+/*
 				m_Shape.x = m_Offset;
 				m_Shape.y = m_Offset;
+/*/
+				m_Bitmap.x = m_Offset - BLOCK_SIZE;
+				m_Bitmap.y = m_Offset - BLOCK_SIZE;
+//*/
 			}
 		}
 	}

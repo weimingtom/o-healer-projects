@@ -36,3 +36,45 @@ Panel {
 	horizontalAlign:	"center";
 	verticalAlign:		"center";
 }
+
+TabNavigator {
+	color: #DDDDDD;
+	textRollOverColor: #DDDDFF;
+
+	borderColor: #000000;
+	borderAlpha: 0.84;
+	borderThickness: 0;
+	borderThicknessLeft: 0;
+	borderThicknessTop: 0;
+	borderThicknessBottom: 0;
+	borderThicknessRight: 0;
+
+	roundedBottomCorners: true;
+	cornerRadius: 3;
+
+	headerHeight: 30;
+	headerColors: #331100, #000000;
+	highlightAlphas: 0.3, 0.0;
+
+	backgroundAlpha: 0.9;
+	backgroundColor: #888888;
+
+	dropShadowEnabled: true;
+	shadowDistance: 1;
+	dropShadowColor: #444444;
+
+	paddingLeft:	5;
+	paddingRight:	5;
+	paddingTop:		5;
+	paddingBottom:	5;
+}
+
+Button {
+	color: #222222;
+	textRollOverColor: #444444;
+}
+
+ComboBox {
+	color: #111111;
+	textRollOverColor: #444444;
+}

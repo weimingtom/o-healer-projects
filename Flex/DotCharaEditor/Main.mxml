@@ -1017,6 +1017,9 @@
 							function(e:Event):void{
 								canvas_color.m_BitmapData_Index.draw(loader.content);
 								canvas_color.Redraw();
+
+								//ロード時の表示確認にも反映
+								Copy_Ori2Save_Canvas_C();
 							}
 						);
 					}
@@ -1047,6 +1050,9 @@
 							function(e:Event):void{
 								canvas_shade.m_BitmapData_Index.draw(loader.content);
 								canvas_shade.Redraw();
+
+								//ロード時の表示確認にも反映
+								Copy_Ori2Save_Canvas_S();
 							}
 						);
 					}
@@ -1111,6 +1117,9 @@
 									}
 								}
 							}
+
+							//ついでにセーブ画面の表示も更新
+							Copy_Ori2Save_Palette_C();
 						}
 					);
 				}
@@ -1203,6 +1212,9 @@
 									}
 								}
 							}
+
+							//ついでにセーブ画面の表示も更新
+							Copy_Ori2Save_Palette_S();
 						}
 					);
 				}
@@ -1240,6 +1252,13 @@
 				(new FileReference).save(result, "Palette_Shade.yaml");
 			}
 
+			public function Canvas_x(in_Ratio:Number):void{
+				canvas_color.scaleX = in_Ratio;
+				canvas_color.scaleY = in_Ratio;
+				canvas_shade.scaleX = in_Ratio;
+				canvas_shade.scaleY = in_Ratio;
+			}
+
 			public function Canvas_Color_x(in_Ratio:Number):void{
 				canvas_color.scaleX = in_Ratio;
 				canvas_color.scaleY = in_Ratio;
@@ -1253,6 +1272,11 @@
 			public function Canvas_SetCursorMode(in_Mode:int):void{
 				canvas_color.SetCursorMode(in_Mode);
 				canvas_shade.SetCursorMode(in_Mode);
+			}
+
+			public function Canvas_Draw(in_Mode:int):void{
+				canvas_color.SetDrawMode(in_Mode);
+				canvas_shade.SetDrawMode(in_Mode);
 			}
 
 			public function Canvas_Color_Draw(in_Mode:int):void{
@@ -1313,6 +1337,75 @@
 				label_color.text = str;
 			}
 //*/
+			public function OpenClose_Color():void{
+				if(area_color_picker.width == 0){
+					//Close => Open
+
+					//Open
+					area_color_picker.percentWidth = 100;
+
+					//Label
+					open_close_button_color.label = "←閉じる";
+				}else{
+					//Open => Close
+
+					//Close
+					area_color_picker.width = 0;
+
+					//Label
+					open_close_button_color.label = "色調整";
+				}
+			}
+
+			public function OpenClose_Shade():void{
+				if(area_shade_picker.width == 0){
+					//Close => Open
+
+					//Open
+					area_shade_picker.percentWidth = 100;
+
+					//Label
+					open_close_button_shade.label = "→閉じる";
+				}else{
+					//Open => Close
+
+					//Close
+					area_shade_picker.width = 0;
+
+					//Label
+					open_close_button_shade.label = "光陰調整";
+				}
+			}
+
+			private function Copy_Ori2Save_Palette_C():void{
+				var num:int = Palette_Color.PALETTE_NUM;
+
+				for(var index:int = 0; index < num; index++){
+					var color:uint = palette_c_color.GetColor(index);
+					save_palette_c_color.Redraw(color, index);
+				}
+			}
+
+			private function Copy_Ori2Save_Palette_S():void{
+				var num:int = Palette_Color.PALETTE_NUM;
+
+				for(var index:int = 0; index < num; index++){
+					var color:uint = palette_c_shade.GetColor(index);
+					save_palette_c_shade.Redraw(color, index);
+				}
+			}
+
+			private function Copy_Ori2Save_Canvas_C():void{
+				save_canvas_color.m_Bitmap.bitmapData = canvas_color.m_BitmapData.clone();
+			}
+
+			private function Copy_Ori2Save_Canvas_S():void{
+				save_canvas_shade.m_Bitmap.bitmapData = canvas_shade.m_BitmapData.clone();
+			}
+
+			private function Copy_Ori2Save_Canvas_Result():void{
+				save_canvas_result.m_Bitmap.bitmapData = canvas_result.m_BitmapData.clone();
+			}
 		]]>
 	</mx:Script>
 
@@ -1320,277 +1413,317 @@
 	<mx:Style source="style.css"/>
 
 	<!--View-->
-	<mx:HBox id="base_box" paddingTop="10">
-		<!--Space-->
-		<mx:Spacer width="100%"/>
+	<mx:ViewStack id="view_base" borderStyle="solid" width="100%" height="100%">
+		<mx:HBox id="view_base_draw" paddingTop="10">
+			<!--Space-->
+			<mx:Spacer width="100%"/>
 
-		<!--HSBA-->
-		<mx:VBox height="100%">
-			<mx:Panel title="色相・彩度(H_S)">
-				<comp:Palette_HS id="palette_hs_color"/>
-			</mx:Panel>
+			<!--HSBA-->
+			<mx:VBox id="area_color_picker" height="100%" width="0">
+				<mx:Panel title="色相・彩度(H_S)">
+					<comp:Palette_HS id="palette_hs_color"/>
+				</mx:Panel>
+
+				<!--Space-->
+				<mx:Spacer height="100%"/>
+
+				<mx:Panel title="輝度(L)"><!--Old:明度(B)-->
+					<comp:Palette_B  id="palette_b_color"/>
+				</mx:Panel>
+
+				<!--Space-->
+				<mx:Spacer height="100%"/>
+
+				<mx:Panel title="アルファ(A)">
+					<comp:Palette_A  id="palette_a_color"/>
+				</mx:Panel>
+
+	<!--
+				<mx:Spacer height="100%"/>
+
+				<mx:Label id="label_color" color="0xFFFFFF"/>
+	-->
+			</mx:VBox>
+
+			<!--Color-->
+			<mx:VBox horizontalAlign="center">
+				<mx:Panel title="色(Color)" paddingLeft="20" paddingRight="20">
+					<comp:Palette_Color id="palette_c_color"/>
+				</mx:Panel>
+
+				<!-- Open&Close Button -->
+				<mx:Button id="open_close_button_color" label="色調整" buttonDown="OpenClose_Color();"/>
+			</mx:VBox>
+
+			<!--Canvas : Color-->
+			<mx:VBox>
+				<!--Canvas-->
+				<mx:Panel title="履歴(History)" width="100%" layout="horizontal">
+					<mx:HBox id="history_color" horizontalScrollPolicy="on" height="48">
+					</mx:HBox>
+				</mx:Panel>
+
+				<!--Space-->
+				<mx:Spacer height="10%"/>
+
+				<!--Canvas-->
+				<mx:Panel title="「色」キャンバス(Canvas_Color)" width="100%" layout="horizontal">
+					<mx:Box id="box_canvas_color" verticalScrollPolicy="on" horizontalScrollPolicy="on">
+						<comp:Canvas_Zoom id="canvas_color"/>
+					</mx:Box>
+				</mx:Panel>
+			</mx:VBox>
 
 			<!--Space-->
-			<mx:Spacer height="100%"/>
+			<mx:Spacer width="100%"/>
 
-			<mx:Panel title="輝度(L)"><!--Old:明度(B)-->
-				<comp:Palette_B  id="palette_b_color"/>
-			</mx:Panel>
+			<!--Canvas : Result-->
+			<mx:VBox>
+				<!--Save & Load-->
+				<mx:Panel title="セーブ＆ロード(Save＆Load)" width="100%" layout="horizontal">
+					<mx:Button label="Save ＆ Load" buttonDown="view_base.selectedChild=view_base_save"/>
+				</mx:Panel>
+
+				<!--Space-->
+				<mx:Spacer height="100%"/>
+
+				<!--Canvas-->
+				<mx:Panel title="結果(Result)" width="100%">
+					<comp:Canvas_Result id="canvas_result"/>
+				</mx:Panel>
+
+				<!--Space-->
+				<mx:Spacer height="100%"/>
+
+				<!--Setting-->
+				<mx:Panel title="設定(Settings)" width="100%" layout="vertical">
+					<!--Combo : Size-->
+					<mx:HBox width="100%">
+						<mx:Label text="表示サイズ(Size)："/>
+						<mx:Spacer width="100%"/>
+						<mx:ComboBox id="combo_size" change="Canvas_x(combo_size.value as int)">
+							<mx:dataProvider>
+								<mx:Array>
+									<mx:Object label="x1" data="1" />
+									<mx:Object label="x2" data="2" />
+									<mx:Object label="x4" data="4" />
+									<mx:Object label="x8" data="8" />
+								</mx:Array>
+							</mx:dataProvider>
+						</mx:ComboBox>
+					</mx:HBox>
+
+					<!--Combo : Cursor-->
+					<mx:HBox width="100%">
+						<mx:Label text="カーソル(Cursor)："/>
+						<mx:Spacer width="100%"/>
+						<mx:ComboBox id="combo_cursor" change="Canvas_SetCursorMode(combo_cursor.value as int)">
+							<mx:dataProvider>
+								<mx:Array>
+									<mx:Object label="Normal" data="0" /><!--Canvas_Zoom.CURSOR_MODE_NORMAL-->
+									<mx:Object label="Mirror16" data="1" /><!--Canvas_Zoom.CURSOR_MODE_MIRROR_16_16-->
+									<mx:Object label="Mirror15" data="2" /><!--Canvas_Zoom.CURSOR_MODE_MIRROR_15_1_15-->
+								</mx:Array>
+							</mx:dataProvider>
+						</mx:ComboBox>
+					</mx:HBox>
+
+					<!--Combo : Draw-->
+					<mx:HBox width="100%">
+						<mx:Label text="描画方法(Draw)："/>
+						<mx:Spacer width="100%"/>
+						<mx:ComboBox id="combo_draw" change="Canvas_Draw(combo_draw.value as int)">
+							<mx:dataProvider>
+								<mx:Array>
+									<mx:Object label="Dot" data="0" /><!--Canvas_Zoom.DRAW_MODE_DOT-->
+									<mx:Object label="Fill" data="1" /><!--Canvas_Zoom.DRAW_MODE_FILL-->
+								</mx:Array>
+							</mx:dataProvider>
+						</mx:ComboBox>
+					</mx:HBox>
+
+					<mx:HBox width="100%">
+						<mx:Spacer width="100%"/>
+						<mx:Grid>
+							<mx:GridRow>
+								<mx:GridItem/>
+								<mx:GridItem> <mx:Button label="↑" buttonDown="ScrollBitmap( 0, -1)"/> </mx:GridItem>
+								<mx:GridItem/>
+							</mx:GridRow>
+							<mx:GridRow>
+								<mx:GridItem> <mx:Button label="←" buttonDown="ScrollBitmap(-1,  0)"/> </mx:GridItem>
+								<mx:GridItem horizontalAlign="center"> <mx:Label text="移動"/> </mx:GridItem>
+								<mx:GridItem> <mx:Button label="→" buttonDown="ScrollBitmap( 1,  0)"/> </mx:GridItem>
+							</mx:GridRow>
+							<mx:GridRow>
+								<mx:GridItem/>
+								<mx:GridItem> <mx:Button label="↓" buttonDown="ScrollBitmap( 0,  1)"/> </mx:GridItem>
+								<mx:GridItem/>
+							</mx:GridRow>
+						</mx:Grid>
+						<mx:Spacer width="100%"/>
+					</mx:HBox>
+				</mx:Panel>
+			</mx:VBox>
 
 			<!--Space-->
-			<mx:Spacer height="100%"/>
+			<mx:Spacer width="100%"/>
 
-			<mx:Panel title="アルファ(A)">
-				<comp:Palette_A  id="palette_a_color"/>
-			</mx:Panel>
+			<!--Canvas : Shade-->
+			<mx:VBox>
+				<!--Canvas-->
+				<mx:Panel title="履歴(History)" width="100%" layout="horizontal">
+					<mx:HBox id="history_shade" horizontalScrollPolicy="on" height="48">
+					</mx:HBox>
+				</mx:Panel>
 
-<!--
-			<mx:Spacer height="100%"/>
+				<!--Space-->
+				<mx:Spacer height="10%"/>
 
-			<mx:Label id="label_color" color="0xFFFFFF"/>
--->
-		</mx:VBox>
+				<!--Canvas-->
+				<mx:Panel title="「陰」キャンバス(Canvas_Shade)" width="100%" layout="horizontal">
+					<mx:Box id="box_canvas_shade" verticalScrollPolicy="on" horizontalScrollPolicy="on">
+						<comp:Canvas_Zoom id="canvas_shade"/>
+					</mx:Box>
+				</mx:Panel>
+			</mx:VBox>
 
-		<!--Color-->
-		<mx:VBox>
-			<mx:Panel title="色(Color)" paddingLeft="20" paddingRight="20">
-				<comp:Palette_Color id="palette_c_color"/>
-			</mx:Panel>
-		</mx:VBox>
+			<!--Color of Shade-->
+			<mx:VBox horizontalAlign="center">
+				<mx:Panel title="光陰(Shade)" paddingLeft="20" paddingRight="20">
+					<comp:Palette_Color id="palette_c_shade"/>
+				</mx:Panel>
 
-		<!--Canvas : Color-->
-		<mx:VBox>
-			<!--Button : Size-->
-			<mx:Panel title="キャンバスの倍率(Size)" width="100%" layout="horizontal">
-				<mx:Spacer width="100%"/>
-				<mx:RadioButtonGroup id="radio_color_size"/>
-				<mx:RadioButton groupName="radio_color_size" label="x1" buttonDown="Canvas_Color_x(1)" selected="true"/>
-				<mx:RadioButton groupName="radio_color_size" label="x2" buttonDown="Canvas_Color_x(2)" />
-				<mx:RadioButton groupName="radio_color_size" label="x4" buttonDown="Canvas_Color_x(4)" />
-				<mx:RadioButton groupName="radio_color_size" label="x8" buttonDown="Canvas_Color_x(8)" />
-				<mx:Spacer width="100%"/>
-			</mx:Panel>
+				<!-- Open&Close Button -->
+				<mx:Button id="open_close_button_shade" label="光陰調整" buttonDown="OpenClose_Shade();"/>
+			</mx:VBox>
+
+			<!--HSBA of Shade-->
+			<mx:VBox id="area_shade_picker" height="100%" width="0">
+				<mx:Panel title="色相・彩度(H_S)">
+					<comp:Palette_HS id="palette_hs_shade"/>
+				</mx:Panel>
+
+				<!--Space-->
+				<mx:Spacer height="100%"/>
+
+				<mx:Panel title="輝度(L)"><!--Old:明度(B)-->
+					<comp:Palette_B  id="palette_b_shade"/>
+				</mx:Panel>
+
+				<!--Space-->
+				<mx:Spacer height="100%"/>
+
+				<mx:Panel title="アルファ(A)">
+					<comp:Palette_A  id="palette_a_shade"/>
+				</mx:Panel>
+			</mx:VBox>
 
 			<!--Space-->
-			<mx:Spacer height="10%"/>
+			<mx:Spacer width="100%"/>
+		</mx:HBox>
+		<mx:HBox id="view_base_save" paddingTop="10">
+			<mx:TabNavigator id="tab_save" paddingTop="0" width="100%" height="100%">
+				<mx:HBox id="tab_save_file" label="ファイル(File)">
+					<mx:Spacer width="100%"/>
 
-			<!--Canvas-->
-			<mx:Panel title="履歴(History)" width="100%" layout="horizontal">
-				<mx:HBox id="history_color" horizontalScrollPolicy="on" height="48">
+					<!--Palette : Color-->
+					<mx:VBox height="100%">
+						<mx:Spacer height="100%"/>
+						<mx:Panel title="色(Color)">
+							<mx:Button label="↓ロード(Load)" buttonDown="Load_C_Palette()"/>
+							<mx:Spacer height="5"/>
+							<comp:Palette_Color id="save_palette_c_color" render="Copy_Ori2Save_Palette_C()"/>
+							<mx:Spacer height="5"/>
+							<mx:Button label="↓セーブ(Save)" buttonDown="Save_C_Palette()"/>
+						</mx:Panel>
+						<mx:Spacer height="100%"/>
+					</mx:VBox>
+
+					<mx:Spacer width="100%"/>
+
+					<!--Canvas : Color-->
+					<mx:VBox height="100%">
+						<mx:Spacer height="100%"/>
+						<mx:Panel title="「色」キャンバス(Canvas_Color)">
+							<mx:Button label="↓ロード(Load)" buttonDown="Load_C_Index()"/>
+							<mx:Spacer height="5"/>
+							<comp:Canvas_Zoom id="save_canvas_color" addedToStage="save_canvas_color.Init()" render="Copy_Ori2Save_Canvas_C()"/>
+							<mx:Spacer height="5"/>
+							<mx:Button label="↓セーブ(Save)" buttonDown="Save_C_Index()"/>
+							<mx:Spacer height="5"/>
+							<mx:Button label="↓セーブ：画像として(Save as Graphic)" buttonDown="Save_C()"/>
+						</mx:Panel>
+						<mx:Spacer height="100%"/>
+					</mx:VBox>
+
+					<mx:Spacer width="100%"/>
+
+					<!--Center-->
+					<mx:VBox height="100%" horizontalAlign="center">
+						<mx:Spacer height="100%"/>
+
+						<!--Return-->
+						<mx:Button label="戻る(Return)" buttonDown="view_base.selectedChild=view_base_draw"/>
+
+						<mx:Spacer height="100%"/>
+
+						<mx:Panel title="まとめて(Zip)">
+							<!--Load : All-->
+							<mx:Button label="まとめてロード(Load:Zip)" buttonDown="Load_All()"/>
+
+							<mx:Spacer height="40"/>
+
+							<comp:Canvas_Result id="save_canvas_result" render="Copy_Ori2Save_Canvas_Result()"/>
+
+							<mx:Spacer height="20"/>
+
+							<!--Save : Result-->
+							<mx:Button label="結果だけセーブ(Save:Result)" buttonDown="Save()"/>
+
+							<mx:Spacer height="40"/>
+
+							<!--Save : All-->
+							<mx:Button label="まとめてセーブ(Save:Zip)" buttonDown="Save_All()"/>
+						</mx:Panel>
+						<mx:Spacer height="100%"/>
+					</mx:VBox>
+
+					<mx:Spacer width="100%"/>
+
+					<!--Canvas : Shade-->
+					<mx:VBox height="100%">
+						<mx:Spacer height="100%"/>
+						<mx:Panel title="「陰」キャンバス(Canvas_Shade)">
+							<mx:Button label="↓ロード(Load)" buttonDown="Load_S_Index()"/>
+							<mx:Spacer height="5"/>
+							<comp:Canvas_Zoom id="save_canvas_shade" addedToStage="save_canvas_shade.Init()" render="Copy_Ori2Save_Canvas_S()"/>
+							<mx:Spacer height="5"/>
+							<mx:Button label="↓セーブ(Save)" buttonDown="Save_S_Index()"/>
+							<mx:Spacer height="5"/>
+							<mx:Button label="↓セーブ：画像として(Save as Graphic)" buttonDown="Save_S()"/>
+						</mx:Panel>
+						<mx:Spacer height="100%"/>
+					</mx:VBox>
+
+					<mx:Spacer width="100%"/>
+
+					<!--Palette : Shade-->
+					<mx:VBox height="100%">
+						<mx:Spacer height="100%"/>
+						<mx:Panel title="光陰(Shade)">
+							<mx:Button label="↓ロード(Load)" buttonDown="Load_S_Palette()"/>
+							<mx:Spacer height="5"/>
+							<comp:Palette_Color id="save_palette_c_shade" render="Copy_Ori2Save_Palette_S()"/>
+							<mx:Spacer height="5"/>
+							<mx:Button label="↓セーブ(Save)" buttonDown="Save_S_Palette()"/>
+						</mx:Panel>
+						<mx:Spacer height="100%"/>
+					</mx:VBox>
+
+					<mx:Spacer width="100%"/>
 				</mx:HBox>
-			</mx:Panel>
-
-			<!--Space-->
-			<mx:Spacer height="10%"/>
-
-			<!--Canvas-->
-			<mx:Panel title="「色」キャンバス(Canvas_Color)" width="100%" layout="horizontal">
-				<mx:Box id="box_canvas_color" verticalScrollPolicy="on" horizontalScrollPolicy="on">
-					<comp:Canvas_Zoom id="canvas_color"/>
-				</mx:Box>
-			</mx:Panel>
-
-			<!--Space-->
-			<mx:Spacer height="10%"/>
-
-			<!--Button : Draw-->
-			<mx:Panel title="描画方法(Draw)" width="100%" layout="horizontal">
-				<mx:Spacer width="100%"/>
-				<mx:RadioButtonGroup id="radio_color_draw"/>
-				<mx:RadioButton groupName="radio_color_draw" label="Dot"  buttonDown="Canvas_Color_Draw(Canvas_Zoom.DRAW_MODE_DOT)" selected="true"/>
-				<mx:RadioButton groupName="radio_color_draw" label="Fill" buttonDown="Canvas_Color_Draw(Canvas_Zoom.DRAW_MODE_FILL)" />
-				<mx:Spacer width="100%"/>
-			</mx:Panel>
-		</mx:VBox>
-
-		<!--Space-->
-		<mx:Spacer width="100%"/>
-
-		<!--Canvas : Result-->
-		<mx:VBox height="100%">
-			<!--Space-->
-			<mx:Spacer height="100%"/>
-
-			<!--Load-->
-			<mx:HBox width="100%">
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Load_All" buttonDown="Load_All()"/>
-				<mx:Spacer width="100%"/>
-			</mx:HBox>
-
-			<!--Load-->
-			<mx:HBox width="100%">
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Load_CI" buttonDown="Load_C_Index()"/>
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Load_SI" buttonDown="Load_S_Index()"/>
-				<mx:Spacer width="100%"/>
-			</mx:HBox>
-
-			<!--Load-->
-			<mx:HBox width="100%">
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Load_CP" buttonDown="Load_C_Palette()"/>
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Load_SP" buttonDown="Load_S_Palette()"/>
-				<mx:Spacer width="100%"/>
-			</mx:HBox>
-
-			<!--Button : Cursor-->
-			<mx:Panel title="カーソルのモード(Cursor_Mode)" width="100%" layout="horizontal">
-				<mx:Spacer width="100%"/>
-				<mx:RadioButtonGroup id="radio_cursor_mode"/>
-				<mx:RadioButton groupName="radio_cursor_mode" label="Normal"
-					buttonDown="Canvas_SetCursorMode(Canvas_Zoom.CURSOR_MODE_NORMAL)"/>
-				<mx:RadioButton groupName="radio_cursor_mode" label="Mirror16"
-					buttonDown="Canvas_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_16_16)"/>
-				<mx:RadioButton groupName="radio_cursor_mode" label="Mirror15"
-					buttonDown="Canvas_SetCursorMode(Canvas_Zoom.CURSOR_MODE_MIRROR_15_1_15)" selected="true"/>
-				<mx:Spacer width="100%"/>
-			</mx:Panel>
-
-			<!--Canvas-->
-			<mx:Panel title="結果(Result)" width="100%">
-				<comp:Canvas_Result id="canvas_result"/>
-			</mx:Panel>
-
-			<!--Save-->
-			<mx:HBox width="100%">
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Save_All" buttonDown="Save_All()"/>
-				<mx:Spacer width="100%"/>
-			</mx:HBox>
-
-			<!--Save-->
-			<mx:HBox width="100%">
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Save_C" buttonDown="Save_C()"/>
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Save_S" buttonDown="Save_S()"/>
-				<mx:Spacer width="100%"/>
-			</mx:HBox>
-
-			<!--Save-->
-			<mx:HBox width="100%">
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Save_CI" buttonDown="Save_C_Index()"/>
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Save_SI" buttonDown="Save_S_Index()"/>
-				<mx:Spacer width="100%"/>
-			</mx:HBox>
-
-			<!--Save-->
-			<mx:HBox width="100%">
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Save_CP" buttonDown="Save_C_Palette()"/>
-				<mx:Spacer width="100%"/>
-				<mx:Button label="Save_SP" buttonDown="Save_S_Palette()"/>
-				<mx:Spacer width="100%"/>
-			</mx:HBox>
-
-			<!--Space-->
-			<mx:Spacer height="20"/>
-
-			<mx:HBox width="100%">
-				<mx:Spacer width="100%"/>
-				<mx:Grid>
-					<mx:GridRow>
-						<mx:GridItem/>
-						<mx:GridItem> <mx:Button label="↑" buttonDown="ScrollBitmap( 0, -1)"/> </mx:GridItem>
-						<mx:GridItem/>
-					</mx:GridRow>
-					<mx:GridRow>
-						<mx:GridItem> <mx:Button label="←" buttonDown="ScrollBitmap(-1,  0)"/> </mx:GridItem>
-						<mx:GridItem/>
-						<mx:GridItem> <mx:Button label="→" buttonDown="ScrollBitmap( 1,  0)"/> </mx:GridItem>
-					</mx:GridRow>
-					<mx:GridRow>
-						<mx:GridItem/>
-						<mx:GridItem> <mx:Button label="↓" buttonDown="ScrollBitmap( 0,  1)"/> </mx:GridItem>
-						<mx:GridItem/>
-					</mx:GridRow>
-				</mx:Grid>
-				<mx:Spacer width="100%"/>
-			</mx:HBox>
-
-			<!--Space-->
-			<mx:Spacer height="100%"/>
-		</mx:VBox>
-
-		<!--Space-->
-		<mx:Spacer width="100%"/>
-
-		<!--Canvas : Shade-->
-		<mx:VBox>
-			<!--Button : Size-->
-			<mx:Panel title="キャンバスの倍率(Size)" width="100%" layout="horizontal">
-				<mx:Spacer width="100%"/>
-				<mx:RadioButtonGroup id="radio_shade_size"/>
-				<mx:RadioButton groupName="radio_shade_size" label="x1" buttonDown="Canvas_Shade_x(1)" selected="true"/>
-				<mx:RadioButton groupName="radio_shade_size" label="x2" buttonDown="Canvas_Shade_x(2)" />
-				<mx:RadioButton groupName="radio_shade_size" label="x4" buttonDown="Canvas_Shade_x(4)" />
-				<mx:RadioButton groupName="radio_shade_size" label="x8" buttonDown="Canvas_Shade_x(8)" />
-				<mx:Spacer width="100%"/>
-			</mx:Panel>
-
-			<!--Space-->
-			<mx:Spacer height="10%"/>
-
-			<!--Canvas-->
-			<mx:Panel title="履歴(History)" width="100%" layout="horizontal">
-				<mx:HBox id="history_shade" horizontalScrollPolicy="on" height="48">
-				</mx:HBox>
-			</mx:Panel>
-
-			<!--Space-->
-			<mx:Spacer height="10%"/>
-
-			<!--Canvas-->
-			<mx:Panel title="「陰」キャンバス(Canvas_Shade)" width="100%" layout="horizontal">
-				<mx:Box id="box_canvas_shade" verticalScrollPolicy="on" horizontalScrollPolicy="on">
-					<comp:Canvas_Zoom id="canvas_shade"/>
-				</mx:Box>
-			</mx:Panel>
-
-			<!--Space-->
-			<mx:Spacer height="10%"/>
-
-			<!--Button : Draw-->
-			<mx:Panel title="描画方法(Draw)" width="100%" layout="horizontal">
-				<mx:Spacer width="100%"/>
-				<mx:RadioButtonGroup id="radio_shade_draw"/>
-				<mx:RadioButton groupName="radio_shade_draw" label="Dot"  buttonDown="Canvas_Shade_Draw(Canvas_Zoom.DRAW_MODE_DOT)" selected="true"/>
-				<mx:RadioButton groupName="radio_shade_draw" label="Fill" buttonDown="Canvas_Shade_Draw(Canvas_Zoom.DRAW_MODE_FILL)" />
-				<mx:Spacer width="100%"/>
-			</mx:Panel>
-		</mx:VBox>
-
-		<!--Color of Shade-->
-		<mx:VBox>
-			<mx:Panel title="光陰(Shade)" paddingLeft="20" paddingRight="20">
-				<comp:Palette_Color id="palette_c_shade"/>
-			</mx:Panel>
-		</mx:VBox>
-
-		<!--HSBA of Shade-->
-		<mx:VBox height="100%">
-			<mx:Panel title="色相・彩度(H_S)">
-				<comp:Palette_HS id="palette_hs_shade"/>
-			</mx:Panel>
-
-			<!--Space-->
-			<mx:Spacer height="100%"/>
-
-			<mx:Panel title="輝度(L)"><!--Old:明度(B)-->
-				<comp:Palette_B  id="palette_b_shade"/>
-			</mx:Panel>
-
-			<!--Space-->
-			<mx:Spacer height="100%"/>
-
-			<mx:Panel title="アルファ(A)">
-				<comp:Palette_A  id="palette_a_shade"/>
-			</mx:Panel>
-		</mx:VBox>
-	</mx:HBox>
+			</mx:TabNavigator>
+		</mx:HBox>
+	</mx:ViewStack>
 </mx:Application>

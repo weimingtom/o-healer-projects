@@ -153,7 +153,7 @@ package{
 		}
 
 		//!stageなどの初期化が終了した後に呼んでもらう
-		public function Init(e:Event):void{
+		public function Init(e:Event=null):void{
 			//==Common Init==
 			{
 				//自身の幅を設定しておく
