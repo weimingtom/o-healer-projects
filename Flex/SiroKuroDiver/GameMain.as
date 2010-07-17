@@ -1,19 +1,18 @@
 /*
+　地味に色々と集大成
+　・移動アルゴリズム＝簡易移動アルゴリズムとBox2Dの統合版
+　・GraphicsもBitmapもfiltersもmaskも利用
+　・高速化：DirtyRect、事前計算
+
+
 　ToDo
-　・ブロック移動時の再描画がまだうまくいかない
-　　・周辺の地形によるコリジョンを消してしまう
-　・ブロック移動時に重くなりすぎる
-　　・もっと高速化を
-　　　・黒いブロックを動かしたときは、「メイン」「白用」だけ更新して、「黒用」は更新しない
-　　　・Drawで共有できる部分は共有
-　　　・Glow意外で幅を広くする方法はない？
-　・プレイヤーが黒いエリアに入ったら黒いブロックのコリジョンとはぶつからないようにしたい
-　・ゲートの可視化
-　・ブロックが壁にぶつかったらBox2Dもそういう風に判定させる
-　・プレイヤーのコリジョンを半分くらいにする
-　・ブロックのコリジョンを縦長に
+　・ブロックが壁にぶつかったらBox2Dもそういう風に判定させる（めりこませないように）
 　・リスタート対応
 　・ちゃんとしたゴール処理
+
+　・ゲートに一回り大きな抜きを仕込みたい（AsBlock描画時に少し大きくすればOKか）
+　・白ブロックの作成
+　　・抜きの対応
 */
 
 
@@ -45,24 +44,41 @@ package {
 		static public const G:int = 100;
 		static public const B:int = 200;
 		static public const MAP:Array = [
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, O, O, O, O, O, O, O, O, X, X, X, X, X, X, X],
-			[X, O, O, O, O, O, X, V, X, X, X, X, X, X, X, X],
-			[X, P, O, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, O, O, O, O, X, X, X],
-			[X, X, X, O, O, O, B, O, O, O, O, G, O, X, X, X],
-			[X, X, X, O, O, X, X, X, X, X, O, X, X, X, X, X],
-			[X, X, X, X, O, X, X, X, V, X, O, X, X, X, X, X],
-			[X, X, X, X, O, O, O, O, O, X, O, X, X, X, X, X],
-			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, O, O, O, O, O, O, O, O, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, O, O, O, O, X, X, V, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, P, O, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, X, V, X, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, V, X, O, O, O, O, O, X, X, X, X, X, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, O, O, O, O, B, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, X, X, X, X, X, X, X, X, X, X, X],
+			[X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, X, X, X, X, X, X, X, X, X, X, X],
+			[X, X, X, X, X, X, O, O, O, O, O, O, O, O, O, O, B, O, O, X, X, X, X, X, X, X, X, X, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, B, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, X, X, X, X, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, X, X, X, X, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, X, X, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, X, V, X, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, X, X, X, X, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, O, O, O, O, O, O, O, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, V, O, O, O, O, O, V, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, V, O, O, O, O, O, V, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, V, O, O, O, O, O, V, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, O, X, V, O, O, O, O, O, V, X, O],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, V, O, O, O, O, O, V, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, V, O, O, G, O, O, V, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
+			[X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
 		];
 
 
@@ -99,6 +115,9 @@ package {
 		public var m_BitmapData_Collision:BitmapData;
 		public var m_BitmapData_Collision_ForBlackBlock:BitmapData;
 		public var m_BitmapData_Collision_ForWhiteBlock:BitmapData;
+
+		//高速化用事前計算
+		public var m_BitmapData_Pre_TerrainAsBlack:BitmapData;
 
 		//汎用ビットマップ（地形の計算に利用する）
 		public var m_BitmapData_Util_0:BitmapData;
@@ -342,6 +361,18 @@ package {
 				m_Layer_Root.addChild(new Goal(GoalX, GoalY));
 			}
 
+			//Bitmap : 事前計算
+			{
+				//m_BitmapData_Pre_TerrainAsBlack
+				{
+					m_BitmapData_Pre_TerrainAsBlack = new BitmapData(W, H, true, 0x00000000);
+
+					const mtx_identity:Matrix = new Matrix();
+					const ct_black:ColorTransform = new ColorTransform(0,0,0,1);
+					m_BitmapData_Pre_TerrainAsBlack.draw(m_Layer_Terrain, mtx_identity, ct_black, BlendMode.NORMAL, m_BitmapData_Pre_TerrainAsBlack.rect);
+				}
+			}
+
 			//Bitmap : Util
 			{
 				m_BitmapData_Util_0 = new BitmapData(W, H, true, 0x00000000);
@@ -426,14 +457,23 @@ package {
 		//地形コリジョン生成
 		public function RedrawCollision(in_Rect:Rectangle, in_Pos:Point):void
 		{
+/*
 			//Dirtyな部分（今は全体描画になってる）
 			var rect:Rectangle = in_Rect;//m_Bitmap_Terrain.rect;
+			var rect_wide:Rectangle = new Rectangle(in_Rect.x-PANEL_LEN, in_Rect.y-PANEL_LEN, in_Rect.width+2*PANEL_LEN, in_Rect.height+2*PANEL_LEN);
+			if(rect_wide.left < 0){rect_wide.left = 0;}
+			if(rect_wide.right > W){rect_wide.right = W;}
+			if(rect_wide.top  < 0){rect_wide.top = 0;}
+			if(rect_wide.bottom > H){rect_wide.bottom = H;}
 			var pos:Point = in_Pos;//new Point(0,0);
 
 			const mtx_identity:Matrix = new Matrix();
 
 			//m_BitmapData_Collision
 			{
+				pos.x = rect_wide.x;
+				pos.y = rect_wide.y;
+
 				//Reset
 				{//rectより一回り大きい範囲をクリアするだけでよいが、一応全てリセット
 					m_BitmapData_Util_0.fillRect(m_BitmapData_Util_0.rect, 0x00000000);
@@ -444,32 +484,35 @@ package {
 				{
 					//強制的に黒く描画
 					const ct_black:ColorTransform = new ColorTransform(0,0,0,1);
-					m_BitmapData_Util_0.draw(m_Layer_Terrain, mtx_identity, ct_black, BlendMode.NORMAL, rect);
-					m_BitmapData_Util_0.draw(m_Layer_Block_Black, mtx_identity, ct_black, BlendMode.NORMAL, rect);
+					m_BitmapData_Util_0.draw(m_Layer_Terrain, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
+					m_BitmapData_Util_0.draw(m_Layer_Block_Black, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
 
 					//白でブラー
 					const blur_white:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 2,2, 255);//幅が１でOKなら１で。
-					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect, pos, blur_white);
-					//ここでブラーの影響がrectの内部に出ないようにしたい
-					//影響が出るようなら、「切り出し部分」よりも小さく「貼りつけ部分」を設定すること（このスコープと下のスコープのrectを別にする）
+					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect_wide, pos, blur_white);
 
 					//ゲート部分を描き足す
-					m_BitmapData_Util_1.draw(m_Layer_GateAsBlock, mtx_identity, ct_black, BlendMode.NORMAL, rect);
+					m_BitmapData_Util_1.draw(m_Layer_GateAsBlock, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
 
 					//Rの値をAにセット：白は白のまま、黒かった部分は透明に。
-					m_BitmapData_Util_0.copyChannel(m_BitmapData_Util_1, rect, pos, BitmapDataChannel.RED, BitmapDataChannel.ALPHA);
+					m_BitmapData_Util_0.copyChannel(m_BitmapData_Util_1, rect_wide, pos, BitmapDataChannel.RED, BitmapDataChannel.ALPHA);
 				}
 
 				//そしてその境界線を膨らませて、実際のコリジョン描画にする
 				{
 					//横に伸ばす
-					const blur_x:GlowFilter = new GlowFilter(0xFFFFFF,1.0, PANEL_LEN*3/5,1, 255);
-					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect, pos, blur_x);
+//					const blur_x:GlowFilter = new GlowFilter(0xFFFFFF,1.0, PANEL_LEN*3/5,1, 255);
+					const blur_x:GlowFilter = new GlowFilter(0x888888,1.0, PANEL_LEN*3/5,1, 255);
+					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect_wide, pos, blur_x);
 
 					//縦に伸ばす
-					const blur_y:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 1,PANEL_LEN*3/5, 255);
-					m_BitmapData_Util_0.applyFilter(m_BitmapData_Util_1, rect, pos, blur_y);
+//					const blur_y:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 1,PANEL_LEN*3/5, 255);
+					const blur_y:GlowFilter = new GlowFilter(0x888888,1.0, 1,PANEL_LEN*3/5, 255);
+					m_BitmapData_Util_0.applyFilter(m_BitmapData_Util_1, rect_wide, pos, blur_y);
 				}
+
+				pos.x = rect.x;
+				pos.y = rect.y;
 
 				//それを実際のコリジョンに移す
 				{
@@ -480,6 +523,9 @@ package {
 			//m_BitmapData_Collision_ForBlackBlock
 			if(m_DirtyFlag_ForBlackBlock)
 			{
+				pos.x = rect_wide.x;
+				pos.y = rect_wide.y;
+
 				//Reset
 				{//rectより一回り大きい範囲をクリアするだけでよいが、一応全てリセット
 					m_BitmapData_Util_0.fillRect(m_BitmapData_Util_0.rect, 0x00000000);
@@ -490,35 +536,156 @@ package {
 				{
 					//強制的に黒く描画
 //					const ct_black:ColorTransform = new ColorTransform(0,0,0,1);
-					m_BitmapData_Util_0.draw(m_Layer_Terrain, mtx_identity, ct_black, BlendMode.NORMAL, rect);
-					m_BitmapData_Util_0.draw(m_Layer_GateAsBlock, mtx_identity, ct_black, BlendMode.NORMAL, rect);
+					m_BitmapData_Util_0.draw(m_Layer_Terrain, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
+					m_BitmapData_Util_0.draw(m_Layer_GateAsBlock, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
 
 					//白でブラー
 //					const blur_white:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 2,2, 255);//幅が１でOKなら１で。
-					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect, pos, blur_white);
-					//ここでブラーの影響がrectの内部に出ないようにしたい
-					//影響が出るようなら、「切り出し部分」よりも小さく「貼りつけ部分」を設定すること（このスコープと下のスコープのrectを別にする）
+					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect_wide, pos, blur_white);
 
 					//Rの値をAにセット：白は白のまま、黒かった部分は透明に。
-					m_BitmapData_Util_0.copyChannel(m_BitmapData_Util_1, rect, pos, BitmapDataChannel.RED, BitmapDataChannel.ALPHA);
+					m_BitmapData_Util_0.copyChannel(m_BitmapData_Util_1, rect_wide, pos, BitmapDataChannel.RED, BitmapDataChannel.ALPHA);
 				}
 
 				//そしてその境界線を膨らませて、実際のコリジョン描画にする
 				{
 					//横に伸ばす
-//					const blur_x:GlowFilter = new GlowFilter(0xFFFFFF,1.0, PANEL_LEN/2-1,1, 255);
-					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect, pos, blur_x);
+//					const blur_x_for_block:GlowFilter = new GlowFilter(0xFFFFFF,1.0, PANEL_LEN-4,1, 255);
+					const blur_x_for_block:GlowFilter = new GlowFilter(0x888888,1.0, PANEL_LEN*3/4,1, 255);
+					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect_wide, pos, blur_x_for_block);
 
 					//縦に伸ばす
-//					const blur_y:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 1,PANEL_LEN/2-1, 255);
-					m_BitmapData_Util_0.applyFilter(m_BitmapData_Util_1, rect, pos, blur_y);
+//					const blur_y_for_block:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 1,PANEL_LEN-4, 255);
+					const blur_y_for_block:GlowFilter = new GlowFilter(0x888888,1.0, 1,PANEL_LEN*3/4, 255);
+					m_BitmapData_Util_0.applyFilter(m_BitmapData_Util_1, rect_wide, pos, blur_y_for_block);
 				}
+
+				pos.x = rect.x;
+				pos.y = rect.y;
 
 				//それを実際のコリジョンに移す
 				{
 					m_BitmapData_Collision_ForBlackBlock.copyPixels(m_BitmapData_Util_0, rect, pos);
 				}
 			}
+/*/
+			//上でコメントアウトした処理の高速化版
+			//Dirtyな部分（今は全体描画になってる）
+			var rect:Rectangle = in_Rect;//m_Bitmap_Terrain.rect;
+			var rect_wide:Rectangle = new Rectangle(in_Rect.x-PANEL_LEN, in_Rect.y-PANEL_LEN, in_Rect.width+2*PANEL_LEN, in_Rect.height+2*PANEL_LEN);
+			if(rect_wide.left < 0){rect_wide.left = 0;}
+			if(rect_wide.right > W){rect_wide.right = W;}
+			if(rect_wide.top  < 0){rect_wide.top = 0;}
+			if(rect_wide.bottom > H){rect_wide.bottom = H;}
+			var pos:Point = in_Pos;//new Point(0,0);
+
+			const mtx_identity:Matrix = new Matrix();
+
+			//m_BitmapData_Collision
+			{
+				pos.x = rect_wide.x;
+				pos.y = rect_wide.y;
+
+				//Reset
+				{//rectより一回り大きい範囲をクリアするだけでよいが、一応全てリセット
+//					m_BitmapData_Util_0.fillRect(m_BitmapData_Util_0.rect, 0x00000000);
+					m_BitmapData_Util_0.copyPixels(m_BitmapData_Pre_TerrainAsBlack, rect_wide, pos);
+					//m_BitmapData_Util_1.fillRect(rect_wide, 0x00000000);
+				}
+
+				//まずは白と黒の境界線が描画されたものを用意する
+				{
+					//強制的に黒く描画
+					const ct_black:ColorTransform = new ColorTransform(0,0,0,1);
+//					m_BitmapData_Util_0.draw(m_Layer_Terrain, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
+					m_BitmapData_Util_0.draw(m_Layer_Block_Black, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
+
+					//白でブラー
+					const blur_white:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 2,2, 255);//幅が１でOKなら１で。
+					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect_wide, pos, blur_white);
+
+					//ゲート部分を描き足す
+					m_BitmapData_Util_1.draw(m_Layer_GateAsBlock, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
+
+					//Rの値をAにセット：白は白のまま、黒かった部分は透明に。
+					m_BitmapData_Util_0.copyChannel(m_BitmapData_Util_1, rect_wide, pos, BitmapDataChannel.RED, BitmapDataChannel.ALPHA);
+				}
+
+				//そしてその境界線を膨らませて、実際のコリジョン描画にする
+				{
+					//横に伸ばす
+//					const blur_x:GlowFilter = new GlowFilter(0xFFFFFF,1.0, PANEL_LEN*3/5,1, 255);
+					const blur_x:GlowFilter = new GlowFilter(0x888888,1.0, PANEL_LEN*3/5,1, 255);
+					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect_wide, pos, blur_x);
+
+					//縦に伸ばす
+//					const blur_y:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 1,PANEL_LEN*3/5, 255);
+					const blur_y:GlowFilter = new GlowFilter(0x888888,1.0, 1,PANEL_LEN*3/5, 255);
+//					m_BitmapData_Util_0.applyFilter(m_BitmapData_Util_1, rect_wide, pos, blur_y);
+				}
+
+				pos.x = rect.x;
+				pos.y = rect.y;
+
+				//それを実際のコリジョンに移す
+				{
+//					m_BitmapData_Collision.copyPixels(m_BitmapData_Util_0, rect, pos);
+					m_BitmapData_Collision.applyFilter(m_BitmapData_Util_1, rect, pos, blur_y);
+				}
+			}
+
+			//m_BitmapData_Collision_ForBlackBlock
+			if(m_DirtyFlag_ForBlackBlock)
+			{
+				pos.x = rect_wide.x;
+				pos.y = rect_wide.y;
+
+				//Reset
+				{//rectより一回り大きい範囲をクリアするだけでよいが、一応全てリセット
+//					m_BitmapData_Util_0.fillRect(m_BitmapData_Util_0.rect, 0x00000000);
+					m_BitmapData_Util_0.copyPixels(m_BitmapData_Pre_TerrainAsBlack, rect_wide, pos);
+//					m_BitmapData_Util_1.fillRect(m_BitmapData_Util_1.rect, 0x00000000);
+				}
+
+				//まずは白と黒の境界線が描画されたものを用意する
+				{
+					//強制的に黒く描画
+//					const ct_black:ColorTransform = new ColorTransform(0,0,0,1);
+//					m_BitmapData_Util_0.draw(m_Layer_Terrain, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
+					m_BitmapData_Util_0.draw(m_Layer_GateAsBlock, mtx_identity, ct_black, BlendMode.NORMAL, rect_wide);
+
+					//白でブラー
+//					const blur_white:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 2,2, 255);//幅が１でOKなら１で。
+					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect_wide, pos, blur_white);
+
+					//Rの値をAにセット：白は白のまま、黒かった部分は透明に。
+					m_BitmapData_Util_0.copyChannel(m_BitmapData_Util_1, rect_wide, pos, BitmapDataChannel.RED, BitmapDataChannel.ALPHA);
+				}
+
+				//そしてその境界線を膨らませて、実際のコリジョン描画にする
+				{
+					//横に伸ばす
+//					const blur_x_for_block:GlowFilter = new GlowFilter(0xFFFFFF,1.0, PANEL_LEN-4,1, 255);
+//					const blur_x_for_block:GlowFilter = new GlowFilter(0x888888,1.0, PANEL_LEN*3/4+1,1, 255);
+					const blur_x_for_block:GlowFilter = new GlowFilter(0x888888,1.0, PANEL_LEN-4,1, 255);
+					m_BitmapData_Util_1.applyFilter(m_BitmapData_Util_0, rect_wide, pos, blur_x_for_block);
+
+					//縦に伸ばす
+//					const blur_y_for_block:GlowFilter = new GlowFilter(0xFFFFFF,1.0, 1,PANEL_LEN-4, 255);
+//					const blur_y_for_block:GlowFilter = new GlowFilter(0x888888,1.0, 1,PANEL_LEN*3/4+1, 255);
+					const blur_y_for_block:GlowFilter = new GlowFilter(0x888888,1.0, 1,PANEL_LEN-4, 255);
+					m_BitmapData_Util_0.applyFilter(m_BitmapData_Util_1, rect_wide, pos, blur_y_for_block);
+				}
+
+				pos.x = rect.x;
+				pos.y = rect.y;
+
+				//それを実際のコリジョンに移す
+				{
+					m_BitmapData_Collision_ForBlackBlock.copyPixels(m_BitmapData_Util_0, rect, pos);
+				}
+			}
+//*/
 		}
 
 
@@ -653,14 +820,18 @@ internal class IGameObject extends Sprite{
 
 	public var m_Body:b2Body;
 
+	//#StartPos
+	public var m_StartPosX:int = 0;
+	public var m_StartPosY:int = 0;
+
 	public var m_AX:Number = 0.0;
 	public var m_VY:Number = 0.0;
 
 	public var m_GroundFlag:Boolean = false;
 
 	//Collision
-	static public var m_ShapeDef_Black:b2PolygonDef;
-	static public var m_ShapeDef_White:b2PolygonDef;
+	public var m_ShapeDef_Black:b2PolygonDef;
+	public var m_ShapeDef_White:b2PolygonDef;
 
 	//#Debug
 	public var m_TrgShape:Shape = new Shape();
@@ -669,11 +840,11 @@ internal class IGameObject extends Sprite{
 	//==Function==
 
 	//Init
-    public function IGameObject(in_PhysWorld:b2World, in_X:int, in_Y:int, in_IsBlack:Boolean){
+    public function IGameObject(in_PhysWorld:b2World, in_X:int, in_Y:int, in_ColW:Number, in_ColH:Number, in_IsBlack:Boolean){
     	//Pos
     	{
-    		this.x = in_X;
-    		this.y = in_Y;
+    		this.x = m_StartPosX = in_X;
+    		this.y = m_StartPosY = in_Y;
     	}
 
     	//Phys
@@ -693,22 +864,28 @@ internal class IGameObject extends Sprite{
 			{
     			//Shape
 //				const COL_W:Number = GameMain.PANEL_LEN/2 / PHYS_SCALE;
-				const COL_W:Number = GameMain.PANEL_LEN*6/10 / PHYS_SCALE;
-				if(m_ShapeDef_Black == null){
+//				const COL_W:Number = GameMain.PANEL_LEN*6/10 / PHYS_SCALE;
+				const COL_W:Number = in_ColW/2 / PHYS_SCALE;
+				const COL_H:Number = in_ColH/2 / PHYS_SCALE;
+				{//m_ShapeDef_Black
 					m_ShapeDef_Black = new b2PolygonDef();
-					m_ShapeDef_Black.SetAsBox(COL_W, COL_W);
+					m_ShapeDef_Black.SetAsBox(COL_W, COL_H);
 					m_ShapeDef_Black.density = 1.0;
 					m_ShapeDef_Black.friction = 0.0;
 					//m_ShapeDef_Black.restitution = i_Param.restitution;
+
+					//同じ色同士でしかぶつからない
 					m_ShapeDef_Black.filter.categoryBits = (1 << 0);
 					m_ShapeDef_Black.filter.maskBits = (1 << 0);
 				}
-				if(m_ShapeDef_White == null){
+				{//m_ShapeDef_White
 					m_ShapeDef_White = new b2PolygonDef();
-					m_ShapeDef_White.SetAsBox(COL_W, COL_W);
+					m_ShapeDef_White.SetAsBox(COL_W, COL_H);
 					m_ShapeDef_White.density = 1.0;
 					m_ShapeDef_White.friction = 0.0;
 					//m_ShapeDef_White.restitution = i_Param.restitution;
+
+					//同じ色同士でしかぶつからない
 					m_ShapeDef_White.filter.categoryBits = (1 << 1);
 					m_ShapeDef_White.filter.maskBits = (1 << 1);
 				}
@@ -731,11 +908,39 @@ internal class IGameObject extends Sprite{
 			//addChild(m_TrgShape);//ここのコメントを外すと、移動方向の可視化
 		}
 
+    	//Call Reset
+    	{
+			addEventListener(
+				Event.ADDED_TO_STAGE,//stageに触れるようになるまで遅延
+				function(e:Event):void{
+		    		stage.addEventListener(
+						KeyboardEvent.KEY_DOWN,
+						function(e:KeyboardEvent):void{
+							switch(e.keyCode){
+							case 82://KEY_R
+								Reset();
+								break;
+							}
+						}
+					);
+				}
+			);
+    	}
+
 		//Call Update
 		{
 			addEventListener(Event.ENTER_FRAME, Update);
 		}
     }
+
+	//Reset
+	public function Reset():void{
+		//位置を初期化するだけ
+		this.x = m_StartPosX;
+		this.y = m_StartPosY;
+
+		m_Body.SetXForm(new b2Vec2(this.x / PHYS_SCALE, this.y / PHYS_SCALE), m_Body.GetAngle());
+	}
 
 	//Update
 	public function Update(e:Event=null):void{//in_DeltaTime:Number
@@ -915,10 +1120,6 @@ internal class Player extends IGameObject{
 
 	//==Var==
 
-	//#StartPos
-	public var m_StartPosX:int = 0;
-	public var m_StartPosY:int = 0;
-
 	//#Graphic
 	public var m_Root:Sprite = new Sprite();
 
@@ -935,13 +1136,15 @@ internal class Player extends IGameObject{
 		//Super
 		{
 			var IsBlack:Boolean = true;
-			super(in_PhysWorld, in_X, in_Y, IsBlack);
+			const COL_W:Number = GameMain.PANEL_LEN-2;
+			const COL_H:Number = GameMain.PANEL_LEN-2;//8;
+			super(in_PhysWorld, in_X, in_Y, COL_W, COL_H, IsBlack);
 		}
 
 		//Pos
 		{
-			this.x = m_StartPosX = in_X;
-			this.y = m_StartPosY = in_Y;
+			this.x = in_X;
+			this.y = in_Y;
 		}
 
 		//Init Later (for Using "stage" etc.)
@@ -963,7 +1166,7 @@ internal class Player extends IGameObject{
 
 		//Create Graphic
 		{
-			const Rad:int = GameMain.PANEL_LEN/4;
+			const Rad:int = GameMain.PANEL_LEN/4+1;
 
 			var shape:Shape;
 			var g:Graphics;
@@ -1011,17 +1214,11 @@ internal class Player extends IGameObject{
 	}
 
 	//#Input
-	static public const KEY_R:int = 82;
 	public function KeyDown(e:KeyboardEvent):void{
 		switch(e.keyCode){
 		case Keyboard.LEFT:		m_Input[BUTTON_L] = true;		break;
 		case Keyboard.RIGHT:	m_Input[BUTTON_R] = true;		break;
 		case Keyboard.UP:		m_Input[BUTTON_U] = true;		break;
-
-		case KEY_R://位置のリセット
-			this.x = m_StartPosX;
-			this.y = m_StartPosY;
-			break;
 		}
 	}
 
@@ -1143,19 +1340,20 @@ internal class MovableBlock extends IGameObject{
 	public function MovableBlock(in_PhysWorld:b2World, in_X:int, in_Y:int){
 		//Super
 		{
-			super(in_PhysWorld, in_X, in_Y, m_IsBlack);
+			const COL_W:Number = GameMain.PANEL_LEN+1;
+			super(in_PhysWorld, in_X, in_Y, COL_W, COL_W, m_IsBlack);
 		}
 
-		const BlockW:int = GameMain.PANEL_LEN;//*3/2;//+2;
-		const BlockH:int = GameMain.PANEL_LEN*3/2;//*3/2;//+2;
-		const OffsetY:int = -GameMain.PANEL_LEN/8;
+		const BlockW:int = GameMain.PANEL_LEN+2;//*3/2;//+2;
+		const BlockH:int = GameMain.PANEL_LEN+2;//*3/2;//*3/2;//+2;
+		const OffsetY:int = 0;//-1;//GameMain.PANEL_LEN/8;
 
 		//Graphic
 		{
 			var shape:Shape = new Shape();
 			var g:Graphics = shape.graphics;
 			{
-				g.lineStyle(2, 0x444444, 1.0);
+				g.lineStyle(2, 0x888888, 1.0);
 //				g.lineStyle(0, 0x000000, 0.0);
 				g.beginFill(0x000000, 1.0);
 				g.drawRect(-BlockW/2, -BlockH/2+OffsetY, BlockW, BlockH);
@@ -1170,7 +1368,7 @@ internal class MovableBlock extends IGameObject{
 			g = m_MaskForPlayer.graphics;
 			if(m_IsBlack)
 			{
-				g.lineStyle(2, 0x444444, 1.0);
+				g.lineStyle(2, 0x888888, 1.0);
 				g.beginFill(0x000000, 1.0);
 				g.drawRect(-BlockW/2, -BlockH/2+OffsetY, BlockW, BlockH);
 				g.endFill();
@@ -1240,6 +1438,8 @@ internal class MovableBlock extends IGameObject{
 
 //*
 internal class Goal extends Sprite{
+	public var m_GoalFlag:Boolean = false;
+
 	public function Goal(in_X:int, in_Y:int){
 		//Pos
 		{
@@ -1257,6 +1457,25 @@ internal class Goal extends Sprite{
 			shape.filters = [new GlowFilter(0xFF0000, 1.0)];
 
 			addChild(shape);
+		}
+
+		//Call Reset
+		{
+			addEventListener(
+				Event.ADDED_TO_STAGE,//stageに触れるようになるまで遅延
+				function(e:Event):void{
+		    		stage.addEventListener(
+						KeyboardEvent.KEY_DOWN,
+						function(e:KeyboardEvent):void{
+							switch(e.keyCode){
+							case 82://KEY_R
+								Reset();
+								break;
+							}
+						}
+					);
+				}
+			);
 		}
 
 		//Call "Update"
@@ -1286,6 +1505,22 @@ internal class Goal extends Sprite{
 			GameMain.Instance().removeEventListener(Event.ENTER_FRAME, GameMain.Instance().Update);
 			//プレイヤーも（ｒｙ
 			GameMain.Instance().m_Player.removeEventListener(Event.ENTER_FRAME, GameMain.Instance().m_Player.Update);
+
+			//リセットのためにフラグを記憶
+			m_GoalFlag = true;
+		}
+	}
+
+	public function Reset():void{
+		//リセットまわりはかなりてきとー
+		if(m_GoalFlag){
+			removeChildAt(1);
+
+			addEventListener(Event.ENTER_FRAME, Update);
+			GameMain.Instance().addEventListener(Event.ENTER_FRAME, GameMain.Instance().Update);
+			GameMain.Instance().m_Player.addEventListener(Event.ENTER_FRAME, GameMain.Instance().m_Player.Update);
+
+			m_GoalFlag = false;
 		}
 	}
 }
